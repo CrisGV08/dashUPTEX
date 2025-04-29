@@ -1,8 +1,47 @@
-{% extends 'base.html' %}
-
-{% block title %}Inicio{% endblock %}
+{% extends 'base_admin.html' %}
+{% block title %}Eficiencia Terminal 3 Años{% endblock %}
 
 {% block content %}
-<h1>Eficiencia Terminal 3 Años</h1>
-<p>Selecciona una opción del menú.</p>
+<h1 style="text-align: center;">Eficiencia Terminal a 3 Años</h1>
+
+<!-- Filtro de programas -->
+<form method="GET" style="margin-bottom: 20px; text-align: center;">
+    <label for="programa"><strong>Filtrar por Programa:</strong></label>
+    <select name="programa" id="programa" onchange="this.form.submit()" style="padding: 5px 10px;">
+        <option value="">Todos</option>
+        {% for prog in programas %}
+            <option value="{{ prog.id }}">{{ prog.nombre }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<!-- Tabla ejemplo -->
+<div class="table-responsive" style="margin: auto; width: 80%;">
+    <table class="table table-striped text-center">
+        <thead style="background-color: #dcedc8;">
+            <tr>
+                <th>Programa Educativo</th>
+                <th>Año de Ingreso</th>
+                <th>Matrícula</th>
+                <th>Egresados</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+            <tr>
+                <td>{{ registro.programa_antiguo.nombre|default:registro.programa_nuevo.nombre }}</td>
+                <td>{{ registro.anio_ingreso }}</td>
+                <td>{{ registro.matricula_ingreso }}</td>
+                <td>{{ registro.egresados }}</td>
+            </tr>
+            {% endfor %}
+            {% if registros|length == 0 %}
+            <tr>
+                <td colspan="4">No hay datos para mostrar.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
 {% endblock %}
