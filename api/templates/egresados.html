@@ -1,0 +1,94 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}egresados{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <h1>Egresados</h1>
+
+    <!-- Formulario para generar plantilla CSV -->
+    <div class="form-box">
+        <form method="POST" action="{% url 'generar_plantilla_csv' %}">
+            {% csrf_token %}
+            <h3 style="margin-bottom: 10px;">Generar plantilla CSV</h3>
+            <p>Selecciona los campos que deseas incluir:</p>
+
+            <div style=" 
+                background-color: rgba(44,62,80,1); 
+                border: 1px solid #34495e;
+                border-radius: 10px;
+                padding: 15px;
+                margin-top: 15px;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                color: white;  /* Cambia el color de las letras a blanco */
+            ">
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="matricula">
+                    Matrícula
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="nombre">
+                    Nombre
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="promedio">
+                    Promedio
+                </label>
+
+
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="carrera">
+                    Carrera
+                </label>
+
+
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="periodo">
+                    Periodo
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                    <input type="checkbox" name="campos" value="creditos">
+                    Creditos
+                </label>
+
+
+                {% for campo in campos %}
+                    <label style="display: flex; align-items: center; gap: 5px; font-weight: 500;">
+                        <input type="checkbox" name="campos" value="{{ campo }}">
+                        {{ campo|capfirst }}
+                    </label>
+                {% endfor %}
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn-admin">Descargar Plantilla</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Formulario para subir archivo Excel -->
+    <div class="form-box" style="margin-top: 40px;">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h3 style="margin-bottom: 10px;">Subir archivo Excel</h3>
+            <p>Selecciona un archivo con promedios para cargarlo al sistema:</p>
+
+            <div style="text-align: center; margin-top: 10px;">
+                <input type="file" name="archivo_excel" accept=".xlsx, .xls" required class="input-file">
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn-admin">Subir archivo</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+

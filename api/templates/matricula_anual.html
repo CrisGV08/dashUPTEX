@@ -1,0 +1,199 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Matrícula por Año{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <h1>Matrícula por Año</h1>
+
+    <!-- Filtros -->
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+        <div>
+            <label for="filtro-anio">Año:</label><br>
+            <select id="filtro-anio">
+                {% for anio in anios_lista %}
+                    <option value="{{ anio }}">{{ anio }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="filtro-periodo">Cuatrimestre:</label><br>
+            <select id="filtro-periodo">
+                <option value="Todos">Todos</option>
+                <option value="Septiembre - Diciembre">Septiembre - Diciembre</option>
+                <option value="Enero - Abril">Enero - Abril</option>
+                <option value="Mayo - Agosto">Mayo - Agosto</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="filtro-tipo-programa">Tipo de Programa:</label><br>
+            <select id="filtro-tipo-programa">
+                <option value="antiguo">Antiguo</option>
+                <option value="nuevo">Nuevo</option>
+            </select>
+        </div>
+
+        <div style="min-width: 250px;">
+            <label for="filtro-programa">Carreras (selecciona varias):</label><br>
+            <select id="filtro-programa" multiple>
+                <option value="Todos">Todas las carreras</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="filtro-tipo-grafica">Tipo de Gráfica:</label><br>
+            <select id="filtro-tipo-grafica">
+                <option value="bar">Barras</option>
+                <option value="line">Líneas</option>
+                <option value="pie">Pastel</option>
+                <option value="doughnut">Dona</option>
+                <option value="polarArea">Área Polar</option>
+                <option value="radar">Radar</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Gráfica -->
+    <div style="max-width: 800px; margin: auto;">
+        <canvas id="graficaMatriculaAnual" height="200"></canvas>
+    </div>
+</div>
+
+<!-- ✅ Importamos Choices.js -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const datosAntiguos = {{ data_antiguos_json|safe }};
+    const datosNuevos = {{ data_nuevos_json|safe }};
+    const programasAntiguos = {{ programas_antiguos_lista|safe }};
+    const programasNuevos = {{ programas_nuevos_lista|safe }};
+
+    const colores = {
+        'Septiembre - Diciembre': 'rgba(54, 162, 235, 0.7)',
+        'Enero - Abril': 'rgba(255, 99, 132, 0.7)',
+        'Mayo - Agosto': 'rgba(75, 192, 192, 0.7)'
+    };
+
+    let chart;
+    let choicesInstance;
+
+    function cargarCarreras() {
+        const tipoPrograma = document.getElementById('filtro-tipo-programa').value;
+        const filtroPrograma = document.getElementById('filtro-programa');
+
+        filtroPrograma.innerHTML = '<option value="Todos">Todas las carreras</option>';
+
+        const programas = tipoPrograma === "antiguo" ? programasAntiguos : programasNuevos;
+
+        programas.forEach(programa => {
+            const option = document.createElement('option');
+            option.value = programa;
+            option.textContent = programa;
+            filtroPrograma.appendChild(option);
+        });
+
+        // 🔄 Reiniciar Choices.js después de actualizar opciones
+        if (choicesInstance) {
+            choicesInstance.destroy();
+        }
+        choicesInstance = new Choices(filtroPrograma, {
+            removeItemButton: true,
+            placeholderValue: 'Selecciona carreras...',
+            searchPlaceholderValue: 'Buscar carrera',
+            shouldSort: false
+        });
+    }
+
+    function actualizarGrafica() {
+        const anioSeleccionado = document.getElementById('filtro-anio').value;
+        const periodoSeleccionado = document.getElementById('filtro-periodo').value;
+        const tipoPrograma = document.getElementById('filtro-tipo-programa').value;
+        const tipoGrafica = document.getElementById('filtro-tipo-grafica').value;
+
+        const datos = (tipoPrograma === 'antiguo') ? datosAntiguos : datosNuevos;
+
+        const filtroPrograma = document.getElementById('filtro-programa');
+        const selectedOptions = Array.from(filtroPrograma.selectedOptions).map(opt => opt.value);
+
+        const keys = Object.keys(datos);
+        const programasDisponibles = [...new Set(keys.filter(k => k.startsWith(anioSeleccionado))
+            .map(k => k.split('-').slice(1).join('-').trim()))];
+
+        let programasFiltrados;
+        if (selectedOptions.includes("Todos") || selectedOptions.length === 0) {
+            programasFiltrados = programasDisponibles;
+        } else {
+            programasFiltrados = programasDisponibles.filter(programa => selectedOptions.includes(programa));
+        }
+
+        const datasets = [];
+
+        if (periodoSeleccionado === "Todos") {
+            ['Septiembre - Diciembre', 'Enero - Abril', 'Mayo - Agosto'].forEach(periodo => {
+                const dataPeriodo = programasFiltrados.map(programa => {
+                    const key = `${anioSeleccionado}-${programa}`;
+                    return datos[key] ? datos[key][periodo] : 0;
+                });
+                datasets.push({
+                    label: periodo,
+                    data: dataPeriodo,
+                    backgroundColor: colores[periodo],
+                    borderColor: colores[periodo],
+                    borderWidth: 1
+                });
+            });
+        } else {
+            const dataPeriodo = programasFiltrados.map(programa => {
+                const key = `${anioSeleccionado}-${programa}`;
+                return datos[key] ? datos[key][periodoSeleccionado] : 0;
+            });
+            datasets.push({
+                label: periodoSeleccionado,
+                data: dataPeriodo,
+                backgroundColor: colores[periodoSeleccionado],
+                borderColor: colores[periodoSeleccionado],
+                borderWidth: 1
+            });
+        }
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chart = new Chart(document.getElementById('graficaMatriculaAnual').getContext('2d'), {
+            type: tipoGrafica,
+            data: {
+                labels: programasFiltrados,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: (tipoGrafica === 'bar' || tipoGrafica === 'line') ? {
+                    y: {
+                        beginAtZero: true
+                    }
+                } : {}
+            }
+        });
+    }
+
+    // Eventos
+    document.getElementById('filtro-anio').addEventListener('change', actualizarGrafica);
+    document.getElementById('filtro-periodo').addEventListener('change', actualizarGrafica);
+    document.getElementById('filtro-tipo-programa').addEventListener('change', () => {
+        cargarCarreras();
+        actualizarGrafica();
+    });
+    document.getElementById('filtro-programa').addEventListener('change', actualizarGrafica);
+    document.getElementById('filtro-tipo-grafica').addEventListener('change', actualizarGrafica);
+
+    // Inicializar
+    cargarCarreras();
+    actualizarGrafica();
+</script>
+{% endblock %}

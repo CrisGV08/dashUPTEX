@@ -1,0 +1,183 @@
+{% extends 'base_admin.html' %}
+{% block title %}Aprovechamiento Académico{% endblock %}
+
+{% block content %}
+<h1>Aprovechamiento Académico Histórico</h1>
+
+<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+    <div>
+        <a href="{% url 'descargar_plantilla_aprovechamiento' %}" class="btn-primary"
+           style="padding: 10px 20px; border-radius: 8px; background-color: #007bff; color: white; font-weight: bold;">
+            <i class="fas fa-download"></i> Descargar Plantilla
+        </a>
+
+        <form method="POST" enctype="multipart/form-data" style="margin-top: 10px;">
+            {% csrf_token %}
+            <input type="file" name="excel_file" accept=".xlsx" required style="margin-top: 10px;">
+            <button type="submit" class="btn-primary"
+                    style="margin-top: 10px; padding: 10px 20px; border-radius: 8px; background-color: #28a745; color: white; font-weight: bold;">
+                <i class="fas fa-upload"></i> Subir Aprovechamiento
+            </button>
+        </form>
+
+        {% if mensaje %}
+        <div style="margin-top: 15px; padding: 10px; background-color: #d4edda; color: #155724; border-radius: 5px;">
+            {{ mensaje|safe }}
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="text-align: right;">
+        <div>
+            <strong style="color: #007bff;">Programas antiguos:</strong>
+            {% for pa in programas_antiguos %}
+                <div>{{ pa.id }} - {{ pa.nombre }}</div>
+            {% empty %}<div><em>No hay programas antiguos</em></div>{% endfor %}
+        </div>
+        <br>
+        <div>
+            <strong style="color: #28a745;">Programas nuevos:</strong>
+            {% for pn in programas_nuevos %}
+                <div>{{ pn.id }} - {{ pn.nombre }}</div>
+            {% empty %}<div><em>No hay programas nuevos</em></div>{% endfor %}
+        </div>
+    </div>
+</div>
+
+<form method="GET" style="margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
+    <div>
+        <label><strong>Ciclo:</strong></label>
+        <select id="filtroAnio" name="filtro_anio" onchange="this.form.submit()">
+            <option value="Todos">Todos</option>
+            {% for anio in anios %}
+                <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label><strong>Tipo de gráfica:</strong></label>
+        <select id="filtroGrafica">
+            <option value="Todos">Todos</option>
+            <option value="Barras">Barras</option>
+            <option value="Pastel">Pastel</option>
+            <option value="Linea">Línea</option>
+        </select>
+    </div>
+</form>
+
+<div style="margin-top: 30px; display: flex; justify-content: space-between; flex-wrap: wrap;">
+    <div style="flex: 1;">
+        <h2 style="margin-bottom: 20px;">Visualización Dinámica de Aprovechamiento</h2>
+        <div id="contenedorGraficas"
+             style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: center; max-width: 100%;">
+            <canvas id="graficaBarras" width="140" height="100"></canvas>
+            <canvas id="graficaLinea" width="140" height="100"></canvas>
+            <canvas id="graficaPastel" width="120" height="120"></canvas>
+        </div>
+        <p id="mensajeSinDatos" style="text-align: center; color: red; font-weight: bold; display: none;">No hay datos disponibles para graficar</p>
+    </div>
+
+    <div style="flex: 1; margin-top: 40px;">
+        <h3 style="text-align: center;">Detalle por Programa</h3>
+        <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; text-align: center;">
+            <thead style="background-color: #f0f0f0;">
+            <tr>
+                <th>Programa</th>
+                <th>Prom. Histórico</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for fila in detalle_programas %}
+                <tr>
+                    <td>{{ fila.programa }}</td>
+                    <td>{{ fila.promedio }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{ programas|json_script:"datos_programas" }}
+{{ promedios_hist|json_script:"datos_promedios_hist" }}
+{{ ciclos|json_script:"datos_ciclos" }}
+{{ promedios_ciclo|json_script:"datos_promedios_ciclo" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const charts = {};
+const datos = {
+    programas: JSON.parse(document.getElementById('datos_programas').textContent),
+    promedios_hist: JSON.parse(document.getElementById('datos_promedios_hist').textContent).map(Number),
+    ciclos: JSON.parse(document.getElementById('datos_ciclos').textContent),
+    promedios_ciclo: JSON.parse(document.getElementById('datos_promedios_ciclo').textContent).map(Number),
+};
+
+function renderGraficas(tipo = 'Todos') {
+    if (charts.barras) charts.barras.destroy();
+    if (charts.linea) charts.linea.destroy();
+    if (charts.pastel) charts.pastel.destroy();
+
+    if (datos.programas.length === 0 || datos.promedios_hist.length === 0) {
+        document.getElementById('mensajeSinDatos').style.display = 'block';
+        return;
+    } else {
+        document.getElementById('mensajeSinDatos').style.display = 'none';
+    }
+
+    const coloresPastel = ['#A7C7E7', '#B5EAD7', '#FFF7AE', '#FFB3BA', '#C7CEEA', '#D5F3F0'];
+
+    if (tipo === 'Barras' || tipo === 'Todos') {
+        charts.barras = new Chart(document.getElementById('graficaBarras'), {
+            type: 'bar',
+            data: {
+                labels: datos.programas,
+                datasets: [{
+                    label: 'Promedio Histórico',
+                    data: datos.promedios_hist,
+                    backgroundColor: coloresPastel
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+
+    if (tipo === 'Linea' || tipo === 'Todos') {
+        charts.linea = new Chart(document.getElementById('graficaLinea'), {
+            type: 'line',
+            data: {
+                labels: datos.ciclos,
+                datasets: [{
+                    label: 'Promedio por Ciclo',
+                    data: datos.promedios_ciclo,
+                    borderColor: '#A7C7E7',
+                    backgroundColor: '#D5F3F0',
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+
+    if (tipo === 'Pastel' || tipo === 'Todos') {
+        charts.pastel = new Chart(document.getElementById('graficaPastel'), {
+            type: 'pie',
+            data: {
+                labels: datos.programas,
+                datasets: [{
+                    data: datos.promedios_hist,
+                    backgroundColor: coloresPastel
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+}
+
+document.getElementById('filtroGrafica').addEventListener('change', (e) => {
+    renderGraficas(e.target.value);
+});
+
+renderGraficas();
+</script>
+{% endblock %}

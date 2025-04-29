@@ -1,0 +1,135 @@
+{% extends 'base_admin.html' %}
+{% load custom_tags %}
+
+{% block title %}Matrícula por Género{% endblock %}
+
+{% block content %}
+<h1>Matrícula por Género</h1>
+
+{% if mensaje %}
+  <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+    {{ mensaje }}
+  </div>
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+  <table border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
+    <thead>
+      <tr style="background-color: #e0ffe0;">
+        <th>Género</th>
+        {% for cp in ciclos %}
+          <th>{{ cp.periodo.nombre }} {{ cp.ciclo.anio }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background-color: #fff9c4;">
+        <td><strong>Mujeres</strong></td>
+        {% for cp in ciclos %}
+          {% with dato=datos|get_item:cp.id %}
+          <td><input type="number" name="mujeres_{{ cp.id }}" value="{{ dato.mujeres|default_if_none:'' }}" min="0" style="width: 60px;" /></td>
+          {% endwith %}
+        {% endfor %}
+      </tr>
+      <tr style="background-color: #ffe0b2;">
+        <td><strong>Hombres</strong></td>
+        {% for cp in ciclos %}
+          {% with dato=datos|get_item:cp.id %}
+          <td><input type="number" name="hombres_{{ cp.id }}" value="{{ dato.hombres|default_if_none:'' }}" min="0" style="width: 60px;" /></td>
+          {% endwith %}
+        {% endfor %}
+      </tr>
+      <tr style="background-color: #ffcdd2; font-weight: bold;">
+        <td>MATRÍCULA</td>
+        {% for cp in ciclos %}
+          {% with dato=datos|get_item:cp.id %}
+          <td>{{ dato.total|default:"-" }}</td>
+          {% endwith %}
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top: 20px;">
+    <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border-radius: 5px; font-weight: bold;">
+      Guardar Cambios
+    </button>
+  </div>
+</form>
+
+<!-- 🎨 Sección de gráficas -->
+<h2 style="margin-top: 50px; text-align: center;">Visualizaciones</h2>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 30px;">
+  <div>
+    <h3 style="text-align:center;">Barras Apiladas</h3>
+    <canvas id="graficaBarras" width="300" height="250"></canvas>
+  </div>
+  <div>
+    <h3 style="text-align:center;">Gráfico de Línea</h3>
+    <canvas id="graficaLinea" width="300" height="250"></canvas>
+  </div>
+  <div>
+    <h3 style="text-align:center;">Distribución Total</h3>
+    <canvas id="graficaPastel" width="260" height="260"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const datos = {{ datos_grafica_json|safe }};
+  
+  // Barras apiladas
+  new Chart(document.getElementById('graficaBarras'), {
+    type: 'bar',
+    data: {
+      labels: datos.labels,
+      datasets: [
+        { label: 'Mujeres', data: datos.mujeres, backgroundColor: '#f06292' },
+        { label: 'Hombres', data: datos.hombres, backgroundColor: '#64b5f6' }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 2000 },
+      plugins: { title: { display: true, text: 'Matrícula por Ciclo' } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+    }
+  });
+
+  // Línea de crecimiento
+  new Chart(document.getElementById('graficaLinea'), {
+    type: 'line',
+    data: {
+      labels: datos.labels,
+      datasets: [
+        { label: 'Mujeres', data: datos.mujeres, borderColor: '#f06292', fill: false, tension: 0.4 },
+        { label: 'Hombres', data: datos.hombres, borderColor: '#64b5f6', fill: false, tension: 0.4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 2000 },
+      plugins: { title: { display: true, text: 'Evolución por Ciclo' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Pastel total
+  new Chart(document.getElementById('graficaPastel'), {
+    type: 'pie',
+    data: {
+      labels: datos.pie_labels,
+      datasets: [{ data: datos.pie_data, backgroundColor: ['#64b5f6', '#f06292'] }]
+    },
+    options: {
+      responsive: true,
+      animation: { duration: 2000 },
+      plugins: {
+        legend: { position: 'top' },
+        title: { display: true, text: 'Distribución General por Género' }
+      }
+    }
+  });
+</script>
+{% endblock %}

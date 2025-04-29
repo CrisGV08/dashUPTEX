@@ -1,0 +1,307 @@
+/* ==== RESET GENERAL ==== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: #ecf0f1;
+}
+
+/* ==== SIDEBAR ==== */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background: #2c3e50;
+    color: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==== LOGO CONTAINER ==== */
+.logo-container {
+    text-align: center;
+    padding: 15px;
+}
+
+.logo-container img {
+    max-width: 150px;
+    height: auto;
+}
+
+/* ==== SCROLLBAR ==== */
+.menu-container {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 50px);
+}
+
+.menu-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.menu-container::-webkit-scrollbar-thumb {
+    background-color: #1abc9c;
+    border-radius: 10px;
+}
+
+/* ==== MENÚ PRINCIPAL ==== */
+.menu {
+    list-style: none;
+    padding: 10px;
+}
+
+.menu-item > a {
+    display: block;
+    color: white;
+    padding: 12px;
+    text-decoration: none;
+    background: #34495e;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.menu-item > a:hover {
+    background: #1abc9c;
+    transform: translateX(5px);
+}
+
+.menu-item.active > a {
+    background: #1abc9c;
+    transform: translateX(0);
+}
+
+/* ==== SUBMENÚ ==== */
+.submenu {
+    list-style: none;
+    padding-left: 20px;
+    display: none;
+}
+
+.submenu-item > a {
+    background: #24ae34;
+    padding: 10px;
+    display: block;
+    color: white;
+    text-decoration: none;
+    margin-top: 6px;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.submenu-item > a:hover {
+    background: #106f25;
+    transform: translateX(4px);
+}
+
+.submenu-item.active > a {
+    background: #1abc9c;
+}
+
+/* ==== SUB-SUBMENÚ ==== */
+.sub-submenu {
+    list-style: none;
+    padding-left: 20px;
+    display: none;
+    transition: max-height 0.4s ease;
+}
+
+.sub-submenu li {
+    margin-top: 5px;
+}
+
+.sub-submenu li button {
+    background-color: #c6ca58;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.3s ease, transform 0.2s ease;
+    text-align: left;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sub-submenu li button:hover {
+    background-color: #edea21;
+    transform: translateX(4px);
+}
+
+.sub-submenu li button:focus {
+    outline: none;
+}
+
+.sub-submenu li a {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+
+.sub-submenu li a:hover {
+    background-color: #1abc9c;
+    transform: translateX(4px);
+}
+
+a, a:visited, a:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ==== OPCIONES DE ADMINISTRADOR ==== */
+.menu-item.admin > a {
+    background-color: #e74c3c;
+}
+
+.menu-item.admin > a:hover {
+    background-color: #c0392b;
+}
+
+/* ==== BOTÓN LOGIN Y LOGOUT ==== */
+.nav-link {
+    display: block;
+    padding: 12px;
+    color: white;
+    text-decoration: none;
+    background: #34495e;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.nav-link:hover {
+    background: #1abc9c;
+}
+
+/* ==== CONTENIDO PRINCIPAL ==== */
+.content {
+    padding: 30px;
+    width: calc(100% - 250px);
+    background-color: #ecf0f1;
+}
+
+/* ==== ENCABEZADOS Y TEXTO ==== */
+h1 {
+    font-size: 32px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 18px;
+    color: #7f8c8d;
+    line-height: 1.6;
+}
+
+/* ==== BOTONES DE ACCESO RÁPIDO ADMIN ==== */
+.btn-admin {
+    display: inline-block;
+    padding: 12px 20px;
+    margin: 10px 10px 0 0;
+    background-color: #2980b9;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-admin:hover {
+    background-color: #1c5980;
+    transform: scale(1.05);
+}
+
+/* ==== CRUD FORM ==== */
+.crud-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.crud-form input {
+    padding: 10px;
+    font-size: 14px;
+    flex: 1 1 30%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.crud-button {
+    padding: 10px 20px;
+    background-color: #1abc9c;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.crud-button:hover {
+    background-color: #16a085;
+}
+
+/* ==== CRUD TABLE ==== */
+.crud-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.crud-table th,
+.crud-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.crud-edit,
+.crud-delete {
+    padding: 6px 12px;
+    font-size: 13px;
+    margin-right: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.crud-edit {
+    background-color: #2980b9;
+    color: white;
+}
+
+.crud-delete {
+    background-color: #c0392b;
+    color: white;
+}
+
+.crud-edit:hover {
+    background-color: #1c5980;
+}
+
+.crud-delete:hover {
+    background-color: #992d22;
+}
+
+.menu-container {
+    scrollbar-color: #1abc9c transparent;
+    scrollbar-width: thin;
+}

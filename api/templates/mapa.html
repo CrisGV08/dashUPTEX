@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Datos Geoespaciales{% endblock %}
+
+{% block content %}
+<h1>Datos Geoespaciales</h1>
+
+<!-- ✅ Contenedor para el mapa -->
+<div id="map" style="height: 500px; width: 100%; border-radius: 8px;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ✅ Llamada al archivo mapa.js -->
+<script defer src="{% static 'js/mapa.js' %}"></script>
+{% endblock %}
