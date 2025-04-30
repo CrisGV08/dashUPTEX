@@ -30,4 +30,4 @@ def matricula_historica_usuario_view(request):
         "programas_json": json.dumps(programas_totales),
     }
 
-    return render(request, "matricula_anual_usuario.html", context)
+    return render(request, "matricula_historica_usuario.html", context)
