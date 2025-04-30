@@ -10,7 +10,8 @@ from api.home.home_views import (
     home_aprobados,
     home_reprobados,
     home_promedios,
-    home_mapa
+    home_mapa,
+    examen_admision_usuario_view
 )
 
 # Vistas de Login
@@ -71,6 +72,7 @@ urlpatterns = [
     path('reprobados/', home_reprobados, name='reprobados'),
     path('promedios/', home_promedios, name='promedios'),
     path('mapa/', home_mapa, name='mapa'),
+path('examen_admision_usuario/', examen_admision_usuario_view, name='examen_admision_usuario'),
 
     # Vistas del Administrador
     path('administrador/', administrador_view, name='administrador'),

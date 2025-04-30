@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Examen Admisión{% endblock %}
+
+{% block content %}
+<h1 style="text-align:center;">Examen de Admisión</h1>
+
+<!-- Filtros -->
+<form method="GET" style="margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+    <div>
+        <label><strong>Ciclo:</strong></label>
+        <select id="filtroAnio" name="filtro_anio" onchange="this.form.submit()">
+            <option value="Todos">Todos</option>
+            {% for anio in anios %}
+                <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label><strong>Tipo de gráfica:</strong></label>
+        <select id="filtroGrafica">
+            <option value="Todos">Todos</option>
+            <option value="Barras">Barras</option>
+            <option value="Pastel">Pastel</option>
+            <option value="Linea">Línea</option>
+        </select>
+    </div>
+</form>
+
+<!-- Tabla detalle -->
+<div style="margin-top: 40px; text-align: center;">
+    <h3>Detalle por Programa</h3>
+    <table border="1" cellspacing="0" cellpadding="5" style="margin: auto; text-align: center;">
+        <thead style="background-color: #f0f0f0;">
+            <tr>
+                <th>Programa</th>
+                <th>Examen</th>
+                <th>RENOES</th>
+                <th>UAEM-GEM</th>
+                <th>Pase Directo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in detalle_programas %}
+            <tr>
+                <td>{{ fila.programa }}</td>
+                <td>{{ fila.examen }}</td>
+                <td>{{ fila.renoes }}</td>
+                <td>{{ fila.uaem_gem }}</td>
+                <td>{{ fila.pase_directo }}</td>
+            </tr>
+            {% endfor %}
+            {% if detalle_programas %}
+            <tr style="font-weight: bold;">
+                <td>Total</td>
+                <td>{{ datos_graficas.examen|default:0 }}</td>
+                <td>{{ datos_graficas.renoes|default:0 }}</td>
+                <td>{{ datos_graficas.uaem_gem|default:0 }}</td>
+                <td>{{ datos_graficas.pase_directo|default:0 }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Gráficas -->
+<div style="margin-top: 30px;">
+    <h2 style="text-align: center; margin-bottom: 20px;">Visualización Dinámica de Modalidades</h2>
+    <div id="contenedorGraficas" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; align-items: center;">
+        <div style="width: 300px; height: 220px;"><canvas id="graficaBarras"></canvas></div>
+        <div style="width: 300px; height: 220px;"><canvas id="graficaLinea"></canvas></div>
+        <div style="width: 250px; height: 220px;"><canvas id="graficaPastel"></canvas></div>
+    </div>
+</div>
+
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const charts = {};
+    const datos = {
+        examen: {{ datos_graficas.examen|default:0 }},
+        renoes: {{ datos_graficas.renoes|default:0 }},
+        uaem_gem: {{ datos_graficas.uaem_gem|default:0 }},
+        pase_directo: {{ datos_graficas.pase_directo|default:0 }},
+    };
+
+    function renderGraficas(tipo = 'Todos') {
+        const labels = ['Examen', 'RENOES', 'UAEM-GEM', 'Pase Directo'];
+        const data = [datos.examen, datos.renoes, datos.uaem_gem, datos.pase_directo];
+
+        if (charts.barras) charts.barras.destroy();
+        if (charts.linea) charts.linea.destroy();
+        if (charts.pastel) charts.pastel.destroy();
+
+        if (tipo === 'Barras' || tipo === 'Todos') {
+            charts.barras = new Chart(document.getElementById('graficaBarras'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total por modalidad',
+                        data: data,
+                        backgroundColor: ['#007bff', '#fd7e14', '#28a745', '#dc3545']
+                    }]
+                },
+                options: { animation: { duration: 2000 }, responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        if (tipo === 'Linea' || tipo === 'Todos') {
+            charts.linea = new Chart(document.getElementById('graficaLinea'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total por modalidad',
+                        data: data,
+                        borderColor: '#17a2b8',
+                        tension: 0.4
+                    }]
+                },
+                options: { animation: { duration: 2000 }, responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        if (tipo === 'Pastel' || tipo === 'Todos') {
+            charts.pastel = new Chart(document.getElementById('graficaPastel'), {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#007bff', '#fd7e14', '#28a745', '#dc3545']
+                    }]
+                },
+                options: { animation: { duration: 2000 }, responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }
+
+    document.getElementById('filtroGrafica').addEventListener('change', (e) => {
+        renderGraficas(e.target.value);
+    });
+
+    renderGraficas();
+</script>
+{% endblock %}

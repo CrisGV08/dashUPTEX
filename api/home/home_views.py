@@ -17,3 +17,7 @@ def home_promedios(request):
 
 def home_mapa(request):
     return render(request, 'mapa.html')
+
+
+def examen_admision_usuario_view(request):
+    return render(request, 'examen_admision_usuario.html')
