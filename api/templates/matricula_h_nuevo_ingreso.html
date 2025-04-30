@@ -1,0 +1,141 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Matrícula H. Nuevo Ingreso {% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <h1 style="text-align: center; margin-bottom: 30px;">Matrícula H. Nuevo Ingreso</h1>
+
+    <!-- 📁 Botones de acciones -->
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
+        <a href="{% url 'descargar_plantilla_matricula_h_nuevo_ingreso' %}" class="btn-admin">
+            📥 Descargar Plantilla
+        </a>
+
+        <form method="POST" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 10px;">
+            {% csrf_token %}
+            <input type="file" name="archivo_excel" accept=".xlsx, .xls" required class="input-file">
+            <button type="submit" class="btn-admin">⬆️ Subir Archivo</button>
+        </form>
+    </div>
+
+    <!-- 📣 Mensajes -->
+    {% if messages %}
+        <div style="margin-bottom: 20px; text-align: center;">
+            {% for message in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin: 5px auto; width: 60%;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <hr style="margin: 30px 0;">
+
+    <!-- 🎯 Dashboard Visual -->
+    <h2 style="text-align: center; margin-bottom: 30px;">Dashboard de Matrícula</h2>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
+        <div class="card-dashboard">
+            <h3 style="text-align:center; margin-bottom: 10px;">Total por Ciclo</h3>
+            <canvas id="graficaTotal" width="320" height="240"></canvas>
+        </div>
+
+        <div class="card-dashboard">
+            <h3 style="text-align:center; margin-bottom: 10px;">Distribución Modalidades</h3>
+            <canvas id="graficaPastel" width="300" height="300"></canvas>
+        </div>
+    </div>
+
+    <div class="card-dashboard" style="margin-top: 40px;">
+        <h3 style="text-align:center; margin-bottom: 10px;">Matrícula por Programa Educativo</h3>
+        <canvas id="graficaProgramas" height="400"></canvas>
+    </div>
+
+</div>
+
+<!-- 🎨 ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const datos = {{ datos_dashboard|safe }};
+
+// 📊 Gráfica barras total
+new Chart(document.getElementById('graficaTotal'), {
+    type: 'bar',
+    data: {
+        labels: datos.labels,
+        datasets: [{
+            label: 'Matrícula Total',
+            data: datos.totales,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        animation: { duration: 1500 },
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+// 🥧 Gráfica pastel
+new Chart(document.getElementById('graficaPastel'), {
+    type: 'pie',
+    data: {
+        labels: ['Programas Antiguos', 'Programas Nuevos'],
+        datasets: [{
+            data: [datos.total_antiguos, datos.total_nuevos],
+            backgroundColor: ['#42a5f5', '#66bb6a']
+        }]
+    },
+    options: {
+        responsive: true,
+        animation: { duration: 1500 }
+    }
+});
+
+// 📈 Gráfica matrícula por programa
+const datasetsProgramas = Object.entries(datos.programas_totales).map(([nombre, valores]) => ({
+    label: nombre,
+    data: valores,
+    borderColor: `hsla(${Math.random() * 360}, 70%, 50%, 1)`,
+    backgroundColor: `hsla(${Math.random() * 360}, 70%, 70%, 0.5)`,
+    fill: false,
+    tension: 0.4
+}));
+
+new Chart(document.getElementById('graficaProgramas'), {
+    type: 'line',
+    data: {
+        labels: datos.labels,
+        datasets: datasetsProgramas
+    },
+    options: {
+        responsive: true,
+        animation: { duration: 1500 },
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+
+<!-- ✨ Estilos extra para embellecer las tarjetas -->
+<style>
+.card-dashboard {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    width: 350px;
+    transition: transform 0.3s ease;
+}
+.card-dashboard:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}
