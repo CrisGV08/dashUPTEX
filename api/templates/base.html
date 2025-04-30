@@ -49,35 +49,21 @@
                 </li>
             
                 <li class="menu-item">
-                    <a href="#"><i class="fas fa-university"></i> Matricula Historica</a>
+                    <a href="{% url 'matricula_historica_usuario' %}"><i class="fas fa-file-signature"></i> Matricula historica</a>
                 </li>
             
                 <li class="menu-item">
-                    <a href="#"><i class="fas fa-venus-mars"></i> Matricula por Género</a>
+                    <a href="{% url 'matricula_por_genero_usuario' %}">Matrícula por Género</a>
                 </li>
             
                 <li class="menu-item">
-                    <a href="#"><i class="fas fa-chart-bar"></i> Matrícula Anual</a>
-                    <ul class="submenu">
-                        <li class="submenu-item">
-                            <a href="#"><i class="fas fa-chart-line"></i> Matrícula Historica</a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="#"><i class="fas fa-chart-line"></i> Matrícula Actual</a>
-                        </li>
-                    </ul>
+                    <a href="{% url 'matricula_anual_usuario' %}">Matrícula Anual</a>
                 </li>
+                
             
                 <li class="menu-item">
-                    <a href="#"><i class="fas fa-layer-group"></i> Matricula por cuatrimestre</a>
-                    <ul class="submenu">
-                        <li class="submenu-item">
-                            <a href="#"><i class="fas fa-chart-line"></i> Historico</a>
-                        </li>
-                        <li class="submenu-item">
-                            <a href="#"><i class="fas fa-chart-line"></i> Actual</a>
-                        </li>
-                    </ul>
+                    <a href="{% url 'matricula_cuatrimestre_usuario' %}">Matrícula por Cuatrimestre</a>
+
                 </li>
             
                 <li class="menu-item">
@@ -110,8 +96,8 @@
             <li class="menu-item">
                 <a href="#"><i class="fas fa-user-shield"></i> Administrador</a>
                 <ul class="submenu">
-                    <li class="submenu-item">
-                        <button onclick="window.location.href='{% url 'logout' %}'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <li class="menu-item">
+                        <a href="{% url 'login' %}"><i class="fas fa-file-signature"></i> Login</a>
                     </li>
                 </ul>
             </li>

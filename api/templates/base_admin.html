@@ -77,12 +77,10 @@
                 </ul>
             </li>
             <li class="menu-item">
-                <a href="#"><i class="fas fa-user-shield"></i> Administrador</a>
+                <a href="#"><i class="fas fa-user-shield"></i> Salir</a>
                 <ul class="submenu">
-                    <li class="submenu-item">
-                        <button onclick="window.location.href='{% url 'logout' %}'">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
+                    <li class="menu-item">
+                        <a href="{% url 'login' %}"><i class="fas fa-stopwatch"></i> Logout</a>
                     </li>
                 </ul>
             </li>

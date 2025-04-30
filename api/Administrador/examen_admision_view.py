@@ -8,8 +8,9 @@ from api.models import (
 from django.db.models import Sum
 
 def examen_admision_view(request):
-    mensaje = request.GET.get("mensaje")  # 🔥 Nuevo: Recupera mensaje desde GET
+    mensaje = request.GET.get("mensaje")
 
+    # Solo crea ciclo si viene desde admin
     if request.method == 'POST' and 'crear_ciclo' in request.POST:
         periodos_definidos = [
             ('E-A', 'Enero - Abril'),
@@ -44,12 +45,11 @@ def examen_admision_view(request):
             CicloPeriodo.objects.get_or_create(ciclo=nuevo_ciclo, periodo=periodo)
             mensaje_creado = f"✅ Se creó el ciclo {nuevo_anio} periodo {nombre}"
 
-        # 🔥 Redireccionamos con el mensaje en la URL
-        url = reverse('examen_admision')  # Nombre que tengas en urls.py
+        url = reverse('examen_admision')
         query_string = urlencode({'mensaje': mensaje_creado})
         return redirect(f"{url}?{query_string}")
 
-    # Lo demás sigue igual
+    # Datos comunes
     programas_antiguos = ProgramaEducativoAntiguo.objects.all()
     programas_nuevos = ProgramaEducativoNuevo.objects.all()
 
@@ -96,7 +96,12 @@ def examen_admision_view(request):
         except CicloPeriodo.DoesNotExist:
             pass
 
-    return render(request, 'examen_admision.html', {
+    # 🔥 Usa base.html si la vista es pública
+    template = 'examen_admision.html'
+    if request.resolver_match.url_name == 'examen_admision_usuario':
+        template = 'examen_admision_usuario.html'
+
+    return render(request, template, {
         'mensaje': mensaje,
         'programas_antiguos': programas_antiguos,
         'programas_nuevos': programas_nuevos,

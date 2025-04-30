@@ -28,6 +28,19 @@ from api.Administrador.administrador_views import (
     generar_plantilla_csv
 )
 
+
+
+
+from api.home.examen_usuario_view import examen_admision_usuario_view
+from api.home.matricula_historica_usuario_view import matricula_historica_usuario_view
+from api.home.matricula_por_genero_usuario_view import matricula_por_genero_usuario_view
+from api.home.matricula_anual_usuario_view import matricula_anual_usuario_view
+from api.home.matricula_cuatrimestre_usuario_view import matricula_cuatrimestre_usuario_view
+
+
+
+
+
 # Vistas específicas
 from api.views import egresados_view
 from api.Administrador.examen_views import examen_admision_view
@@ -72,7 +85,19 @@ urlpatterns = [
     path('reprobados/', home_reprobados, name='reprobados'),
     path('promedios/', home_promedios, name='promedios'),
     path('mapa/', home_mapa, name='mapa'),
-path('examen_admision_usuario/', examen_admision_usuario_view, name='examen_admision_usuario'),
+    path('examen_admision_usuario/', examen_admision_usuario_view, name='examen_admision_usuario'),
+
+
+
+    path('examen_admision_usuario/', examen_admision_usuario_view, name='examen_admision_usuario'),
+    path('matricula_historica_usuario/', matricula_historica_usuario_view, name='matricula_historica_usuario'),
+    path("matricula_genero_usuario/", matricula_por_genero_usuario_view, name="matricula_por_genero_usuario"),
+    path('matricula_anual_usuario/', matricula_anual_usuario_view, name='matricula_anual_usuario'),
+    path('matricula_cuatrimestre_usuario/', matricula_cuatrimestre_usuario_view, name='matricula_cuatrimestre_usuario'),
+
+
+
+
 
     # Vistas del Administrador
     path('administrador/', administrador_view, name='administrador'),
