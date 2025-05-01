@@ -39,6 +39,10 @@ from api.Administrador.aprovechamiento_tools import descargar_plantilla_aprovech
 from api.Administrador.indicadores_generales_view import (
     indicadores_generales_view, descargar_plantilla_indicadores, subir_csv_indicadores
 )
+from api.Administrador.eficiencia_terminal_view import eficiencia_terminal_view
+from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
+from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
+
 
 # Otras vistas nuevas
 from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
@@ -94,6 +98,9 @@ urlpatterns = [
     path('administrador/indicadores-generales/', indicadores_generales_view, name='indicadores_generales'),
     path('administrador/descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'),
     path('administrador/subir-csv-indicadores/', subir_csv_indicadores, name='subir_csv_indicadores'),
+
+    path('eficiencia-terminal/', eficiencia_terminal_view, name='eficiencia_terminal'),
+    path('descargar-plantilla-eficiencia/', descargar_plantilla_eficiencia, name='descargar_plantilla_eficiencia'),
 
     path('administrador/matricula-h-nuevo-ingreso/', matricula_h_nuevo_ingreso_view, name='matricula_h_nuevo_ingreso'),
     path('administrador/descargar-plantilla-matricula-h-nuevo-ingreso/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),

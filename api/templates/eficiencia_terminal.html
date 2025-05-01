@@ -1,0 +1,207 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Eficiencia Terminal{% endblock %}
+
+{% block content %}
+<h2 class="text-center mt-3">Eficiencia Terminal Histórica</h2>
+
+<!-- Botones -->
+<!-- Botones sin Bootstrap -->
+<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+    <a href="{% url 'descargar_plantilla_eficiencia' %}" class="btn btn-primary" style="margin-right: 10px;">📥 Descargar Plantilla</a>
+    <form method="POST" enctype="multipart/form-data" style="display: inline-block;">
+        {% csrf_token %}
+        <input type="file" name="archivo_excel" style="margin-right: 10px;">
+        <button type="submit" class="btn btn-success">📊 Subir Eficiencia</button>
+    </form>
+</div>
+
+
+<!-- Filtros -->
+<div class="d-flex justify-content-center gap-3 mb-4">
+    <label><strong>Ciclo:</strong></label>
+    <select id="filtroCiclo" onchange="filtrarDatos()" class="form-select">
+        <option value="Todos">Todos</option>
+        {% for ciclo in ciclos %}
+            <option value="{{ ciclo }}">{{ ciclo }}</option>
+        {% endfor %}
+    </select>
+
+    <label><strong>Tipo de gráfica:</strong></label>
+    <select id="filtroGrafica" onchange="filtrarDatos()" class="form-select">
+        <option value="Todos">Todos</option>
+        <option value="barras">Barras</option>
+        <option value="linea">Línea</option>
+        <option value="pastel">Pastel</option>
+    </select>
+</div>
+
+<!-- Tabla de detalle -->
+<!-- Tabla de detalle -->
+<!-- Tabla sin Bootstrap -->
+<div style="margin: 20px auto; width: 95%;">
+    <table border="1" cellspacing="0" cellpadding="10" style="width: 100%; border-collapse: collapse; text-align: center;">
+        <thead style="background-color: #dcedc8;">
+            <tr>
+                <th>Programa</th>
+                <th>Prom. Eficiencia</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in eficiencia_por_programa %}
+                <tr>
+                    <td>{{ item.programa }}</td>
+                    <td>{{ item.promedio }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
+<!-- Gráficas -->
+<div class="container text-center">
+    <h4 class="mb-4">Visualización Dinámica de Eficiencia Terminal</h4>
+    <div class="d-flex justify-content-center align-items-start flex-wrap gap-4">
+
+        <!-- Gráfica de Barras -->
+        <div style="width: 600px;">
+            <canvas id="graficaBarras" height="500"></canvas>
+        </div>
+
+        <!-- Gráfica de Línea -->
+        <div style="width: 600px;">
+            <canvas id="graficaLinea" height="500"></canvas>
+        </div>
+
+        <!-- Gráfica de Pastel -->
+        <div style="width: 600px;">
+            <canvas id="graficaPastel" height="600"></canvas>
+        </div>
+
+    </div>
+
+    <p id="mensajeSinDatos" class="text-danger mt-3" style="display: none;">No hay datos disponibles para graficar</p>
+</div>
+
+
+
+
+
+
+<!-- Leyenda de Programas -->
+<div class="container text-center mb-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h5><strong>📘 Programas antiguos:</strong></h5>
+            <p>
+                ISC - Ingeniería en Sistemas Computacionales<br>
+                IRO - Ingeniería en Robótica<br>
+                ILT - Ingeniería en Logística y Transporte<br>
+                IET - Ingeniería en Electrónica<br>
+                LCIA - Licenciatura en Comercio Internacional y Aduanas<br>
+                LAGE - Licenciatura en Administración y Gestión de Empresas
+            </p>
+            <h5><strong>📗 Programas nuevos:</strong></h5>
+            <p>
+                ILG - Ingeniería en Logística<br>
+                ISE - Ingeniería en Sistemas Electrónicos<br>
+                IMC - Ingeniería Mecatrónica<br>
+                ITID - Ingeniería en Tecnologías de la Información e Innovación<br>
+                LCI - Licenciatura en Comercio Internacional<br>
+                LAD - Licenciatura en Administración
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<!-- JS para gráficas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const datos = {{ eficiencia_por_programa|safe }};
+    const selectCiclo = document.getElementById('filtroCiclo');
+    const selectGrafica = document.getElementById('filtroGrafica');
+    const sinDatos = document.getElementById('mensajeSinDatos');
+
+    let graficaBarras, graficaLinea, graficaPastel;
+
+    const pastelColors = [
+        'rgba(255, 179, 186, 0.7)', 'rgba(255, 223, 186, 0.7)', 'rgba(255, 255, 186, 0.7)',
+        'rgba(186, 255, 201, 0.7)', 'rgba(186, 225, 255, 0.7)', 'rgba(204, 204, 255, 0.7)',
+        'rgba(255, 204, 229, 0.7)', 'rgba(204, 255, 229, 0.7)', 'rgba(229, 204, 255, 0.7)'
+    ];
+
+    function obtenerDatosFiltrados() {
+        const cicloSeleccionado = selectCiclo.value;
+        return datos.filter(item => cicloSeleccionado === "Todos" || item.ciclo == cicloSeleccionado);
+    }
+
+    function destruirGraficas() {
+        if (graficaBarras) graficaBarras.destroy();
+        if (graficaLinea) graficaLinea.destroy();
+        if (graficaPastel) graficaPastel.destroy();
+    }
+
+    function crearGraficas() {
+        const filtrados = obtenerDatosFiltrados();
+        if (filtrados.length === 0) {
+            sinDatos.style.display = 'block';
+            destruirGraficas();
+            return;
+        } else {
+            sinDatos.style.display = 'none';
+        }
+
+        const programas = filtrados.map(d => d.programa);
+        const porcentajes = filtrados.map(d => d.promedio);
+
+        const configBase = {
+            labels: programas,
+            datasets: [{
+                label: 'Eficiencia Terminal %',
+                data: porcentajes,
+                backgroundColor: pastelColors,
+                borderColor: pastelColors,
+                borderWidth: 1
+            }]
+        };
+
+        destruirGraficas();
+
+        const tipoGrafica = selectGrafica.value;
+
+        if (tipoGrafica === 'Todos' || tipoGrafica === 'barras') {
+            graficaBarras = new Chart(document.getElementById('graficaBarras'), {
+                type: 'bar',
+                data: configBase,
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        if (tipoGrafica === 'Todos' || tipoGrafica === 'linea') {
+            graficaLinea = new Chart(document.getElementById('graficaLinea'), {
+                type: 'line',
+                data: configBase,
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        if (tipoGrafica === 'Todos' || tipoGrafica === 'pastel') {
+            graficaPastel = new Chart(document.getElementById('graficaPastel'), {
+                type: 'pie',
+                data: configBase,
+                options: { responsive: true }
+            });
+        }
+    }
+
+    function filtrarDatos() {
+        crearGraficas();
+    }
+
+    window.addEventListener('load', crearGraficas);
+</script>
+{% endblock %}
