@@ -25,8 +25,16 @@ def matricula_h_nuevo_ingreso_view(request):
             for i, fila in df.iterrows():
                 try:
                     ciclo_periodo = CicloPeriodo.objects.get(id=int(fila['ciclo_periodo_id']))
-                    programa_antiguo = ProgramaEducativoAntiguo.objects.filter(id=fila['programa_antiguo_id']).first()
-                    programa_nuevo = ProgramaEducativoNuevo.objects.filter(id=fila['programa_nuevo_id']).first()
+
+                    # Validación y limpieza segura de programa_antiguo y programa_nuevo
+                    programa_antiguo = None
+                    programa_nuevo = None
+
+                    if pd.notna(fila['programa_antiguo_id']) and str(fila['programa_antiguo_id']).strip() != '':
+                        programa_antiguo = ProgramaEducativoAntiguo.objects.filter(id=int(fila['programa_antiguo_id'])).first()
+
+                    if pd.notna(fila['programa_nuevo_id']) and str(fila['programa_nuevo_id']).strip() != '':
+                        programa_nuevo = ProgramaEducativoNuevo.objects.filter(id=int(fila['programa_nuevo_id'])).first()
 
                     if not programa_antiguo and not programa_nuevo:
                         errores.append(f"Fila {i+2}: Programa no encontrado.")
@@ -54,26 +62,42 @@ def matricula_h_nuevo_ingreso_view(request):
 
     # 🔍 Preparar datos para gráficas
     datos_por_ciclo = defaultdict(int)
-    for d in datos:
-        key = f"{d.ciclo_periodo.ciclo.anio} - {d.ciclo_periodo.periodo.clave}"
-        datos_por_ciclo[key] += d.cantidad
+    programas_totales = defaultdict(lambda: [0] * 20)  # Máximo 20 ciclos
+    ciclos_unicos = []
 
-    labels = list(sorted(datos_por_ciclo.keys()))
+    for d in datos:
+        ciclo_label = f"{d.ciclo_periodo.ciclo.anio} - {d.ciclo_periodo.periodo.clave}"
+        if ciclo_label not in ciclos_unicos:
+            ciclos_unicos.append(ciclo_label)
+        datos_por_ciclo[ciclo_label] += d.cantidad
+
+        prog = str(d.programa_antiguo or d.programa_nuevo)
+        index = ciclos_unicos.index(ciclo_label)
+        programas_totales[prog][index] += d.cantidad
+
+    labels = ciclos_unicos
     valores = [datos_por_ciclo[label] for label in labels]
 
-    datos_grafica_json = json.dumps({
+    total_antiguos = sum(d.cantidad for d in datos if d.programa_antiguo)
+    total_nuevos = sum(d.cantidad for d in datos if d.programa_nuevo)
+
+    datos_dashboard = {
         "labels": labels,
-        "valores": valores
-    })
+        "totales": valores,
+        "total_antiguos": total_antiguos,
+        "total_nuevos": total_nuevos,
+        "programas_totales": programas_totales
+    }
 
     return render(request, 'matricula_h_nuevo_ingreso.html', {
         'datos': datos,
-        'datos_grafica_json': datos_grafica_json
+        'datos_grafica_json': json.dumps(datos_dashboard),
+        'datos_dashboard': json.dumps(datos_dashboard)
     })
+
 
 def descargar_plantilla_matricula_h_nuevo_ingreso(request):
     ciclo_periodo = CicloPeriodo.objects.order_by('-id').first()
-
     programas_antiguos = ProgramaEducativoAntiguo.objects.all()
     programas_nuevos = ProgramaEducativoNuevo.objects.all()
 
