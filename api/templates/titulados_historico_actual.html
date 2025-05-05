@@ -1,4 +1,4 @@
-{% extends 'base_admin.html' %} 
+{% extends 'base_admin.html' %}
 {% load static %}
 
 {% block title %}Titulados Histórico Actual {% endblock %}
@@ -56,7 +56,15 @@
             <tbody>
                 {% for gen in generaciones %}
                 <tr>
-                    <td>{{ gen.programa_antiguo.nombre|default:gen.programa_nuevo.nombre }}</td>
+                    <td>
+                        {% if gen.programa_antiguo %}
+                            {{ gen.programa_antiguo.nombre }}
+                        {% elif gen.programa_nuevo %}
+                            {{ gen.programa_nuevo.nombre }}
+                        {% else %}
+                            Sin programa
+                        {% endif %}
+                    </td>
                     <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
                     <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
                     <td>{{ gen.total_ingreso }}</td>
@@ -87,7 +95,7 @@
     const ctx = document.getElementById('graficaTasaTitulacion').getContext('2d');
     const etiquetas = [
         {% for gen in generaciones %}
-            "{{ gen.programa_antiguo.nombre|default:gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:"Y" }})",
+            "{% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}{% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}{% else %}Sin programa{% endif %} ({{ gen.fecha_ingreso|date:"Y" }})",
         {% endfor %}
     ];
     const tasas = [
@@ -113,17 +121,13 @@
         },
         options: {
             responsive: true,
-            animation: {
-                duration: 2000
-            },
+            animation: { duration: 2000 },
             plugins: {
                 title: {
                     display: true,
                     text: 'Tasa de Titulación por Generación'
                 },
-                legend: {
-                    display: false
-                }
+                legend: { display: false }
             },
             scales: {
                 y: {

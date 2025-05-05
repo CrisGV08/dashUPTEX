@@ -52,7 +52,15 @@ from api.Administrador.titulados_historico_actual_view import (
     titulados_historico_actual_view, descargar_plantilla_titulados_historico_actual
 )
 
+from api.Administrador.titulados_historico_actual_view import (
+    titulados_historico_actual_view,
+    descargar_plantilla_titulados_historico_actual
+)
+
+
 urlpatterns = [
+
+
     # Home (públicas)
     path('', home_view, name='index'),
     path('login/', login_view, name='login'),
@@ -107,7 +115,10 @@ urlpatterns = [
 
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
     path('administrador/descargar-plantilla-titulados-historico-actual/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
-]
+    path('titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
+    path('titulados-historico-actual/descargar/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+
+]   
 
 # Archivos estáticos
 if settings.DEBUG:

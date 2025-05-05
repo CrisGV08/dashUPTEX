@@ -1,5 +1,3 @@
-#api/Administrador/titulados_historico_actual_view.py
-
 import pandas as pd
 import io
 from django.shortcuts import render, redirect
@@ -15,23 +13,28 @@ def titulados_historico_actual_view(request):
     if request.method == 'POST' and request.FILES.get('archivo_excel'):
         excel = request.FILES['archivo_excel']
         try:
-            df = pd.read_excel(excel, skiprows=5)
+            df = pd.read_excel(excel)
             registros = 0
             errores = []
 
             for i, fila in df.iterrows():
                 try:
-                    nombre_programa = str(fila['PROGRAMA EDUCATIVO']).strip()
-                    programa = ProgramaEducativoAntiguo.objects.filter(nombre__icontains=nombre_programa).first()
+                    id_programa = str(fila['PROGRAMA EDUCATIVO']).strip().upper()
+
+                    programa = ProgramaEducativoAntiguo.objects.filter(id=id_programa).first()
                     if not programa:
-                        programa = ProgramaEducativoNuevo.objects.filter(nombre__icontains=nombre_programa).first()
+                        programa = ProgramaEducativoNuevo.objects.filter(id=id_programa).first()
 
                     if not programa:
-                        errores.append(f"Fila {i+6}: Programa no encontrado ({nombre_programa})")
+                        errores.append(f"Fila {i+2}: 'PROGRAMA EDUCATIVO' ({id_programa}) no encontrado")
                         continue
 
                     ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
                     egreso = pd.to_datetime(fila['EGRESO'], errors='coerce')
+
+                    if pd.isna(ingreso) or pd.isna(egreso):
+                        errores.append(f"Fila {i+2}: Fechas inválidas")
+                        continue
 
                     GeneracionCarrera.objects.create(
                         programa_antiguo=programa if isinstance(programa, ProgramaEducativoAntiguo) else None,
@@ -51,7 +54,7 @@ def titulados_historico_actual_view(request):
                     )
                     registros += 1
                 except Exception as e:
-                    errores.append(f"Fila {i+6}: {str(e)}")
+                    errores.append(f"Fila {i+2}: {str(e)}")
 
             if registros:
                 messages.success(request, f"✅ {registros} registros cargados correctamente.")
@@ -67,33 +70,31 @@ def titulados_historico_actual_view(request):
         'generaciones': generaciones
     })
 
-# NUEVA FUNCIÓN: Exportar plantilla con datos reales
 def descargar_plantilla_titulados_historico_actual(request):
-    generaciones = GeneracionCarrera.objects.select_related(
-        'programa_antiguo', 'programa_nuevo'
-    ).order_by('fecha_ingreso')
+    antiguos = ProgramaEducativoAntiguo.objects.all()
+    nuevos = ProgramaEducativoNuevo.objects.all()
 
     datos = []
-    for g in generaciones:
-        datos.append({
-            'PROGRAMA EDUCATIVO': str(g.programa_antiguo or g.programa_nuevo),
-            'INGRESO': g.fecha_ingreso.strftime('%Y-%m-%d'),
-            'EGRESO': g.fecha_egreso.strftime('%Y-%m-%d'),
-            'ING H': g.ingreso_hombres,
-            'ING M': g.ingreso_mujeres,
-            'EGR COH H': g.egresados_cohorte_h,
-            'EGR COH M': g.egresados_cohorte_m,
-            'EGR REZ H': g.egresados_rezagados_h,
-            'EGR REZ M': g.egresados_rezagados_m,
-            'TIT H': g.titulados_h,
-            'TIT M': g.titulados_m,
-            'REG H': g.registrados_dgp_h,
-            'REG M': g.registrados_dgp_m,
-        })
+    for p in antiguos:
+        datos.append({'PROGRAMA EDUCATIVO': p.id})
+    for p in nuevos:
+        datos.append({'PROGRAMA EDUCATIVO': p.id})
+
+    columnas_extra = [
+        'INGRESO', 'EGRESO', 'ING H', 'ING M',
+        'EGR COH H', 'EGR COH M',
+        'EGR REZ H', 'EGR REZ M',
+        'TIT H', 'TIT M',
+        'REG H', 'REG M'
+    ]
+
+    for row in datos:
+        for col in columnas_extra:
+            row[col] = 0 if 'INGRESO' not in col and 'EGRESO' not in col else ''
 
     df = pd.DataFrame(datos)
-    buffer = io.BytesIO()
 
+    buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Titulados')
 
