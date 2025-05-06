@@ -1,34 +1,10 @@
-{% extends 'base_admin.html' %}
+{% extends 'base.html' %}
 {% block title %}Indicadores Generales{% endblock %}
 
 {% block content %}
-<h1>Reprobación y Deserción</h1>
+<h1 style="text-align: center;">Reprobación y Deserción</h1>
 
-<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
-    <div>
-        <a href="{% url 'descargar_plantilla_indicadores' %}" class="btn-primary"
-           style="padding: 10px 20px; border-radius: 8px; background-color: #007bff; color: white; font-weight: bold;">
-            <i class="fas fa-download"></i> Descargar Plantilla
-        </a>
-
-        <form method="POST" enctype="multipart/form-data" action="{% url 'subir_csv_indicadores' %}" style="margin-top: 10px;">
-            {% csrf_token %}
-            <input type="file" name="archivo_csv" accept=".csv" required style="margin-top: 10px;">
-            <button type="submit" class="btn-primary"
-                    style="margin-top: 10px; padding: 10px 20px; border-radius: 8px; background-color: #28a745; color: white; font-weight: bold;">
-                <i class="fas fa-upload"></i> Subir Indicadores
-            </button>
-        </form>
-
-        {% if mensaje %}
-        <div style="margin-top: 15px; padding: 10px; background-color: #d4edda; color: #155724; border-radius: 5px;">
-            {{ mensaje|safe }}
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<form method="GET" style="margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
+<form method="GET" style="margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
     <div>
         <label><strong>Ciclo:</strong></label>
         <select id="filtroAnio" name="filtro_anio" onchange="this.form.submit()">
@@ -53,7 +29,7 @@
     <div style="flex: 1; max-width: 600px; margin: auto;">
         <h2 style="margin-bottom: 20px; text-align: center;">Visualización Dinámica de Indicadores</h2>
         <div id="contenedorGraficas"
-             style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center; max-width: 600px; margin: auto;">
+             style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center;">
             <canvas id="graficaBarras" width="100" height="80" style="border-radius: 12px;"></canvas>
             <canvas id="graficaLinea" width="100" height="80" style="border-radius: 12px;"></canvas>
             <canvas id="graficaPastel" width="100" height="100" style="border-radius: 12px;"></canvas>

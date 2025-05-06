@@ -1,0 +1,114 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Titulados Histórico Actual{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <h1>Titulados Histórico Actual</h1>
+
+    <!-- Tabla de Generaciones -->
+    <h2 style="text-align: center;">Generaciones Registradas</h2>
+    <div class="table-responsive" style="margin-top: 20px;">
+        <table class="crud-table">
+            <thead>
+                <tr>
+                    <th>Programa</th>
+                    <th>Ingreso</th>
+                    <th>Egreso</th>
+                    <th>Ingreso Total</th>
+                    <th>Egresados</th>
+                    <th>Titulados</th>
+                    <th>Registrados DGP</th>
+                    <th>Tasa de Titulación (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gen in generaciones %}
+                <tr>
+                    <td>
+                        {% if gen.programa_antiguo %}
+                            {{ gen.programa_antiguo.nombre }}
+                        {% elif gen.programa_nuevo %}
+                            {{ gen.programa_nuevo.nombre }}
+                        {% else %}
+                            Sin programa
+                        {% endif %}
+                    </td>
+                    <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
+                    <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
+                    <td>{{ gen.total_ingreso }}</td>
+                    <td>{{ gen.total_egresados }}</td>
+                    <td>{{ gen.total_titulados }}</td>
+                    <td>{{ gen.total_dgp }}</td>
+                    <td>{{ gen.tasa_titulacion }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">No hay registros disponibles.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráfica -->
+    {% if generaciones %}
+    <div style="margin-top: 50px;">
+        <h2 style="text-align: center;">Evolución de Tasa de Titulación</h2>
+        <canvas id="graficaTasaTitulacion" width="100%" height="40"></canvas>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    {% if generaciones %}
+    const ctx = document.getElementById('graficaTasaTitulacion').getContext('2d');
+    const etiquetas = [
+        {% for gen in generaciones %}
+            "{% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}{% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}{% else %}Sin programa{% endif %} ({{ gen.fecha_ingreso|date:"Y" }})",
+        {% endfor %}
+    ];
+    const tasas = [
+        {% for gen in generaciones %}
+            {{ gen.tasa_titulacion }},
+        {% endfor %}
+    ];
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: etiquetas,
+            datasets: [{
+                label: 'Tasa de Titulación (%)',
+                data: tasas,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Tasa de Titulación por Generación'
+                },
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Porcentaje (%)'
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

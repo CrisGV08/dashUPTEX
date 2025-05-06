@@ -4,104 +4,116 @@
 {% block title %}Matrícula por Cuatrimestre{% endblock %}
 
 {% block content %}
-<div class="admin-panel">
-    <h1 style="text-align: center;">Matrícula por Cuatrimestre</h1>
+<div class="user-panel">
+  <h1>Matrícula por Cuatrimestre</h1>
 
-    <!-- Filtros -->
-    <form method="get" class="crud-form" style="text-align: center; margin-bottom: 20px;">
-        <select name="ciclo">
-            <option value="Todos">Todos los ciclos</option>
-            {% for c in ciclos %}
-                <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
-                    {{ c.ciclo.anio }} - {{ c.periodo.clave }}
-                </option>
-            {% endfor %}
-        </select>
+  <!-- Filtros -->
+  <form method="get" class="user-form">
+    <select name="ciclo">
+      <option value="Todos">Todos los ciclos</option>
+      {% for c in ciclos %}
+        <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
+          {{ c.ciclo.anio }} - {{ c.periodo.clave }}
+        </option>
+      {% endfor %}
+    </select>
 
-        <select name="programa">
-            <option value="Todos">Todos los programas</option>
-            {% for p in programas %}
-                <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>
-                    {{ p.nombre }}
-                </option>
-            {% endfor %}
-        </select>
+    <select name="programa">
+      <option value="Todos">Todos los programas</option>
+      {% for p in programas %}
+        <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+      {% endfor %}
+    </select>
 
-        <button type="submit" class="btn-admin">Filtrar</button>
-    </form>
+    <button type="submit" class="btn-user">Filtrar</button>
+  </form>
 
-    <!-- Tabla de resultados -->
-    <div style="margin-top: 20px;">
-        <table class="crud-table" style="margin: auto;">
-            <thead>
-                <tr>
-                    <th>Programa</th>
-                    <th>Periodo</th>
-                    <th>Matrícula</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for fila in tabla %}
-                <tr>
-                    <td>{{ fila.programa }}</td>
-                    <td>{{ fila.periodo }}</td>
-                    <td>{{ fila.cantidad }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3">No hay datos disponibles.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <!-- Tabla de resultados -->
+  <div class="mt-3">
+    <table class="user-table">
+      <thead>
+        <tr><th>Programa</th><th>Periodo</th><th>Matrícula</th></tr>
+      </thead>
+      <tbody>
+        {% for fila in tabla %}
+          <tr><td>{{ fila.programa }}</td><td>{{ fila.periodo }}</td><td>{{ fila.cantidad }}</td></tr>
+        {% empty %}
+          <tr><td colspan="3">No hay datos disponibles.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-    <!-- Gráfica con animación -->
-    <div style="margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
-        <canvas id="graficaMatricula" height="200"></canvas>
-    </div>
+  <!-- Gráficas -->
+  <div class="mt-5">
+    <canvas id="graficaHorizontal" height="60"></canvas>
+    <canvas id="graficaArea" height="60" class="mt-5"></canvas>
+    <canvas id="graficaRadar" height="60" class="mt-5"></canvas>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('graficaMatricula').getContext('2d');
-    const datos = JSON.parse('{{ datos_grafica|safe }}');
+  const datos = JSON.parse('{{ datos_grafica|safe }}');
+  const labels = datos.labels;
+  const valores = datos.valores;
 
-    const grafica = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: datos.labels,
-            datasets: [{
-                label: 'Matrícula por periodo',
-                data: [],
-                borderWidth: 1,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            }]
-        },
-        options: {
-            animation: {
-                duration: 1500,
-                easing: 'easeOutBounce'
-            },
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+  new Chart(document.getElementById('graficaHorizontal'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Matrícula por Periodo',
+        data: valores,
+        backgroundColor: 'rgba(255, 159, 64, 0.6)'
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      scales: { x: { beginAtZero: true } }
+    }
+  });
 
-    let index = 0;
-    const valores = datos.valores;
-    const intervalo = setInterval(() => {
-        if (index >= valores.length) {
-            clearInterval(intervalo);
-        } else {
-            grafica.data.datasets[0].data.push(valores[index]);
-            grafica.update();
-            index++;
+  new Chart(document.getElementById('graficaArea'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tendencia Acumulada',
+        data: valores,
+        fill: true,
+        backgroundColor: 'rgba(153, 102, 255, 0.3)',
+        borderColor: 'rgba(153, 102, 255, 1)',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  new Chart(document.getElementById('graficaRadar'), {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Comparativa Radar',
+        data: valores,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        pointBackgroundColor: 'rgba(54, 162, 235, 1)'
+      }]
+    },
+    options: {
+      responsive: true,
+      elements: {
+        line: {
+          borderWidth: 2
         }
-    }, 300);
+      }
+    }
+  });
 </script>
 {% endblock %}
