@@ -58,6 +58,12 @@ from api.Administrador.titulados_historico_actual_view import (
     descargar_plantilla_titulados_historico_actual
 )
 
+
+from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
+
+
+
+
 urlpatterns = [
     # Home públicas
     path('', home_view, name='index'),
@@ -110,6 +116,15 @@ urlpatterns = [
     path('administrador/descargar-plantilla-matricula-h-nuevo-ingreso/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
     path('administrador/descargar-plantilla-titulados-historico-actual/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+
+
+    path(
+        'evaluacion-docente-cuatrimestre/',
+        evaluacion_docente_cuatrimestre_view,
+        name='evaluacion_docente_cuatrimestre'
+    ),
+
+
 ]
 
 # Archivos estáticos en desarrollo

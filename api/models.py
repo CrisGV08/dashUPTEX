@@ -227,3 +227,132 @@ class GeneracionCarrera(models.Model):
     def __str__(self):
         prog = self.programa_antiguo or self.programa_nuevo
         return f"{prog} ({self.fecha_ingreso.strftime('%m-%Y')} - {self.fecha_egreso.strftime('%m-%Y')})"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class TituladosHistoricos(models.Model):
+    anio_ingreso = models.IntegerField()
+    anio_egreso = models.IntegerField()
+
+    programa_antiguo = models.ForeignKey('ProgramaEducativoAntiguo', on_delete=models.CASCADE, null=True, blank=True)
+    programa_nuevo = models.ForeignKey('ProgramaEducativoNuevo', on_delete=models.CASCADE, null=True, blank=True)
+
+    titulados_hombres = models.IntegerField(default=0)
+    titulados_mujeres = models.IntegerField(default=0)
+
+    registrados_dgp_h = models.IntegerField(default=0)
+    registrados_dgp_m = models.IntegerField(default=0)
+
+    @property
+    def total_titulados(self):
+        return self.titulados_hombres + self.titulados_mujeres
+
+    @property
+    def total_dgp(self):
+        return self.registrados_dgp_h + self.registrados_dgp_m
+
+    def __str__(self):
+        prog = self.programa_antiguo or self.programa_nuevo
+        return f"{prog} - Ingreso {self.anio_ingreso} / Egreso {self.anio_egreso}"
+
+
+
+
+class TasaTitulacion(models.Model):
+    anio_ingreso = models.IntegerField()
+
+    programa_antiguo = models.ForeignKey('ProgramaEducativoAntiguo', on_delete=models.CASCADE, null=True, blank=True)
+    programa_nuevo = models.ForeignKey('ProgramaEducativoNuevo', on_delete=models.CASCADE, null=True, blank=True)
+
+    matricula_ingreso = models.IntegerField(default=0)
+    egresados = models.IntegerField(default=0)
+    eficiencia_terminal_porcentaje = models.FloatField(default=0.0)
+    titulados = models.IntegerField(default=0)
+    tasa_titulacion = models.FloatField(default=0.0)
+
+    def __str__(self):
+        prog = self.programa_antiguo or self.programa_nuevo
+        return f"{prog} - {self.anio_ingreso}"
+
+
+
+
+
+
+class SeguimientoLaboral(models.Model):
+    programa_antiguo = models.ForeignKey('ProgramaEducativoAntiguo', on_delete=models.CASCADE, null=True, blank=True)
+    programa_nuevo = models.ForeignKey('ProgramaEducativoNuevo', on_delete=models.CASCADE, null=True, blank=True)
+
+    fecha_ingreso = models.DateField()
+    fecha_egreso = models.DateField()
+
+    ingreso_h = models.IntegerField(default=0)
+    ingreso_m = models.IntegerField(default=0)
+
+    egresados_total = models.IntegerField(default=0)
+    titulados_total = models.IntegerField(default=0)
+    registrados_dgp_total = models.IntegerField(default=0)
+
+    egresados_trabajan = models.IntegerField(default=0)
+    egresados_trabajan_area = models.IntegerField(default=0)
+
+    indice_egreso = models.FloatField(default=0.0)         # %
+    indice_titulacion = models.FloatField(default=0.0)     # %
+
+    def __str__(self):
+        prog = self.programa_antiguo or self.programa_nuevo
+        return f"{prog} - {self.fecha_ingreso.strftime('%m-%Y')} / {self.fecha_egreso.strftime('%m-%Y')}"
+
+
+
+class EvaluacionDocente(models.Model):
+    ciclo_periodo = models.ForeignKey('CicloPeriodo', on_delete=models.CASCADE)
+    profesor = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=5, choices=[('PA', 'PA'), ('PTC', 'PTC')])
+
+    calificacion_grupal = models.FloatField()
+    evaluaciones_realizadas = models.IntegerField(default=0)
+    promedio_docente = models.FloatField()
+
+    class Meta:
+        unique_together = ('ciclo_periodo', 'profesor')
+
+    def __str__(self):
+        return f"{self.profesor} - {self.ciclo_periodo} ({self.tipo})"
+
+
+
+class EvaluacionDocenteCuatrimestre(models.Model):
+    ciclo_periodo = models.ForeignKey('CicloPeriodo', on_delete=models.CASCADE, unique=True)
+    promedio_general = models.FloatField()
+
+    def __str__(self):
+        return f"{self.ciclo_periodo} - {self.promedio_general}"
+
+
+
+
+
+
+
+
+
