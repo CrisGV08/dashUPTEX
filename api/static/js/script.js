@@ -85,3 +85,23 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll(".menu a").forEach(link => {
+        const linkPath = link.getAttribute("href");
+        if (linkPath === currentPath) {
+            link.classList.add("active");
+            const submenu = link.closest(".submenu");
+            if (submenu) {
+                submenu.style.display = "block";
+                const parentMenuLink = submenu.previousElementSibling;
+                if (parentMenuLink) {
+                    parentMenuLink.classList.add("active");
+                }
+            }
+        }
+    });
+});

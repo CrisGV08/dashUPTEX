@@ -305,3 +305,12 @@ p {
     scrollbar-color: #1abc9c transparent;
     scrollbar-width: thin;
 }
+
+
+
+.menu a.active {
+    background-color: #007bff;
+    color: white !important;
+    font-weight: bold;
+    border-left: 4px solid #0056b3;
+}

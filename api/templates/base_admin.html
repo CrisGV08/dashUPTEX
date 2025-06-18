@@ -1,8 +1,5 @@
 
-
-
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -31,91 +28,83 @@
 <body>
 <div class="sidebar">
     <div class="sidebar-logo" style="text-align: center; margin-bottom: 20px;">
-            <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;">
+        <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;">
     </div>
 
     <div class="menu-container">
         <ul class="menu">
             <li class="menu-item">
-                <a href="{% url 'examen_admision' %}"><i class="fas fa-file-signature"></i> Examen Admisión y Crear Ciclo Nuevo</a>
+                <a href="{% url 'examen_admision' %}" data-menu="/examen_admision/"><i class="fas fa-file-signature"></i> Examen Admisión y Crear Ciclo Nuevo</a>
             </li>
 
-        <li class="menu-item">
-                <a href="#"><i class="fas fa-user-shield"></i> Matricula</a>
+            <li class="menu-item">
+                <a href="#" data-menu="matricula"><i class="fas fa-user-shield"></i> Matricula</a>
                 <ul class="submenu">
                     <li class="menu-item">
-                <a href="{% url 'matricula_h_nuevo_ingreso' %}"><i class="fas fa-file-signature"></i> Matricula H. Nuevo Ingreso</a>
+                        <a href="{% url 'matricula_h_nuevo_ingreso' %}" data-submenu="/matricula_h_nuevo_ingreso/"><i class="fas fa-file-signature"></i> Matricula H. Nuevo Ingreso</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'matricula_historica' %}"><i class="fas fa-file-signature"></i> Matricula Historica</a>
+                        <a href="{% url 'matricula_historica' %}" data-submenu="/matricula_historica/"><i class="fas fa-file-signature"></i> Matricula Historica</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'matricula_por_genero' %}"><i class="fas fa-file-signature"></i> Matricula Por Genero</a>
+                        <a href="{% url 'matricula_por_genero' %}" data-submenu="/matricula_por_genero/"><i class="fas fa-file-signature"></i> Matricula Por Genero</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'matricula_por_anio' %}"><i class="fas fa-chart-bar"></i> Matrícula Anual</a>
+                        <a href="{% url 'matricula_por_anio' %}" data-submenu="/matricula_por_anio/"><i class="fas fa-chart-bar"></i> Matrícula Anual</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'matricula_por_cuatrimestre' %}"><i class="fas fa-layer-group"></i> Matricula por cuatrimestre</a>
+                        <a href="{% url 'matricula_por_cuatrimestre' %}" data-submenu="/matricula_por_cuatrimestre/"><i class="fas fa-layer-group"></i> Matricula por cuatrimestre</a>
                     </li>
                 </ul>
+            </li>
 
             <li class="menu-item">
-                <a href="#"><i class="fas fa-user-shield"></i> Escolar</a>
+                <a href="#" data-menu="escolar"><i class="fas fa-user-shield"></i> Escolar</a>
                 <ul class="submenu">
                     <li class="menu-item">
-                <a href="{% url 'aprovechamiento' %}"><i class="fas fa-chart-pie"></i> Aprovechamiento Académico</a>
+                        <a href="{% url 'aprovechamiento' %}" data-submenu="/aprovechamiento/"><i class="fas fa-chart-pie"></i> Aprovechamiento Académico</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'indicadores_generales' %}"><i class="fas fa-user-minus"></i> Deserción y Reprobación</a>
+                        <a href="{% url 'indicadores_generales' %}" data-submenu="/indicadores_generales/"><i class="fas fa-user-minus"></i> Deserción y Reprobación</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'eficiencia_terminal' %}"><i class="fas fa-user-minus"></i> Eficiencia Terminal Historico</a>
+                        <a href="{% url 'eficiencia_terminal' %}" data-submenu="/eficiencia_terminal/"><i class="fas fa-user-minus"></i> Eficiencia Terminal Historico</a>
                     </li>
                     <li class="menu-item">
-                <a href="{% url 'titulados_historico_actual' %}"><i class="fas fa-certificate"></i> Titulados Historico Actual</a>
+                        <a href="{% url 'titulados_historico_actual' %}" data-submenu="/titulados_historico_actual/"><i class="fas fa-certificate"></i> Titulados Historico Actual</a>
                     </li>
                 </ul>
-
-            </li>
-            <li class="menu-item">
-                <a href="{% url 'evaluacion_docente_cuatrimestre' %}"><i class="fas fa-graduation-cap"></i> Evaluacion Docente por Cuatrimestre</a>
-            </li>
-
-            
-            <li class="menu-item">
-                <a href=""><i class="fas fa-graduation-cap"></i> Seguimiento Laboral</a>
-            </li>
-
-
-            <li class="menu-item">
-                <a href=""><i class="fas fa-graduation-cap"></i> Tasa de Titulacion</a>
-            </li>
-
-
-            <li class="menu-item">
-                <a href=""><i class="fas fa-graduation-cap"></i> Titulados Históricos</a>
-            </li>
-
-
-            
-            <li class="menu-item">
-                <a href=""><i class="fas fa-graduation-cap"></i> Evaluacion Docente</a>
             </li>
 
             <li class="menu-item">
-                <a href="{% url 'subir_carreras' %}"><i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas</a>
+                <a href="{% url 'evaluacion_docente_cuatrimestre' %}" data-menu="/evaluacion_docente_cuatrimestre/"><i class="fas fa-graduation-cap"></i> Evaluacion Docente por Cuatrimestre</a>
             </li>
 
-
-
-
+            <li class="menu-item">
+                <a href="#"><i class="fas fa-graduation-cap"></i> Seguimiento Laboral</a>
+            </li>
 
             <li class="menu-item">
-                <a href="#"><i class="fas fa-user-shield"></i> Salir</a>
+                <a href="#"><i class="fas fa-graduation-cap"></i> Tasa de Titulacion</a>
+            </li>
+
+            <li class="menu-item">
+                <a href="#"><i class="fas fa-graduation-cap"></i> Titulados Históricos</a>
+            </li>
+
+            <li class="menu-item">
+                <a href="#"><i class="fas fa-graduation-cap"></i> Evaluacion Docente</a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{% url 'subir_carreras' %}" data-menu="/subir_carreras/"><i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas</a>
+            </li>
+
+            <li class="menu-item">
+                <a href="#" data-menu="salir"><i class="fas fa-user-shield"></i> Salir</a>
                 <ul class="submenu">
                     <li class="menu-item">
-                        <a href="{% url 'login' %}"><i class="fas fa-stopwatch"></i> Logout</a>
+                        <a href="{% url 'login' %}" data-submenu="/login/"><i class="fas fa-stopwatch"></i> Logout</a>
                     </li>
                 </ul>
             </li>
