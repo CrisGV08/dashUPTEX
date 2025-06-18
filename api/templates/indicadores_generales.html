@@ -1,119 +1,129 @@
 {% extends 'base_admin.html' %}
 {% load static %}
 
-{% block title %}Indicador Reprobación y Deserción{% endblock %}
+{% block title %}Reprobación y Deserción{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2><i class="fas fa-user-minus"></i> Reprobación y Deserción</h2>
+<h2 class="titulo-seccion"><i class="fas fa-user-minus"></i> Reprobación y Deserción</h2>
 
-    <!-- Botones principales -->
-    <div class="mb-3">
-        <a href="{% url 'descargar_plantilla_indicador' %}" class="btn btn-primary">
-            <i class="fas fa-download"></i> Descargar Plantilla
-        </a>
-        <form action="{% url 'subir_indicadores_generales' %}" method="POST" enctype="multipart/form-data" style="display: inline-block">
-            {% csrf_token %}
-            <input type="file" name="archivo" accept=".xlsx, .xls" required>
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-upload"></i> Subir Indicadores
-            </button>
-        </form>
-    </div>
+<!-- 🧩 Botones de acciones -->
+<div style="margin-bottom: 20px; display: flex; gap: 10px;">
+  <a href="{% url 'descargar_plantilla_indicador' %}" class="btn btn-primary">
+    <i class="fas fa-download"></i> Descargar plantilla
+  </a>
 
-    <!-- Filtros -->
-    <form method="GET" action="" class="row g-3">
-        <div class="col-md-2">
-            <label class="form-label">Año</label>
-            <select name="anio" class="form-select">
-                <option value="">Todos</option>
-                {% for a in anios %}
-                    <option value="{{ a.anio }}" {% if anio_actual == a.anio|stringformat:"s" %}selected{% endif %}>{{ a.anio }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">Período</label>
-            <select name="periodo" class="form-select">
-                <option value="">Todos</option>
-                {% for p in periodos %}
-                    <option value="{{ p.clave }}" {% if periodo_actual == p.clave %}selected{% endif %}>{{ p.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Tipo de Programa</label>
-            <select name="tipo_programa" class="form-select">
-                <option value="">Todos</option>
-                <option value="nuevo" {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevo</option>
-                <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguo</option>
-            </select>
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Carrera</label>
-            <select name="carrera" class="form-select">
-                <option value="">Todas</option>
-                {% for carrera in carreras %}
-                    <option value="{{ carrera.id }}" {% if carrera_actual == carrera.id %}selected{% endif %}>{{ carrera.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">Tipo de gráfica</label>
-            <select name="tipo_grafica" class="form-select">
-                <option value="todos">Todos</option>
-                <option value="lineal" {% if tipo_grafica == 'lineal' %}selected{% endif %}>Lineal</option>
-                <option value="barras" {% if tipo_grafica == 'barras' %}selected{% endif %}>Barras</option>
-                <option value="pastel" {% if tipo_grafica == 'pastel' %}selected{% endif %}>Pastel</option>
-                <option value="campana" {% if tipo_grafica == 'campana' %}selected{% endif %}>Campana de Gauss</option>
-            </select>
-        </div>
-
-        <div class="col-md-12 text-end">
-            <button type="submit" class="btn btn-info">
-                <i class="fas fa-filter"></i> Aplicar Filtros
-            </button>
-        </div>
-    </form>
-
-    <!-- Gráficas -->
-    <div class="mt-4">
-        {% if datos %}
-            <canvas id="graficaReprobacion" height="100"></canvas>
-        {% else %}
-            <p class="text-danger mt-4">No hay datos disponibles para graficar</p>
-        {% endif %}
-    </div>
-
-    <!-- Tabla resumen -->
-    {% if datos %}
-        <h4 class="mt-4">Detalle de Indicadores</h4>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Periodo</th>
-                    <th>Matrícula</th>
-                    <th>Deserción</th>
-                    <th>Reprobación</th>
-                    <th>Egresados</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in datos %}
-                    <tr>
-                        <td>{{ d.periodo }}</td>
-                        <td>{{ d.matricula }}</td>
-                        <td>{{ d.desertores }}</td>
-                        <td>{{ d.reprobados }}</td>
-                        <td>{{ d.egresados }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+  <form action="{% url 'cargar_indicadores_generales' %}" method="POST" enctype="multipart/form-data" style="display:inline-block;">
+    {% csrf_token %}
+    <input type="file" name="archivo" accept=".xlsx,.xls" required>
+    <button type="submit" class="btn btn-success">
+      <i class="fas fa-upload"></i> Subir indicadores
+    </button>
+  </form>
 </div>
+
+<!-- 🎯 Filtros -->
+<form method="get" class="filtro-form">
+  <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+    <legend><strong>Filtros</strong></legend>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+      <div>
+        <label for="anio">Año:</label>
+        <select name="anio" id="anio" class="form-control">
+          <option value="">Todos</option>
+          {% for ciclo in ciclos %}
+            <option value="{{ ciclo.anio }}" {% if ciclo.anio|stringformat:"s" == anio_actual %}selected{% endif %}>{{ ciclo.anio }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="periodo">Periodo:</label>
+<select name="periodo" id="periodo">
+    <option value="">Todos</option>
+    {% for p in periodos %}
+        <option value="{{ p.clave }}" {% if periodo_actual == p.clave %}selected{% endif %}>
+            {{ p.nombre }}
+        </option>
+    {% endfor %}
+</select>
+      </div>
+
+      <div>
+        <label for="tipo_programa">Tipo de programa:</label>
+        <select name="tipo_programa" id="tipo_programa" class="form-control">
+          <option value="">Todos</option>
+          <option value="nuevo" {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevos</option>
+          <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguos</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="carrera">Carrera:</label>
+        <select name="carrera" id="carrera">
+        <option value="">Todas</option>
+        {% for carrera in carreras %}
+        <option value="{{ carrera.id }}" {% if carrera_actual == carrera.id|stringformat:"s" %}selected{% endif %}>
+            {{ carrera.nombre }}
+        </option>
+        {% endfor %}
+        </select>
+
+      </div>
+
+      <div>
+        <label for="grafica">Tipo de gráfica:</label>
+        <select name="grafica" id="grafica" class="form-control">
+          <option value="">Todos</option>
+          <option value="barras" {% if tipo_grafica == 'barras' %}selected{% endif %}>Barras</option>
+          <option value="pastel" {% if tipo_grafica == 'pastel' %}selected{% endif %}>Pastel</option>
+          <option value="linea" {% if tipo_grafica == 'linea' %}selected{% endif %}>Línea</option>
+          <option value="gauss" {% if tipo_grafica == 'gauss' %}selected{% endif %}>Campana de Gauss</option>
+        </select>
+      </div>
+
+      <div style="align-self: flex-end;">
+        <button type="submit" class="btn btn-outline-primary"><i class="fas fa-filter"></i> Aplicar</button>
+      </div>
+    </div>
+  </fieldset>
+</form>
+
+<!-- 📊 Resultados -->
+<h4 class="mt-4"><i class="fas fa-chart-bar"></i> Detalle de indicadores</h4>
+
+<table class="table table-bordered table-striped mt-3">
+  <thead class="table-dark">
+    <tr>
+      <th>Periodo</th>
+      <th>Matrícula</th>
+      <th>Deserción</th>
+      <th>Reprobación</th>
+      <th>Egresados</th>
+      <th>% Deserción</th>
+      <th>% Reprobación</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in datos %}
+    <tr>
+      <td>{{ d.periodo }}</td>
+      <td>{{ d.matricula }}</td>
+      <td>{{ d.desertores }}</td>
+      <td>{{ d.reprobados }}</td>
+      <td>{{ d.egresados }}</td>
+      <td>{{ d.porc_desercion }}%</td>
+      <td>{{ d.porc_reprobacion }}%</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-center text-danger">No hay datos disponibles para mostrar.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- 🧠 Aquí puedes insertar tus gráficas con JS -->
+<div id="contenedor-graficas" class="mt-4">
+  <!-- Gráfica dinámica se cargará aquí usando Chart.js -->
+</div>
+
 {% endblock %}

@@ -1,85 +1,109 @@
-# views/indicadores_generales_view.py
-
-from django.shortcuts import render
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.db.models import Sum
 from django.http import HttpResponse
-import pandas as pd
-from django.contrib import messages
-from django.template.loader import get_template
-from weasyprint import HTML
-from openpyxl import Workbook
-from django.http import HttpResponse
-from api.models import IndicadoresGenerales, CicloEscolar, Periodo, CicloPeriodo, ProgramaEducativoAntiguo, ProgramaEducativoNuevo, MatriculaPorCuatrimestre
-from api.forms import ExcelUploadForm
+from api.models import IndicadoresGenerales, CicloPeriodo, Periodo, CicloEscolar, ProgramaEducativoAntiguo, ProgramaEducativoNuevo
 
 
-def reprobacion_desercion_view(request):
-    filtros = get_filtros_desercion(request)
-    indicadores = filtrar_indicadores_queryset(**filtros)
-    context = generar_contexto_indicadores(request, indicadores, filtros)
-    return render(request, 'indicadores_generales.html', context)
+def cargar_indicadores_generales(request):
+    if request.method == 'POST':
+        archivo = request.FILES['archivo']
+        df = pd.read_excel(archivo)
 
+        for index, row in df.iterrows():
+            try:
+                ciclo_texto = str(row['ciclo_periodo'])  # "2023 - S-D"
+                anio, clave_periodo = [x.strip() for x in ciclo_texto.split('-')]
 
-def get_filtros_desercion(request):
-    anio = request.GET.get('anio')
-    periodo = request.GET.get('periodo')
-    tipo_programa = request.GET.get('tipo_programa')
-    programa = request.GET.get('programa')
-    tipo_grafica = request.GET.get('tipo_grafica', 'todos')
+                ciclo = CicloEscolar.objects.get(anio=int(anio))
+                periodo = Periodo.objects.get(clave=clave_periodo)
+                ciclo_periodo = CicloPeriodo.objects.get(ciclo=ciclo, periodo=periodo)
 
-    return {
-        'anio': anio,
-        'periodo': periodo,
-        'tipo_programa': tipo_programa,
-        'programa': programa,
-        'tipo_grafica': tipo_grafica,
-    }
+                IndicadoresGenerales.objects.update_or_create(
+                    ciclo_periodo=ciclo_periodo,
+                    defaults={
+                        'desertores': row['desertores'],
+                        'reprobados': row['reprobados'],
+                        'egresados': row['egresados'],
+                    }
+                )
+            except Exception as e:
+                print(f"Error en fila {index}: {e}")
+                messages.error(request, f"Error en la fila {index + 2}: {e}")
 
+        messages.success(request, "Archivo procesado correctamente.")
+        return redirect('reprobacion_desercion')
 
-def filtrar_indicadores_queryset(anio, periodo, tipo_programa, programa, tipo_grafica):
-    queryset = IndicadoresGenerales.objects.select_related('ciclo_periodo__ciclo', 'ciclo_periodo__periodo')
-
-    if anio:
-        queryset = queryset.filter(ciclo_periodo__ciclo__anio=anio)
-    if periodo:
-        queryset = queryset.filter(ciclo_periodo__periodo__clave=periodo)
-    if tipo_programa and programa:
-        if tipo_programa == 'antiguo':
-            queryset = queryset.filter(ciclo_periodo__matriculaporcuatrimestre__programa_antiguo__id=programa)
-        else:
-            queryset = queryset.filter(ciclo_periodo__matriculaporcuatrimestre__programa_nuevo__id=programa)
-
-    return queryset.distinct()
-
-
-def generar_contexto_indicadores(request, indicadores, filtros):
-    context = {
-        'form': ExcelUploadForm(),
-        'indicadores': indicadores,
-        'anios': CicloEscolar.objects.all(),
-        'periodos': Periodo.objects.all(),
-        'programas_antiguos': ProgramaEducativoAntiguo.objects.all(),
-        'programas_nuevos': ProgramaEducativoNuevo.objects.all(),
-        'tipo_grafica': filtros['tipo_grafica'],
-        'anio_seleccionado': filtros['anio'],
-        'periodo_seleccionado': filtros['periodo'],
-        'tipo_programa': filtros['tipo_programa'],
-        'programa_seleccionado': filtros['programa'],
-    }
-    return context
+    return redirect('reprobacion_desercion')
 
 
 def descargar_plantilla_indicador(request):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Plantilla Indicadores Generales"
+    with open('static/plantillas/plantilla_indicadores.xlsx', 'rb') as f:
+        response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="plantilla_indicadores.xlsx"'
+        return response
 
-    # Encabezados
-    columnas = ["anio", "periodo", "programa_id", "desertores", "reprobados", "egresados"]
-    ws.append(columnas)
 
-    # Crear respuesta
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="plantilla_indicadores_generales.xlsx"'
-    wb.save(response)
-    return response
+def reprobacion_desercion_view(request):
+    anio = request.GET.get('anio')
+    periodo_clave = request.GET.get('periodo')
+    tipo_programa = request.GET.get('tipo_programa')
+    carrera_id = request.GET.get('carrera')
+    tipo_grafica = request.GET.get('grafica')
+
+    indicadores = IndicadoresGenerales.objects.all()
+
+    if anio:
+        indicadores = indicadores.filter(ciclo_periodo__ciclo__anio=anio)
+    if periodo_clave:
+        indicadores = indicadores.filter(ciclo_periodo__periodo__clave=periodo_clave)
+
+    # Obtener listas de referencia
+    ciclos = CicloEscolar.objects.all().order_by('anio')
+    periodos = Periodo.objects.all().order_by('clave')
+
+    # Obtener carreras según el tipo de programa
+   # Obtener carreras según el tipo de programa
+    if carrera_id:
+        if tipo_programa == 'nuevo':
+            indicadores = indicadores.filter(ciclo_periodo__matriculaporcuatrimestre__programa_nuevo__id=carrera_id)
+        elif tipo_programa == 'antiguo':
+            indicadores = indicadores.filter(ciclo_periodo__matriculaporcuatrimestre__programa_antiguo__id=carrera_id)
+
+# Obtener todas las carreras según el tipo de programa (esto va fuera del if carrera_id)
+    if tipo_programa == 'nuevo':
+        carreras = ProgramaEducativoNuevo.objects.all()
+    elif tipo_programa == 'antiguo':
+        carreras = ProgramaEducativoAntiguo.objects.all()
+    else:
+        carreras = list(ProgramaEducativoNuevo.objects.all()) + list(ProgramaEducativoAntiguo.objects.all())
+
+
+    # Preparar datos para tabla y gráfica
+    datos = []
+    for ind in indicadores:
+        total = ind.desertores + ind.reprobados + ind.egresados
+        datos.append({
+            'periodo': f"{ind.ciclo_periodo.ciclo.anio} - {ind.ciclo_periodo.periodo.clave}",
+            'matricula': total,
+            'desertores': ind.desertores,
+            'reprobados': ind.reprobados,
+            'egresados': ind.egresados,
+            'porc_desercion': round((ind.desertores / total) * 100, 2) if total else 0,
+            'porc_reprobacion': round((ind.reprobados / total) * 100, 2) if total else 0,
+        })
+
+    context = {
+        'datos': datos,
+        'ciclos': ciclos,
+        'periodos': periodos,
+        'carreras': carreras,
+        'anio_actual': anio,
+        'periodo_actual': periodo_clave,
+        'tipo_programa': tipo_programa,
+        'carrera_actual': carrera_id,
+        'tipo_grafica': tipo_grafica,
+    }
+
+    return render(request, 'indicadores_generales.html', context)
