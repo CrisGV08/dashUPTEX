@@ -140,6 +140,8 @@ document.getElementById("btnDescargarPDF").addEventListener("click", async () =>
 
 
 
+
+
 document.getElementById("btnDescargarPDF").addEventListener("click", function () {
     const graficas = {
         linea: "grafico-linea",

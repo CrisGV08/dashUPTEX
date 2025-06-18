@@ -7,6 +7,11 @@
 
 <h2 class="titulo-principal">📊 Evaluación Docente por Cuatrimestre</h2>
 
+<div class="mt-4 text-center">
+    <button id="btnDescargarPDF" class="btn btn-danger">
+        📥 Descargar PDF con Gráficas
+    </button>
+</div>
 
 
 <!-- Formulario de captura -->
@@ -98,19 +103,19 @@
 <div class="row mt-4">
     <div class="col-md-6" id="grafico-linea-container">
         <h6>📈 Gráfico de Línea</h6>
-        <canvas id="grafico-linea" height="180"></canvas>
+        <canvas id="grafico-linea" height="300"></canvas>
     </div>
     <div class="col-md-6" id="grafico-barras-container">
         <h6>📊 Gráfico de Barras</h6>
-        <canvas id="grafico-barras" height="180"></canvas>
+        <canvas id="grafico-barras" height="300"></canvas>
     </div>
     <div class="col-md-6" id="grafico-pastel-container">
         <h6>🥧 Gráfico de Pastel</h6>
-        <canvas id="grafico-pastel" height="180"></canvas>
+        <canvas id="grafico-pastel" height="300"></canvas>
     </div>
     <div class="col-md-6" id="grafico-gauss-container">
         <h6>📉 Gráfico Gaussiano</h6>
-        <canvas id="grafico-gauss" height="180"></canvas>
+        <canvas id="grafico-gauss" height="300"></canvas>
     </div>
 </div>
 
@@ -215,5 +220,53 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+document.getElementById("btnDescargarPDF").addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Título centrado y limpio
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.text("Evaluación Docente por Cuatrimestre", pageWidth / 2, 20, { align: "center" });
+
+    const visibleCharts = [
+        "grafico-linea-container",
+        "grafico-barras-container",
+        "grafico-pastel-container",
+        "grafico-gauss-container"
+    ];
+
+    let yOffset = 30;
+
+    for (const id of visibleCharts) {
+        const container = document.getElementById(id);
+        if (container && container.style.display !== 'none') {
+           await html2canvas(container, { scale: 3 }).then(canvas => {
+    const maxWidth = 450;
+    const width = Math.min(maxWidth, canvas.width / 3); // corregimos al dividir entre scale
+    const height = canvas.height * (width / canvas.width);
+
+    if (yOffset + height > 280) {
+        doc.addPage();
+        yOffset = 20;
+    }
+
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, yOffset, width, height);
+    yOffset += height + 15;
+});
+        }
+    }
+
+    doc.save("Evaluacion_Docente_por_Cuatrimestre.pdf");
+});
+
+</script>
+
 
 {% endblock %}
