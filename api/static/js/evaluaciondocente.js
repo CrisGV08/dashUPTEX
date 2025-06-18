@@ -1,7 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    const etiquetas = JSON.parse(document.getElementById("etiquetas-data").textContent);
-    const valores = JSON.parse(document.getElementById("valores-data").textContent);
+    const etiquetas = {{ etiquetas|safe }};
+    const valores = {{ promedios|safe }};
 
     const charts = {
         linea: crearLinea(etiquetas, valores),
@@ -14,12 +14,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const seleccionados = [...document.querySelectorAll('#filtro-ciclos option:checked')].map(opt => opt.value);
         const checks = [...document.querySelectorAll('.form-check-input')];
 
-        // Mostrar/ocultar gráficas
         checks.forEach(chk => {
-            document.getElementById(`grafico-${chk.value}-container`).style.display = chk.checked ? 'block' : 'none';
+            const contenedor = document.getElementById(`grafico-${chk.value}-container`);
+            if (contenedor) {
+                contenedor.style.display = chk.checked ? 'block' : 'none';
+            }
         });
 
-        // Filtrar datos
         const nuevasEtiquetas = [], nuevosValores = [];
         etiquetas.forEach((et, i) => {
             if (seleccionados.includes(et)) {
@@ -28,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // Actualizar todas las gráficas
         Object.entries(charts).forEach(([key, chart]) => {
             chart.data.labels = nuevasEtiquetas;
             chart.data.datasets[0].data = key === 'gauss' ? calcularGauss(nuevosValores) : nuevosValores;
@@ -110,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
 document.getElementById("btnDescargarPDF").addEventListener("click", async () => {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -125,7 +124,7 @@ document.getElementById("btnDescargarPDF").addEventListener("click", async () =>
 
     for (const id of visibleCharts) {
         const container = document.getElementById(id);
-        if (container.style.display !== 'none') {
+        if (container && container.style.display !== 'none') {
             await html2canvas(container).then(canvas => {
                 const imgData = canvas.toDataURL("image/png");
                 const width = 180;
@@ -140,4 +139,65 @@ document.getElementById("btnDescargarPDF").addEventListener("click", async () =>
 });
 
 
+
+document.getElementById("btnDescargarPDF").addEventListener("click", function () {
+    const graficas = {
+        linea: "grafico-linea",
+        barras: "grafico-barras",
+        pastel: "grafico-pastel",
+        gauss: "grafico-gauss"
+    };
+
+    const seleccionadas = [];
+
+    document.querySelectorAll(".form-check-input").forEach(chk => {
+        if (chk.checked) {
+            const id = graficas[chk.value];
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                const imgBase64 = canvas.toDataURL("image/png");
+                seleccionadas.push({
+                    nombre: chk.nextElementSibling.textContent,
+                    imagen: imgBase64
+                });
+            }
+        }
+    });
+
+    fetch("/descargar_graficas_pdf/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            imagenes: seleccionadas.map(g => g.imagen),
+            nombres: seleccionadas.map(g => g.nombre)
+        })
+    })
+    .then(resp => resp.blob())
+    .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "graficas_evaluacion_docente.pdf";
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 

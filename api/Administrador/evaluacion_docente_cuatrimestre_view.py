@@ -30,3 +30,6 @@ def evaluacion_docente_cuatrimestre_view(request):
         'promedios': json.dumps(promedios)
     }
     return render(request, 'Evaluacion_docente_cuatrimestre.html', context)
+
+
+
