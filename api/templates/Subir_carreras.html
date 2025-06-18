@@ -1,0 +1,123 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Subir Programas Educativos{% endblock %}
+
+{% block content %}
+<!-- Estilos -->
+<link rel="stylesheet" href="{% static 'css/style_buttoms_subircalificaciones.css' %}">
+<link rel="stylesheet" href="{% static 'css/subir_carreras.css' %}">
+
+<div class="container mt-4">
+
+    <!-- Mensajes -->
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+<a href="{% url 'exportar_carreras_pdf' %}" class="btn-descargar">
+    🧾 Exportar Carreras en PDF
+</a>
+    <!-- CONTENEDOR DE TABLAS -->
+    <div class="tabla-programas">
+
+
+        
+        <!-- 📘 ANTIGUOS UNIFICADO -->
+        <div class="tabla-box antiguos">
+            <h3>📘 Programas Educativos Antiguos</h3>
+
+            <!-- Botones de descarga y subida -->
+            <div class="d-flex gap-3 flex-wrap mb-3 align-items-center">
+                <a href="{% url 'generar_plantilla_carreras' %}" class="btn-descargar">
+                    📄 Descargar Plantilla CSV
+                </a>
+                <form method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-3">
+                    {% csrf_token %}
+                    {{ form_antiguos.archivo }}
+                    <button type="submit" name="subir_antiguos" class="btn-subir">⬆️ Subir</button>
+                </form>
+            </div>
+
+            <!-- Tabla -->
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Nombre</th></tr>
+                </thead>
+                <tbody>
+                    {% for programa in antiguos %}
+                    <tr><td>{{ programa.id }}</td><td>{{ programa.nombre }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="2">No hay registros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 📗 NUEVOS UNIFICADO -->
+        <div class="tabla-box nuevos">
+            <h3>📗 Programas Educativos Nuevos</h3>
+
+            <!-- Botones de descarga y subida -->
+            <div class="d-flex gap-3 flex-wrap mb-3 align-items-center">
+                <a href="{% url 'generar_plantilla_nuevos' %}" class="btn-descargar">
+                    📄 Descargar Plantilla CSV
+                </a>
+                <form method="post" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-3">
+                    {% csrf_token %}
+                    {{ form_nuevos.archivo }}
+                    <button type="submit" name="subir_nuevos" class="btn-subir">⬆️ Subir</button>
+                </form>
+            </div>
+
+            <!-- Formulario manual -->
+            <hr class="my-3">
+            <h5 class="mb-3">➕ Agregar Programa Nuevo Manualmente</h5>
+            <form method="post" class="row g-3" id="crud-nuevo-form">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    {{ nuevo_form.id.label_tag }} {{ nuevo_form.id }}
+                </div>
+                <div class="col-md-6">
+                    {{ nuevo_form.nombre.label_tag }} {{ nuevo_form.nombre }}
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" name="agregar_nuevo_manual" class="btn-guardar mt-4">
+                        ➕ Agregar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla -->
+            <table class="mt-4">
+                <thead>
+                    <tr><th>ID</th><th>Nombre</th></tr>
+                </thead>
+                <tbody>
+                    {% for programa in nuevos %}
+                    <tr><td>{{ programa.id }}</td><td>{{ programa.nombre }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="2">No hay registros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para limpiar formulario -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const msg = document.querySelector(".alert-success");
+        if (msg && msg.innerText.includes("agregado correctamente")) {
+            const form = document.getElementById("crud-nuevo-form");
+            if (form) {
+                form.reset();
+            }
+        }
+    });
+</script>
+{% endblock %}

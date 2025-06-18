@@ -57,6 +57,13 @@ from api.Administrador.titulados_historico_actual_view import (
 
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
 
+from api.Administrador.subir_carreras_view import (
+    subir_carreras_view,
+    generar_plantilla_csv,
+    generar_plantilla_nuevos_csv,
+)
+
+from api.Administrador.subir_carreras_view import exportar_carreras_pdf
 
 
 
@@ -119,6 +126,13 @@ urlpatterns = [
         evaluacion_docente_cuatrimestre_view,
         name='evaluacion_docente_cuatrimestre'
     ),
+
+  path("subir-carreras/", subir_carreras_view, name="subir_carreras"),
+    path("plantilla-carreras/", generar_plantilla_csv, name="generar_plantilla_carreras"),
+    path("plantilla-carreras-nuevos/", generar_plantilla_nuevos_csv, name="generar_plantilla_nuevos"),
+
+
+  path("exportar-carreras-pdf/", exportar_carreras_pdf, name="exportar_carreras_pdf"),
 
 
 ]

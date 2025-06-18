@@ -1,65 +1,121 @@
-/* evaluacion_docente.css */
-.table-evaluacion th {
-    background-color: #c8e6c9;
-    text-align: center;
-}
-
-.table-evaluacion td {
-    background-color: #e3f2fd;
-    text-align: center;
-    font-weight: bold;
-}
-
-.btn-guardar {
-    margin: 15px 0;
-    padding: 10px 25px;
-    background-color: #1976d2;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.btn-guardar:hover {
-    background-color: #1565c0;
-    cursor: pointer;
+/* Estilos generales */
+body {
+    background-color: #f4f8fa;
+    font-family: 'Segoe UI', sans-serif;
 }
 
 .titulo-principal {
     text-align: center;
-    margin-top: 30px;
-    margin-bottom: 20px;
-    font-size: 24px;
+    margin-bottom: 30px;
     font-weight: bold;
+    color: #333;
 }
 
-.grafica-container {
-    margin-top: 50px;
-    text-align: center;
-}
-/* static/css/dashboard.css */
-
-.card-evaluacion {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    padding: 25px;
+/* Tabla */
+.table-evaluacion {
+    width: 100%;
+    background-color: white;
     border-radius: 8px;
-    margin-top: 30px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.card-evaluacion h4 {
-    font-weight: bold;
-    color: #2c3e50;
+    overflow: hidden;
 }
 
 .table-evaluacion th {
-    background-color: #4a90e2;
+    background-color: #007bff;
     color: white;
-    font-size: 15px;
+    font-weight: bold;
 }
 
-.table-evaluacion td {
+.table-evaluacion td, .table-evaluacion th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Botones */
+.btn-guardar {
+    background-color: #28a745;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    margin-top: 20px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-guardar:hover {
+    background-color: #218838;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 6px 14px;
+    font-weight: 500;
+    border-radius: 5px;
+    margin-right: 8px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border: none;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Formulario y filtros */
+select.form-control,
+input.form-control {
+    border-radius: 4px;
+    height: 38px;
+}
+
+#filtro-ciclos {
+    width: 100%;
+    min-height: 130px;
+    margin-top: 6px;
     font-size: 14px;
+}
+
+.form-check {
+    margin-bottom: 6px;
+}
+
+/* Contenedor de gráficas */
+.grafico-container, #grafico-linea-container, #grafico-barras-container,
+#grafico-pastel-container, #grafico-gauss-container {
+    background-color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.grafico-container h6 {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+/* Ajuste de tamaño compacto para contenedores de gráficas */
+#grafico-linea-container,
+#grafico-barras-container,
+#grafico-pastel-container,
+#grafico-gauss-container {
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    min-height: 250px;
+    max-height: 300px;
+    overflow: hidden;
 }
