@@ -1,0 +1,188 @@
+body {
+    background-color: #edf1f5;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Alertas */
+.alerta-exito {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    margin-top: 20px;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Botones */
+.btn {
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-crear {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-descargar {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-subir {
+    background-color: #ffc107;
+    color: black;
+}
+
+/* Contenedores */
+.contenedor-superior,
+.botones-superiores {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-csv {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Filtros */
+.filtros-form {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Gráficas */
+.seccion-graficas h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.graficas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    justify-items: center;
+    padding: 10px;
+}
+
+.grafica-box {
+    width: 300px;
+    height: 220px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    padding: 10px;
+    text-align: center;
+}
+
+.grafica-box h5 {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Tabla detalle */
+.tabla-detalle-programa {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.tabla-detalle-programa table {
+    margin: auto;
+    border-collapse: collapse;
+    width: 90%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+}
+
+.tabla-detalle-programa th {
+    background-color: #007bff;
+    color: white;
+    padding: 8px;
+}
+
+.tabla-detalle-programa td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.total-fila {
+    font-weight: bold;
+    background-color: #f0f0f0;
+}
+
+/* Tablas de programas */
+.tablas-programas-container {
+    display: flex;
+    gap: 40px;
+    margin-top: 60px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tabla-programa {
+    width: 420px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.tabla-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.tabla-programas {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-programas th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: left;
+    padding: 8px;
+}
+
+.tabla-programas td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Encabezados por tipo */
+.titulo-programa-azul {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.titulo-programa-verde {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+}

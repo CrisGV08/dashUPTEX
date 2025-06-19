@@ -5,22 +5,19 @@ from api.models import (
     CicloEscolar, Periodo, CicloPeriodo,
     ProgramaEducativoAntiguo, ProgramaEducativoNuevo, NuevoIngreso
 )
-from django.db.models import Sum
+from django.db.models import Sum, Q
 
 def examen_admision_view(request):
     mensaje = request.GET.get("mensaje")
 
-    # Solo crea ciclo si viene desde admin
     if request.method == 'POST' and 'crear_ciclo' in request.POST:
         periodos_definidos = [
             ('E-A', 'Enero - Abril'),
             ('M-A', 'Mayo - Agosto'),
             ('S-D', 'Septiembre - Diciembre')
         ]
-
         ultimo_ciclo = CicloEscolar.objects.order_by('-anio').first()
         anio_actual = int(ultimo_ciclo.anio) if ultimo_ciclo else 2025
-
         ciclo_actual, _ = CicloEscolar.objects.get_or_create(anio=anio_actual)
         periodos_actuales = CicloPeriodo.objects.filter(
             ciclo=ciclo_actual
@@ -62,39 +59,45 @@ def examen_admision_view(request):
     datos_graficas = {}
     detalle_programas = []
 
-    filtro = request.GET.get("filtro_anio")
-    if filtro and filtro != "Todos":
-        try:
-            anio_str, periodo_clave = filtro.split(" - ")
-            ciclo_periodo = CicloPeriodo.objects.select_related("ciclo", "periodo").get(
-                ciclo__anio=anio_str, periodo__clave=periodo_clave
-            )
+    filtros = request.GET.getlist("filtro_anio")
+    ciclos_objetivos = []
 
-            datos = NuevoIngreso.objects.filter(ciclo_periodo=ciclo_periodo).aggregate(
-                examen=Sum('examen'),
-                renoes=Sum('renoes'),
-                uaem_gem=Sum('uaem_gem'),
-                pase_directo=Sum('pase_directo')
-            )
-            if any(datos.values()):
-                datos_graficas = datos
+    if filtros and "Todos" not in filtros:
+        for filtro in filtros:
+            try:
+                anio_str, periodo_clave = filtro.split(" - ")
+                ciclo = CicloPeriodo.objects.select_related("ciclo", "periodo").get(
+                    ciclo__anio=anio_str, periodo__clave=periodo_clave
+                )
+                ciclos_objetivos.append(ciclo)
+            except CicloPeriodo.DoesNotExist:
+                continue
+    else:
+        ciclos_objetivos = list(CicloPeriodo.objects.all())
 
-            registros = NuevoIngreso.objects.select_related('programa_antiguo', 'programa_nuevo').filter(
-                ciclo_periodo=ciclo_periodo
-            )
+    if ciclos_objetivos:
+        datos = NuevoIngreso.objects.filter(ciclo_periodo__in=ciclos_objetivos).aggregate(
+            examen=Sum('examen'),
+            renoes=Sum('renoes'),
+            uaem_gem=Sum('uaem_gem'),
+            pase_directo=Sum('pase_directo')
+        )
+        if any(datos.values()):
+            datos_graficas = datos
 
-            for r in registros:
-                nombre_programa = r.programa_antiguo.nombre if r.programa_antiguo else r.programa_nuevo.nombre
-                detalle_programas.append({
-                    'programa': nombre_programa,
-                    'examen': r.examen,
-                    'renoes': r.renoes,
-                    'uaem_gem': r.uaem_gem,
-                    'pase_directo': r.pase_directo
-                })
+        registros = NuevoIngreso.objects.select_related('programa_antiguo', 'programa_nuevo').filter(
+            ciclo_periodo__in=ciclos_objetivos
+        )
 
-        except CicloPeriodo.DoesNotExist:
-            pass
+        for r in registros:
+            nombre_programa = r.programa_antiguo.nombre if r.programa_antiguo else r.programa_nuevo.nombre
+            detalle_programas.append({
+                'programa': nombre_programa,
+                'examen': r.examen,
+                'renoes': r.renoes,
+                'uaem_gem': r.uaem_gem,
+                'pase_directo': r.pase_directo
+            })
 
     # 🔥 Usa base.html si la vista es pública
     template = 'examen_admision.html'
