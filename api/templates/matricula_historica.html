@@ -5,8 +5,9 @@
 {% block title %}Matrícula Histórica{% endblock %}
 
 {% block content %}
-<h2 style="text-align: center;">Matrícula Histórica</h2>
+<h2 class="text-center">📊 Matrícula Histórica</h2>
 
+<!-- Formulario de captura -->
 <form method="post">
     {% csrf_token %}
     <div class="table-responsive">
@@ -24,9 +25,11 @@
                 <tr style="background-color: #fff9c4;">
                     <td><strong>{{ programa.nombre }}</strong></td>
                     {% for cp in ciclos %}
-                        {% with val=datos|get_item:programa.id|get_item:cp.id %}
+                        {% with key='antiguo_'|add:programa.id|stringformat:"s" %}
                         <td>
-                            <input type="number" name="celda_antiguo_{{ programa.id }}_{{ cp.id }}" value="{{ val|default:'' }}" class="form-control text-center" min="0">
+                            <input type="number" name="celda_antiguo_{{ programa.id }}_{{ cp.id }}"
+                                   value="{{ datos|get_item:key|get_item:cp.id|default:'' }}"
+                                   class="form-control text-center" min="0">
                         </td>
                         {% endwith %}
                     {% endfor %}
@@ -37,9 +40,11 @@
                 <tr style="background-color: #b3e5fc;">
                     <td><strong>{{ programa.nombre }}</strong></td>
                     {% for cp in ciclos %}
-                        {% with val=datos|get_item:programa.id|get_item:cp.id %}
+                        {% with key='nuevo_'|add:programa.id|stringformat:"s" %}
                         <td>
-                            <input type="number" name="celda_nuevo_{{ programa.id }}_{{ cp.id }}" value="{{ val|default:'' }}" class="form-control text-center" min="0">
+                            <input type="number" name="celda_nuevo_{{ programa.id }}_{{ cp.id }}"
+                                   value="{{ datos|get_item:key|get_item:cp.id|default:'' }}"
+                                   class="form-control text-center" min="0">
                         </td>
                         {% endwith %}
                     {% endfor %}
@@ -55,13 +60,21 @@
             </tbody>
         </table>
     </div>
-
     <div class="text-center mt-3">
         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
     </div>
 </form>
 
-<hr>
+<!-- Aquí puedes colocar tus filtros y gráficas si quieres que siga todo en la misma vista -->
+<hr class="my-4">
+
+
+
+
+
+
+
+
 
 <h5 class="text-center mt-4">Visualización Gráfica</h5>
 
@@ -78,68 +91,109 @@
         <div>
             <input type="checkbox" id="chkPastel" value="graficoPastelCarreras" checked> Distribución Total
         </div>
+<div>
+    <input type="checkbox" id="chkGauss" value="graficoGauss" checked> Campana de Gauss
+</div>
+
+
     </div>
+
+
     <button id="btnMostrarTodas" class="btn btn-success mt-3">Mostrar Todas</button>
 </div>
 
-<!-- 🎯 Nuevo contenedor ordenado -->
+<!-- 🎯 Contenedor con títulos de cada gráfica -->
 <div id="contenedorGraficas" class="container">
     <div class="row justify-content-center text-center">
+        <!-- 📊 MATRÍCULA TOTAL -->
         <div id="graficoMatriculaTotalContainer" class="col-12 col-md-4 mb-4">
+            <h6>Matrícula Total</h6>
             <canvas id="graficoMatriculaTotal" style="max-height: 250px;"></canvas>
         </div>
+        <!-- 📊 MATRÍCULA POR CARRERA -->
         <div id="graficoMatriculaCarreraContainer" class="col-12 col-md-4 mb-4">
+            <h6>Matrícula por Carrera</h6>
             <canvas id="graficoMatriculaCarrera" style="max-height: 250px;"></canvas>
         </div>
+        <!-- 📊 DISTRIBUCIÓN TOTAL (PASTEL) -->
         <div id="graficoPastelCarrerasContainer" class="col-12 col-md-4 mb-4">
+            <h6>Distribución Total por Carrera (Gráfico de Pastel)</h6>
             <canvas id="graficoPastelCarreras" style="max-height: 250px;"></canvas>
+        </div>
+        <!-- 📊 CAMPANA DE GAUSS -->
+        <div id="graficoGaussContainer" class="col-12 col-md-4 mb-4">
+            <h6>Distribución Gaussiana de la Matrícula</h6>
+            <canvas id="graficoGauss" style="max-height: 250px;"></canvas>
         </div>
     </div>
 </div>
+        
 
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const labels = {{ labels_json|safe }};
     const totales = {{ totales_json|safe }};
     const programas = {{ programas_json|safe }};
 
+    // ✅ FUNCIONES PARA GENERAR COLORES
+    function colorAleatorio() {
+        const h = Math.floor(Math.random() * 360);
+        return `hsla(${h}, 70%, 60%, 0.6)`;
+    }
+
+    function colorBordeAleatorio() {
+        const h = Math.floor(Math.random() * 360);
+        return `hsla(${h}, 70%, 60%, 1)`;
+    }
+
+    // 📊 Gráfico Total
     const chartTotal = new Chart(document.getElementById('graficoMatriculaTotal'), {
         type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Matrícula Total',
-                data: totales,
-                backgroundColor: 'rgba(255, 99, 132, 0.4)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }, {
-                label: 'Tendencia',
-                data: totales,
-                type: 'line',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                fill: false,
-                tension: 0.3,
-                pointRadius: 0
-            }]
+            datasets: [
+                {
+                    label: 'Matrícula Total',
+                    data: totales,
+                    backgroundColor: 'rgba(255, 99, 132, 0.4)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Tendencia',
+                    data: totales,
+                    type: 'line',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 0
+                }
+            ]
         },
         options: { responsive: true }
     });
 
+    // 📊 Gráfico por Carrera
     const datasetsProgramas = Object.entries(programas).map(([nombre, valores]) => ({
         label: nombre,
         data: valores,
-        backgroundColor: `hsla(${Math.random() * 360}, 70%, 60%, 0.6)`,
-        borderColor: `hsla(${Math.random() * 360}, 70%, 60%, 1)`,
+        backgroundColor: colorAleatorio(),
+        borderColor: colorBordeAleatorio(),
         borderWidth: 1
     }));
 
     const chartCarrera = new Chart(document.getElementById('graficoMatriculaCarrera'), {
         type: 'bar',
-        data: { labels: labels, datasets: datasetsProgramas },
+        data: {
+            labels: labels,
+            datasets: datasetsProgramas
+        },
         options: { responsive: true }
     });
 
+    // 📊 Gráfico Pastel (solo primer ciclo)
     const primerCiclo = labels[0];
     const datosPrimerCiclo = Object.entries(programas).map(([nombre, valores]) => ({
         label: nombre,
@@ -152,7 +206,7 @@
             labels: datosPrimerCiclo.map(d => d.label),
             datasets: [{
                 data: datosPrimerCiclo.map(d => d.value),
-                backgroundColor: datosPrimerCiclo.map(() => `hsla(${Math.random() * 360}, 70%, 70%, 0.7)`),
+                backgroundColor: datosPrimerCiclo.map(() => colorAleatorio()),
                 borderColor: 'white',
                 borderWidth: 1
             }]
@@ -160,6 +214,51 @@
         options: { responsive: true }
     });
 
+    // 📊 Gráfico Gaussiano
+    function calcularMedia(datos) {
+        const suma = datos.reduce((acc, val) => acc + val, 0);
+        return suma / datos.length;
+    }
+
+    function calcularDesviacionEstandar(datos, media) {
+        const sumaCuadrados = datos.reduce((acc, val) => acc + Math.pow(val - media, 2), 0);
+        return Math.sqrt(sumaCuadrados / datos.length);
+    }
+
+    function generarDatosGauss(media, desviacion, labels) {
+        const datos = [];
+        for (let i = 0; i < labels.length; i++) {
+            const x = i;
+            const y = (1 / (desviacion * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desviacion, 2));
+            datos.push(y);
+        }
+        return datos;
+    }
+
+    const media = calcularMedia(totales);
+    const desviacion = calcularDesviacionEstandar(totales, media);
+    const datosGauss = generarDatosGauss(media, desviacion, labels);
+
+    const chartGauss = new Chart(document.getElementById('graficoGauss'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Distribución Gaussiana',
+                data: datosGauss,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.3)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    // ✅ Mostrar u ocultar gráficas
     const checkboxes = document.querySelectorAll('#filtroGraficas input[type="checkbox"]');
     const btnMostrarTodas = document.getElementById('btnMostrarTodas');
 
@@ -179,7 +278,9 @@
         });
     }
 
+
+    
+    // Mostrar por default
     actualizarGraficas();
 </script>
-
 {% endblock %}

@@ -6,6 +6,7 @@ from api.models import (
 from django.db.models import Avg
 import pandas as pd
 
+
 def aprovechamiento_view(request):
     mensaje = None
 

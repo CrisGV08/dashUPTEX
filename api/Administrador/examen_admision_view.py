@@ -112,3 +112,5 @@ def examen_admision_view(request):
         'datos_graficas': datos_graficas,
         'detalle_programas': detalle_programas
     })
+
+

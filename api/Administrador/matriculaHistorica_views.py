@@ -39,12 +39,12 @@ def matricula_historica(request):
     registros = MatriculaHistorica.objects.all()
     datos = defaultdict(dict)
     totales_por_ciclo = defaultdict(int)
-    programas_totales = defaultdict(lambda: [0]*len(ciclos))  # Para gráfica por carrera
+    programas_totales = defaultdict(lambda: [0]*len(ciclos))
 
     ciclo_id_map = {cp.id: idx for idx, cp in enumerate(ciclos)}
 
     for reg in registros:
-        programa_id = reg.programa_antiguo_id or reg.programa_nuevo_id
+        programa_id = f"antiguo_{reg.programa_antiguo_id}" if reg.programa_antiguo_id else f"nuevo_{reg.programa_nuevo_id}"
         datos[programa_id][reg.ciclo_periodo_id] = reg.cantidad
         totales_por_ciclo[reg.ciclo_periodo_id] += reg.cantidad
 
