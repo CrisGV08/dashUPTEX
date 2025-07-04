@@ -1,0 +1,150 @@
+/* Estilo general */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+/* Título principal */
+.titulo-principal {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 26px;
+    color: #1b5e20;
+}
+
+/* Tabla editable */
+.tabla-titulados {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.tabla-titulados thead th {
+    background-color: #ffe082;
+    color: #000;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #bbb;
+}
+
+.tabla-titulados tbody td {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid #ddd;
+    transition: background-color 0.2s;
+}
+
+.tabla-titulados tbody tr:hover {
+    background-color: #fff8e1;
+}
+
+.tabla-titulados tbody input[type="number"] {
+    width: 80px;
+    padding: 4px;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Botón Guardar */
+.btn-guardar {
+    padding: 6px 12px;
+    background-color: #f57c00;
+    color: white;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.btn-guardar:hover {
+    background-color: #ef6c00;
+}
+
+/* Filtros */
+.filtros {
+    margin: 30px 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.filtros label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.filtros select {
+    padding: 6px 10px;
+    font-size: 14px;
+    min-width: 160px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+}
+
+/* Botones de filtros */
+.filtros button {
+    padding: 7px 14px;
+    font-size: 14px;
+    background-color: #1e88e5;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.filtros button:hover {
+    background-color: #1565c0;
+}
+
+/* Contenedor de gráficas */
+.contenedor-graficas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 30px;
+    gap: 20px;
+}
+
+.grafica {
+    width: 45%;
+    min-width: 280px;
+    max-width: 480px;
+    background-color: #ffffff;
+    padding: 15px;
+    border: 1px solid #cfd8dc;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.grafica:hover {
+    transform: scale(1.01);
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .grafica {
+        width: 90%;
+    }
+
+    .tabla-titulados {
+        font-size: 12px;
+    }
+
+    .tabla-titulados input[type="number"] {
+        width: 65px;
+        font-size: 12px;
+    }
+}
