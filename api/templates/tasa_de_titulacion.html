@@ -1,15 +1,88 @@
 {% extends 'base_admin.html' %}
-
 {% load static %}
 
-{% block title %}Dashboard Universidad{% endblock %}
+{% block title %}Tasa de Titulación{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <div class="card shadow">
-            <div class="card-body">
-                <h1 class="card-title">TAZA DE TITULACION</h1>
+<link rel="stylesheet" href="{% static 'css/style_buttons.css' %}">
+<link rel="stylesheet" href="{% static 'css/tasa_titulacion.css' %}">
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="titulo-principal text-center mb-4">📈 Tasa de Titulación</h2>
+
+            <!-- Filtros -->
+            <div class="row filtros mb-4">
+                <div class="col-md-4">
+                    <label><strong>Filtrar por Año:</strong></label>
+                    <select id="filtro_anio" class="form-control" multiple></select>
+                </div>
+                <div class="col-md-4">
+                    <label><strong>Filtrar por Carrera:</strong></label>
+                    <select id="filtro_carrera" class="form-control" multiple></select>
+                </div>
+                <div class="col-md-4">
+                    <label><strong>Tipo de Gráfica:</strong></label>
+                    <select id="filtro_grafica" class="form-control">
+                        <option value="line">📉 Línea</option>
+                        <option value="bar">📊 Barras</option>
+                        <option value="pie">🥧 Pastel</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla editable -->
+            <form method="POST">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm text-center">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Año Ingreso</th>
+                                <th>Programa</th>
+                                <th>Matrícula</th>
+                                <th>Egresados</th>
+                                <th>Titulados</th>
+                                <th>% Eficiencia Terminal</th>
+                                <th>% Tasa Titulación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in datos %}
+                            <tr data-anio="{{ fila.anio_ingreso }}" data-carrera="{{ fila.programa_antiguo|default:fila.programa_nuevo }}">
+                                <td>{{ fila.anio_ingreso }}</td>
+                                <td>{{ fila.programa_antiguo|default:fila.programa_nuevo }}</td>
+                                <td><input name="matricula_{{ fila.id }}" type="number" value="{{ fila.matricula_ingreso }}" class="form-control form-control-sm" /></td>
+                                <td><input name="egresados_{{ fila.id }}" type="number" value="{{ fila.egresados }}" class="form-control form-control-sm" /></td>
+                                <td><input name="titulados_{{ fila.id }}" type="number" value="{{ fila.titulados }}" class="form-control form-control-sm" /></td>
+                                <td>{{ fila.eficiencia_terminal_porcentaje }}%</td>
+                                <td>{{ fila.tasa_titulacion }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-success btn-lg">💾 Guardar Cambios</button>
+                </div>
+            </form>
+
+            <!-- Gráfica -->
+            <div class="grafica-container mt-5">
+                <canvas id="graficaTitulacion"></canvas>
+            </div>
+
+            <!-- Botón PDF -->
+            <div class="text-center mt-4">
+                <button id="descargarPDF" class="btn btn-danger">📄 Descargar Gráfica en PDF</button>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="{% static 'js/tasa_de_titulacion.js' %}"></script>
 {% endblock %}

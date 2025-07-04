@@ -1,0 +1,32 @@
+.titulo-principal {
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.filtros label {
+    font-weight: bold;
+}
+
+.filtros .form-control {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+.table th, .table td {
+    vertical-align: middle !important;
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+.grafica-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+#descargarPDF {
+    font-size: 1rem;
+    padding: 8px 16px;
+}
