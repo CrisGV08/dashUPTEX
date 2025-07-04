@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let chartLinea, chartBarras, chartPastel, chartGauss;
 
-    // Inicializar filtros con todas las opciones seleccionadas
     function inicializarFiltros() {
         const anios = [...new Set(datos.map(d => d.anio_ingreso))].sort();
         const programas = [...new Set(datos.map(d => d.programa))].sort();
@@ -48,13 +47,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const filtrados = filtrarDatos();
         const visibleGraficas = obtenerSeleccionados(filtroGrafica);
 
-        // Destruir gráficas existentes
         if (chartLinea) chartLinea.destroy();
         if (chartBarras) chartBarras.destroy();
         if (chartPastel) chartPastel.destroy();
         if (chartGauss) chartGauss.destroy();
 
-        // Ocultar todas
         document.querySelectorAll(".grafica").forEach(div => div.style.display = "none");
 
         if (filtrados.length === 0) return;
@@ -67,10 +64,9 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets: [{
                 label: 'Tasa de Titulación (%)',
                 data: valores,
-                backgroundColor: 'rgba(76, 175, 80, 0.4)',
-                borderColor: 'rgba(76, 175, 80, 1)',
-                borderWidth: 2,
-                fill: true
+                borderWidth: 1,
+                backgroundColor: 'rgba(255, 193, 7, 0.4)',
+                borderColor: 'rgba(255, 193, 7, 1)'
             }]
         };
 
@@ -78,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("graficaLinea").parentElement.style.display = "block";
             chartLinea = new Chart(ctxLinea, {
                 type: 'line',
-                data,
+                data: data,
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
@@ -87,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("graficaBarras").parentElement.style.display = "block";
             chartBarras = new Chart(ctxBarras, {
                 type: 'bar',
-                data,
+                data: data,
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
@@ -96,66 +92,50 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("graficaPastel").parentElement.style.display = "block";
             chartPastel = new Chart(ctxPastel, {
                 type: 'pie',
-                data,
+                data: data,
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
         if (visibleGraficas.includes("gauss")) {
             document.getElementById("graficaGauss").parentElement.style.display = "block";
-            const puntos = valores.map((y, i) => ({ x: i, y }));
             chartGauss = new Chart(ctxGauss, {
-                type: 'line',
+                type: 'scatter',
                 data: {
                     datasets: [{
-                        label: 'Distribución Gaussiana (simulada)',
-                        data: puntos,
-                        fill: false,
-                        borderColor: 'rgba(33, 150, 243, 0.8)',
-                        backgroundColor: 'rgba(33, 150, 243, 0.2)',
-                        tension: 0.3
+                        label: 'Distribución Gaussiana',
+                        data: valores.map((y, i) => ({ x: i, y })),
+                        showLine: true,
+                        borderColor: 'rgba(0, 123, 255, 0.7)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Índice' } },
-                        y: { title: { display: true, text: 'Tasa (%)' } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
         }
     }
 
-    // Exportar las gráficas visibles a PDF
     function descargarPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        let y = 10;
 
+        let y = 10;
         document.querySelectorAll("canvas").forEach(canvas => {
             if (canvas.offsetParent !== null) {
-                const img = canvas.toDataURL("image/png");
-                doc.addImage(img, "PNG", 10, y, 180, 60);
+                const imgData = canvas.toDataURL("image/png");
+                doc.addImage(imgData, "PNG", 10, y, 180, 60);
                 y += 70;
-                if (y > 250) {
-                    doc.addPage();
-                    y = 10;
-                }
             }
         });
 
-        doc.save("tasa_titulacion.pdf");
+        doc.save("titulados_historicos.pdf");
     }
 
-    // Eventos
     filtroAnio.addEventListener("change", crearGraficas);
     filtroPrograma.addEventListener("change", crearGraficas);
     filtroGrafica.addEventListener("change", crearGraficas);
     window.descargarPDF = descargarPDF;
 
-    // Inicialización
     inicializarFiltros();
     crearGraficas();
 });
