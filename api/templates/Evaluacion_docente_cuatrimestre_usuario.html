@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Evaluación Docente por Cuatrimestre{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/evaluacion_docente.css' %}">
+
+<h2 class="titulo-principal">📊 Evaluación Docente por Cuatrimestre</h2>
+
+
+<!-- Filtros -->
+<div class="mt-5">
+    <h5>🎯 Filtros de visualización</h5>
+
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" value="linea" checked>
+        <label class="form-check-label">Gráfico de Línea</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" value="barras" checked>
+        <label class="form-check-label">Gráfico de Barras</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" value="pastel" checked>
+        <label class="form-check-label">Gráfico de Pastel</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" value="gauss" checked>
+        <label class="form-check-label">Gráfico Gaussiano</label>
+    </div>
+
+    <!-- Selector de ciclos -->
+    <div class="mt-3">
+        <label><strong>Ciclos a mostrar:</strong></label>
+        <select id="filtro-ciclos" class="form-control" multiple size="5" style="min-height: 130px;">
+            {% for p in periodos %}
+                <option value="{{ p }}">{{ p }}</option>
+            {% endfor %}
+        </select>
+        <small class="text-muted">Mantén presionada Ctrl (o Cmd en Mac) para seleccionar múltiples ciclos</small>
+    </div>
+
+    <div class="mt-3">
+        <button id="btnAplicar" class="btn btn-primary">Aplicar Filtros</button>
+        <button id="btnReset" class="btn btn-secondary">Restablecer</button>
+    </div>
+</div>
+
+<!-- Tabla de resultados (solo visual) -->
+<div class="table-responsive mt-4">
+    <table class="table table-bordered table-evaluacion text-center">
+        <thead class="table-primary">
+            <tr>
+                <th>Ciclo Periodo</th>
+                <th>Promedio General</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in datos %}
+            <tr>
+                <td>{{ item.ciclo_periodo }}</td>
+                <td>{{ item.promedio_general }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2">No hay registros aún.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Gráficas -->
+<div class="row mt-4">
+    <div class="col-md-6" id="grafico-linea-container">
+        <h6>📈 Gráfico de Línea</h6>
+        <canvas id="grafico-linea" height="300"></canvas>
+    </div>
+    <div class="col-md-6" id="grafico-barras-container">
+        <h6>📊 Gráfico de Barras</h6>
+        <canvas id="grafico-barras" height="300"></canvas>
+    </div>
+    <div class="col-md-6" id="grafico-pastel-container">
+        <h6>🥧 Gráfico de Pastel</h6>
+        <canvas id="grafico-pastel" height="300"></canvas>
+    </div>
+    <div class="col-md-6" id="grafico-gauss-container">
+        <h6>📉 Gráfico Gaussiano</h6>
+        <canvas id="grafico-gauss" height="300"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const etiquetas = {{ etiquetas|safe }};
+    const valores = {{ promedios|safe }};
+
+    const charts = {
+        linea: new Chart(document.getElementById("grafico-linea"), {
+            type: 'line',
+            data: { labels: etiquetas, datasets: [{ label: 'Promedio', data: valores }] },
+            options: { responsive: true }
+        }),
+        barras: new Chart(document.getElementById("grafico-barras"), {
+            type: 'bar',
+            data: { labels: etiquetas, datasets: [{ label: 'Promedio', data: valores }] },
+            options: { responsive: true }
+        }),
+        pastel: new Chart(document.getElementById("grafico-pastel"), {
+            type: 'pie',
+            data: { labels: etiquetas, datasets: [{ data: valores, backgroundColor: etiquetas.map((_, i) => `hsl(${i * 60}, 70%, 70%)`) }] },
+            options: { responsive: true }
+        }),
+        gauss: new Chart(document.getElementById("grafico-gauss"), {
+            type: 'line',
+            data: { labels: etiquetas, datasets: [{ label: 'Distribución Gaussiana', data: calcularGauss(valores) }] },
+            options: { responsive: true }
+        })
+    };
+
+    document.getElementById("btnAplicar").addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const seleccionados = Array.from(document.querySelectorAll("#filtro-ciclos option:checked"))
+            .map(option => option.value.trim());
+
+        const nuevasEtiquetas = [];
+        const nuevosValores = [];
+
+        etiquetas.forEach((etiqueta, index) => {
+            if (seleccionados.includes(etiqueta.trim())) {
+                nuevasEtiquetas.push(etiqueta);
+                nuevosValores.push(valores[index]);
+            }
+        });
+
+        ['linea', 'barras', 'pastel', 'gauss'].forEach(tipo => {
+            document.getElementById(`grafico-${tipo}-container`).style.display = 
+                document.querySelector(`input[value="${tipo}"]`).checked ? 'block' : 'none';
+        });
+
+        charts.linea.data.labels = nuevasEtiquetas;
+        charts.linea.data.datasets[0].data = nuevosValores;
+        charts.linea.update();
+
+        charts.barras.data.labels = nuevasEtiquetas;
+        charts.barras.data.datasets[0].data = nuevosValores;
+        charts.barras.update();
+
+        charts.pastel.data.labels = nuevasEtiquetas;
+        charts.pastel.data.datasets[0].data = nuevosValores;
+        charts.pastel.update();
+
+        charts.gauss.data.labels = nuevasEtiquetas;
+        charts.gauss.data.datasets[0].data = calcularGauss(nuevosValores);
+        charts.gauss.update();
+    });
+
+    document.getElementById("btnReset").addEventListener("click", () => location.reload());
+
+    function calcularGauss(datos) {
+        const prom = datos.reduce((a, b) => a + b, 0) / datos.length;
+        const sigma = Math.sqrt(datos.reduce((a, b) => a + Math.pow(b - prom, 2), 0) / datos.length);
+        return datos.map(x => Math.exp(-Math.pow(x - prom, 2) / (2 * Math.pow(sigma, 2))));
+    }
+</script>
+{% endblock %}

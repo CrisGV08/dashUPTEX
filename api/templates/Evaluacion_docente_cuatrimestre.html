@@ -7,60 +7,66 @@
 
 <h2 class="titulo-principal">📊 Evaluación Docente por Cuatrimestre</h2>
 
+<!-- Botón para descargar PDF -->
 <div class="mt-4 text-center">
-    <button id="btnDescargarPDF" class="btn btn-danger">
-        📥 Descargar PDF con Gráficas
+    <button id="btnDescargarPDF" class="btn-descargar">
+        🧾 Descargar PDF con Gráficas
     </button>
 </div>
 
 
-<!-- Formulario de captura -->
+
+<!-- Formulario de captura superior -->
 <form method="POST">
     {% csrf_token %}
     <div class="row justify-content-center">
         <div class="col-md-4">
-            <label><strong>Ciclo Periodo</strong></label>
-            <select name="ciclo_periodo" class="form-control" required>
-                <option value="">Seleccione un ciclo</option>
-                {% for periodo in periodos %}
-                    <option value="{{ periodo.id }}">{{ periodo }}</option>
-                {% endfor %}
+
             </select>
         </div>
-        <div class="col-md-4">
-            <label><strong>Promedio General</strong></label>
-            <input type="number" name="promedio_general" class="form-control" step="0.01" placeholder="Ej. 8.5" required>
-        </div>
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn-guardar w-100">Guardar</button>
-        </div>
+
     </div>
 </form>
 
-<!-- Tabla de datos -->
-<div class="table-responsive mt-4">
-    <table class="table table-bordered table-evaluacion text-center">
-        <thead class="table-primary">
-            <tr>
-                <th>Ciclo Periodo</th>
-                <th>Promedio General</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in datos %}
-            <tr>
-                <td>{{ item.ciclo_periodo }}</td>
-                <td>{{ item.promedio_general }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2">No hay registros aún.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+<!-- Tabla editable con Guardar Cambios -->
+<form method="POST" id="tabla-form">
+    {% csrf_token %}
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered table-evaluacion text-center">
+            <thead class="table-primary">
+                <tr>
+                    <th>Ciclo Periodo</th>
+                    <th>Promedio General</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in datos %}
+                <tr>
+                    <td>
+                        {{ item.ciclo_periodo }}
+                        <input type="hidden" name="ciclo_ids" value="{{ item.ciclo_periodo.id }}">
+                    </td>
+                    <td>
+                        <input type="number" step="0.01" name="promedios" value="{{ item.promedio_general }}" class="form-control text-center" required>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2">No hay registros aún.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" name="guardar_tabla" class="btn-guardar w-100 ">Guardar Cambios</button>
+        </div>
+
+
+
+    </div>
+</form>
 <!-- Filtros -->
 <div class="mt-5">
     <h5>🎯 Filtros de visualización</h5>
@@ -180,26 +186,24 @@
         })
     };
 
-    // Filtros
     document.getElementById("btnAplicar").addEventListener("click", () => {
-        const seleccionados = [...document.querySelectorAll('#filtro-ciclos option:checked')].map(opt => opt.value);
+        const seleccionados = [...document.querySelectorAll('#filtro-ciclos option:checked')].map(opt => opt.value.trim());
         const checks = [...document.querySelectorAll('.form-check-input')];
 
-        // Gráficas ON/OFF
         checks.forEach(chk => {
             document.getElementById(`grafico-${chk.value}-container`).style.display = chk.checked ? 'block' : 'none';
         });
 
-        // Filtrar datos
-        const nuevasEtiquetas = [], nuevosValores = [];
+        const nuevasEtiquetas = [];
+        const nuevosValores = [];
+
         etiquetas.forEach((et, i) => {
-            if (seleccionados.includes(et)) {
+            if (seleccionados.includes(et.trim())) {
                 nuevasEtiquetas.push(et);
                 nuevosValores.push(valores[i]);
             }
         });
 
-        // Actualizar gráficas
         Object.entries(charts).forEach(([key, chart]) => {
             chart.data.labels = nuevasEtiquetas;
             chart.data.datasets[0].data = key === 'gauss' ? calcularGauss(nuevosValores) : nuevosValores;
@@ -207,10 +211,7 @@
         });
     });
 
-    // Restablecer
-    document.getElementById("btnReset").addEventListener("click", () => {
-        location.reload();
-    });
+    document.getElementById("btnReset").addEventListener("click", () => location.reload());
 
     function calcularGauss(datos) {
         const prom = datos.reduce((a, b) => a + b, 0) / datos.length;
@@ -218,9 +219,7 @@
         return datos.map(x => Math.exp(-Math.pow(x - prom, 2) / (2 * sigma ** 2)));
     }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<!-- Librerías para exportar a PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -229,7 +228,7 @@ document.getElementById("btnDescargarPDF").addEventListener("click", async () =>
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Título centrado y limpio
+    // Encabezado
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -247,26 +246,24 @@ document.getElementById("btnDescargarPDF").addEventListener("click", async () =>
     for (const id of visibleCharts) {
         const container = document.getElementById(id);
         if (container && container.style.display !== 'none') {
-           await html2canvas(container, { scale: 3 }).then(canvas => {
-    const maxWidth = 450;
-    const width = Math.min(maxWidth, canvas.width / 3); // corregimos al dividir entre scale
-    const height = canvas.height * (width / canvas.width);
+            await html2canvas(container, { scale: 3 }).then(canvas => {
+                const maxWidth = 450;
+                const width = Math.min(maxWidth, canvas.width / 3);  // ajuste por scale
+                const height = canvas.height * (width / canvas.width);
 
-    if (yOffset + height > 280) {
-        doc.addPage();
-        yOffset = 20;
-    }
+                if (yOffset + height > 280) {
+                    doc.addPage();
+                    yOffset = 20;
+                }
 
-    doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, yOffset, width, height);
-    yOffset += height + 15;
-});
+                doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, yOffset, width, height);
+                yOffset += height + 15;
+            });
         }
     }
 
     doc.save("Evaluacion_Docente_por_Cuatrimestre.pdf");
 });
-
 </script>
-
 
 {% endblock %}

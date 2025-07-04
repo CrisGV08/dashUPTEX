@@ -31,8 +31,11 @@
         <a href="{% url 'index' %}">
             <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;">
         </a>
+     
     </div>
-
+   <div style="font-weight: bold; color: white; margin-top: 5px; font-size: 13px; background-color: #007bff; border-radius: 10px; padding: 3px 10px; display: inline-block;">
+        MODO USUARIO
+        </div>
     <div class="menu-container">
         <ul class="menu">
 
@@ -61,7 +64,7 @@
                 </ul>
             </li>
 
-            <li class="menu-item"><a href="#"><i class="fas fa-graduation-cap"></i> Evaluación Docente por Cuatrimestre</a></li>
+            <li class="menu-item"><a href="{% url 'Evaluacion_docente_cuatrimestre_usuario' %}" data-submenu="/Evaluacion_docente_cuatrimestre_usuario/"> Evaluacion Docente por Cuatrimestre </a></li>
             <li class="menu-item"><a href="#"><i class="fas fa-graduation-cap"></i> Seguimiento Laboral</a></li>
             <li class="menu-item"><a href="#"><i class="fas fa-graduation-cap"></i> Tasa de Titulación</a></li>
             <li class="menu-item"><a href="#"><i class="fas fa-graduation-cap"></i> Titulados Históricos</a></li>

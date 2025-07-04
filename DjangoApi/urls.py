@@ -65,6 +65,7 @@ from api.Administrador.subir_carreras_view import (
 
 from api.Administrador.subir_carreras_view import exportar_carreras_pdf
 
+from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 
 
 urlpatterns = [
@@ -90,7 +91,15 @@ urlpatterns = [
     path('usuario/indicadores-generales/', indicadores_generales_usuario_view, name='indicadores_generales_usuario'),
     path('usuario/eficiencia-terminal/', eficiencia_terminal_usuario_view, name='eficiencia_terminal_usuario'),
     path('usuario/titulados-historicos-actual/', titulados_historicos_actual_usuario_view, name='titulados_historicos_actual_usuario'),
-   
+    path(
+    'usuario/evaluacion-docente-cuatrimestre/',
+    evaluacion_docente_cuatrimestre_usuario_view,
+    name='Evaluacion_docente_cuatrimestre_usuario'
+),
+
+
+
+
     # Administrador
     path('administrador/', administrador_view, name='administrador'),
     path('administrador/subir-calificaciones/', subir_calificaciones, name='subir_calificaciones'),

@@ -29,7 +29,7 @@ def importar_matricula_cuatrimestres(request):
         "Ingenieria en sistemas Computacionales",
         "Ingenieria en logistica",
         "Licenciatura en Administracion",
-        "Licenciatura en Comercio Internacional y aduanas"
+        "Licenciatura en Comercio Internacional y aduanas",
     ]
     carreras_normalizadas = [c.lower() for c in carreras_antiguas]
 
