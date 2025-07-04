@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-
 # Vistas públicas (home)
 from api.home.home_views import (
     home_view, home_calificaciones, home_aprobados, home_reprobados,
@@ -20,7 +19,6 @@ from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuari
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
 # Login
 from api.login.login_views import login_view, logout_view
-
 # Administrador
 from api.Administrador.administrador_views import (
     administrador_view, subir_calificaciones, gestionar_usuarios, generar_plantilla_csv
@@ -53,10 +51,7 @@ from api.Administrador.titulados_historico_actual_view import (
     titulados_historico_actual_view,
     descargar_plantilla_titulados_historico_actual
 )
-
-
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
-
 from api.Administrador.subir_carreras_view import (
     subir_carreras_view,
     generar_plantilla_csv,
@@ -64,7 +59,6 @@ from api.Administrador.subir_carreras_view import (
 )
 
 from api.Administrador.subir_carreras_view import exportar_carreras_pdf
-
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 
 
