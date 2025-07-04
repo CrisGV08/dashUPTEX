@@ -18,6 +18,7 @@ from api.home.aprovechamiento_usuario_view import aprovechamiento_usuario_view
 from api.home.indicadores_generales_usuario_view import indicadores_generales_usuario_view
 from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuario_view
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
+
 # Login
 from api.login.login_views import login_view, logout_view
 
@@ -42,7 +43,9 @@ from api.Administrador.matricula_cuatrimestre_views import (
 from api.Administrador.eficiencia3anios_views import eficiencia_3anios_view
 from api.Administrador.aprovechamiento_views import aprovechamiento_view
 from api.Administrador.aprovechamiento_tools import descargar_plantilla_aprovechamiento
-from api.Administrador.indicadores_generales_view import ( reprobacion_desercion_view, cargar_indicadores_generales, descargar_plantilla_indicador,)
+from api.Administrador.indicadores_generales_view import (
+    reprobacion_desercion_view, cargar_indicadores_generales, descargar_plantilla_indicador
+)
 from api.Administrador.eficiencia_terminal_view import eficiencia_terminal_view
 from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
 from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
@@ -53,20 +56,17 @@ from api.Administrador.titulados_historico_actual_view import (
     titulados_historico_actual_view,
     descargar_plantilla_titulados_historico_actual
 )
-
-
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
-
 from api.Administrador.subir_carreras_view import (
-    subir_carreras_view,
-    generar_plantilla_csv,
-    generar_plantilla_nuevos_csv,
+    subir_carreras_view, generar_plantilla_csv, generar_plantilla_nuevos_csv, exportar_carreras_pdf
 )
 
-from api.Administrador.subir_carreras_view import exportar_carreras_pdf
-
-
-
+# ✅ NUEVAS IMPORTACIONES PARA TASA DE TITULACIÓN
+from api.Administrador.tasa_de_titulacion_view import (
+    tasa_de_titulacion_view,
+    descargar_plantilla_tasa_titulacion,
+    subir_excel_tasa_titulacion  # ⬅️ Agrega esta línea
+)
 urlpatterns = [
     # Home públicas
     path('', home_view, name='index'),
@@ -86,11 +86,10 @@ urlpatterns = [
     path('usuario/matricula-cuatrimestre/', matricula_cuatrimestre_usuario_view, name='matricula_cuatrimestre_usuario'),
     path('usuario/matricula-nuevo-ingreso/', matricula_h_nuevo_ingreso_usuario_view, name='matricula_h_nuevo_ingreso_usuario'),
     path('usuario/aprovechamiento/', aprovechamiento_usuario_view, name='aprovechamiento_usuario'),
-    path('administrador/gestionar-usuarios/', gestionar_usuarios, name='gestionar_usuarios'),
     path('usuario/indicadores-generales/', indicadores_generales_usuario_view, name='indicadores_generales_usuario'),
     path('usuario/eficiencia-terminal/', eficiencia_terminal_usuario_view, name='eficiencia_terminal_usuario'),
     path('usuario/titulados-historicos-actual/', titulados_historicos_actual_usuario_view, name='titulados_historicos_actual_usuario'),
-   
+
     # Administrador
     path('administrador/', administrador_view, name='administrador'),
     path('administrador/subir-calificaciones/', subir_calificaciones, name='subir_calificaciones'),
@@ -120,23 +119,20 @@ urlpatterns = [
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
     path('administrador/descargar-plantilla-titulados-historico-actual/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
 
+    path('evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_view, name='evaluacion_docente_cuatrimestre'),
+    path('subir-carreras/', subir_carreras_view, name='subir_carreras'),
+    path('plantilla-carreras/', generar_plantilla_csv, name='generar_plantilla_carreras'),
+    path('plantilla-carreras-nuevos/', generar_plantilla_nuevos_csv, name='generar_plantilla_nuevos'),
+    path('exportar-carreras-pdf/', exportar_carreras_pdf, name='exportar_carreras_pdf'),
+    
+# ✅ NUEVAS RUTAS PARA TASA DE TITULACIÓN
+path('administrador/tasa-de-titulacion/', tasa_de_titulacion_view, name='tasa_de_titulacion'),
+path('administrador/descargar-plantilla-tasa-titulacion/', descargar_plantilla_tasa_titulacion, name='descargar_plantilla_tasa_titulacion'),
+path('administrador/subir-excel-tasa-titulacion/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
 
-    path(
-        'evaluacion-docente-cuatrimestre/',
-        evaluacion_docente_cuatrimestre_view,
-        name='evaluacion_docente_cuatrimestre'
-    ),
-
-  path("subir-carreras/", subir_carreras_view, name="subir_carreras"),
-    path("plantilla-carreras/", generar_plantilla_csv, name="generar_plantilla_carreras"),
-    path("plantilla-carreras-nuevos/", generar_plantilla_nuevos_csv, name="generar_plantilla_nuevos"),
-
-
-  path("exportar-carreras-pdf/", exportar_carreras_pdf, name="exportar_carreras_pdf"),
-
-
+    
 ]
 
 # Archivos estáticos en desarrollo
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)    
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -15,7 +15,7 @@ body {
 }
 
 /* Tabla editable */
-.tabla-titulacion {
+.tabla-titulados {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
@@ -26,27 +26,27 @@ body {
     overflow: hidden;
 }
 
-.tabla-titulacion thead th {
-    background-color: #c8e6c9;
+.tabla-titulados thead th {
+    background-color: #ffe082;
     color: #000;
     text-align: center;
     padding: 10px;
     border: 1px solid #bbb;
 }
 
-.tabla-titulacion tbody td {
+.tabla-titulados tbody td {
     text-align: center;
     padding: 8px;
     border: 1px solid #ddd;
     transition: background-color 0.2s;
 }
 
-.tabla-titulacion tbody tr:hover {
-    background-color: #f1f8e9;
+.tabla-titulados tbody tr:hover {
+    background-color: #fff8e1;
 }
 
-.tabla-titulacion tbody input[type="number"] {
-    width: 90px;
+.tabla-titulados tbody input[type="number"] {
+    width: 80px;
     padding: 4px;
     font-size: 13px;
     text-align: center;
@@ -55,7 +55,7 @@ body {
 /* Botón Guardar */
 .btn-guardar {
     padding: 6px 12px;
-    background-color: #4caf50;
+    background-color: #f57c00;
     color: white;
     border: none;
     font-size: 13px;
@@ -65,7 +65,7 @@ body {
 }
 
 .btn-guardar:hover {
-    background-color: #388e3c;
+    background-color: #ef6c00;
 }
 
 /* Filtros */
@@ -90,9 +90,9 @@ body {
     border-radius: 4px;
     border: 1px solid #ccc;
     background-color: #fff;
-    height: auto;
 }
 
+/* Botones de filtros */
 .filtros button {
     padding: 7px 14px;
     font-size: 14px;
@@ -139,12 +139,12 @@ body {
         width: 90%;
     }
 
-    .tabla-titulacion {
+    .tabla-titulados {
         font-size: 12px;
     }
 
-    .tabla-titulacion input[type="number"] {
-        width: 70px;
+    .tabla-titulados input[type="number"] {
+        width: 65px;
         font-size: 12px;
     }
 }
