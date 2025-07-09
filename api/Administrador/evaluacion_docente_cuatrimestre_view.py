@@ -3,10 +3,12 @@ from api.models import EvaluacionDocenteCuatrimestre, CicloPeriodo
 from django.contrib import messages
 import json
 
+
+from django.db.models import OuterRef, Subquery
+
 def evaluacion_docente_cuatrimestre_view(request):
     periodos = CicloPeriodo.objects.all()
 
-    # Guardar desde formulario de tabla
     if request.method == 'POST':
         if 'guardar_tabla' in request.POST:
             ciclo_ids = request.POST.getlist('ciclo_ids')
@@ -27,7 +29,6 @@ def evaluacion_docente_cuatrimestre_view(request):
             return redirect('evaluacion_docente_cuatrimestre')
 
         else:
-            # Guardar desde formulario superior
             ciclo_id = request.POST.get('ciclo_periodo')
             promedio = request.POST.get('promedio_general')
 
@@ -44,11 +45,17 @@ def evaluacion_docente_cuatrimestre_view(request):
 
             return redirect('evaluacion_docente_cuatrimestre')
 
-    # Mostrar datos
-    datos = EvaluacionDocenteCuatrimestre.objects.select_related('ciclo_periodo__ciclo').order_by('ciclo_periodo__ciclo__anio')
+    # Mostrar todos los ciclos, incluso si aún no tienen promedio registrado
+    datos = []
+    for ciclo in periodos:
+        evaluacion = EvaluacionDocenteCuatrimestre.objects.filter(ciclo_periodo=ciclo).first()
+        datos.append({
+            'ciclo_periodo': ciclo,
+            'promedio_general': evaluacion.promedio_general if evaluacion else ''
+        })
 
-    etiquetas = [str(d.ciclo_periodo) for d in datos]
-    promedios = [d.promedio_general for d in datos]
+    etiquetas = [str(d['ciclo_periodo']) for d in datos]
+    promedios = [d['promedio_general'] or 0 for d in datos]
 
     context = {
         'periodos': periodos,

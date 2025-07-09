@@ -1,60 +1,85 @@
-/* Estilos generales */
 body {
-    background-color: #f4f8fa;
+    background-color: #eef4f7;
     font-family: 'Segoe UI', sans-serif;
-}
-
-.titulo-principal {
-    text-align: center;
-    margin-bottom: 30px;
-    font-weight: bold;
     color: #333;
 }
 
-/* Tabla */
+/* 🧾 Título */
+.titulo-principal {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    margin: 40px 0 30px;
+    color: #1b396a;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 🗃️ Tabla editable */
 .table-evaluacion {
     width: 100%;
-    background-color: white;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+    background-color: #fff;
     border-radius: 8px;
     overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .table-evaluacion th {
-    background-color: #007bff;
+    background-color: #1b396a;
     color: white;
-    font-weight: bold;
+    font-weight: 600;
+    padding: 12px;
 }
 
-.table-evaluacion td, .table-evaluacion th {
-    text-align: center;
+.table-evaluacion td {
+    padding: 10px;
+    background-color: #f9fbfc;
     vertical-align: middle;
 }
 
-/* Botones */
+/* ✅ Botón Guardar */
 .btn-guardar {
-    background-color: #28a745;
+    background-color: #198754;
     border: none;
     color: white;
-    padding: 8px 16px;
+    font-weight: bold;
+    padding: 10px 20px;
     margin-top: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     transition: background-color 0.3s ease;
 }
 
 .btn-guardar:hover {
-    background-color: #218838;
+    background-color: #146c43;
 }
 
+/* 📥 Botón Descargar PDF */
+.btn-descargar {
+    background-color: #0d6efd;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-descargar:hover {
+    background-color: #004bbf;
+}
+
+/* 🔘 Botones de filtros */
 .btn-primary, .btn-secondary {
-    padding: 6px 14px;
+    padding: 8px 16px;
     font-weight: 500;
-    border-radius: 5px;
-    margin-right: 8px;
+    border-radius: 6px;
+    margin: 8px 4px 0 0;
+    border: none;
 }
 
 .btn-primary {
     background-color: #007bff;
-    border: none;
     color: white;
 }
 
@@ -64,7 +89,6 @@ body {
 
 .btn-secondary {
     background-color: #6c757d;
-    border: none;
     color: white;
 }
 
@@ -72,60 +96,59 @@ body {
     background-color: #5a6268;
 }
 
-/* Formulario y filtros */
+/* 🧩 Selects y controles */
 select.form-control,
 input.form-control {
-    border-radius: 4px;
-    height: 38px;
+    border-radius: 6px;
+    height: 40px;
+    font-size: 15px;
+    text-align: center;
 }
 
 #filtro-ciclos {
     width: 100%;
-    min-height: 130px;
-    margin-top: 6px;
-    font-size: 14px;
-}
-
-.form-check {
-    margin-bottom: 6px;
-}
-
-/* Contenedor de gráficas */
-.grafico-container, #grafico-linea-container, #grafico-barras-container,
-#grafico-pastel-container, #grafico-gauss-container {
-    background-color: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.grafico-container h6 {
-    text-align: center;
-    margin-bottom: 12px;
+    margin-top: 10px;
     font-size: 15px;
 }
-/* Ajuste de tamaño compacto para contenedores de gráficas */
+
+/* ☑️ Filtros */
+.form-check {
+    margin-bottom: 8px;
+    font-size: 15px;
+}
+
+.form-check-input {
+    margin-right: 6px;
+}
+
+/* 📊 Gráficas */
 #grafico-linea-container,
 #grafico-barras-container,
 #grafico-pastel-container,
 #grafico-gauss-container {
-    padding: 10px;
-    background-color: #fff;
+    background-color: white;
+    padding: 14px;
     border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     min-height: 250px;
-    max-height: 300px;
+    max-height: 320px;
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#grafico-linea-container h6,
+#grafico-barras-container h6,
+#grafico-pastel-container h6,
+#grafico-gauss-container h6 {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1b396a;
 }
 
 
-.btn-descargar {
-    background-color: #0d6efd;
-    color: white;
-    padding: 6px 20px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: bold;
+.choices {
+    margin-top: 10px;
 }

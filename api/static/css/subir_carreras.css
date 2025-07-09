@@ -1,62 +1,142 @@
+/* Contenedor principal de las tablas */
 .tabla-programas {
     display: flex;
+    flex-wrap: wrap;
     gap: 30px;
-    justify-content: stretch;
-    align-items: stretch;
-    flex-wrap: nowrap;
+    margin-top: 30px;
+    justify-content: center;
 }
 
+/* Tarjetas visuales para cada bloque (antiguos y nuevos) */
 .tabla-box {
-    flex: 1;
-    min-width: 48%;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    padding: 20px;
+    flex: 1 1 500px;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
 }
 
-/* ANTIGUOS: simulamos altura de formulario */
-.tabla-box.antiguos table {
-    margin-top: 65px; /* ajusta si aún no se empareja visualmente */
-}
-
-/* NUEVOS: tabla alineada abajo gracias al contenido extra arriba */
-.tabla-box.nuevos table {
-    margin-top: auto;
+/* Encabezado de cada bloque */
+.tabla-box h3 {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #1d3557;
+    font-size: 1.4rem;
 }
 
 /* Tablas */
 .tabla-box table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed;
+    margin-top: 15px;
+    background-color: #fdfdfd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .tabla-box th,
 .tabla-box td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    padding: 12px 10px;
     text-align: center;
     font-size: 14px;
-    word-wrap: break-word;
+    border: 1px solid #dee2e6;
 }
 
 .tabla-box th {
-    background-color: #f2f2f2;
-    font-weight: bold;
+    background-color: #007bff;
+    color: #fff;
+    font-weight: 600;
 }
 
-/* Ancho fijo de columnas */
+/* Ancho de columnas */
 .tabla-box table th:nth-child(1),
 .tabla-box table td:nth-child(1) {
-    width: 25%;
+    width: 30%;
 }
 
 .tabla-box table th:nth-child(2),
 .tabla-box table td:nth-child(2) {
-    width: 75%;
+    width: 70%;
+}
+
+/* Botones */
+.btn-descargar,
+.btn-subir,
+.btn-guardar {
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.btn-descargar {
+    background-color: #28a745;
+    color: #fff;
+}
+.btn-descargar:hover {
+    background-color: #218838;
+}
+
+.btn-subir {
+    background-color: #007bff;
+    color: #fff;
+}
+.btn-subir:hover {
+    background-color: #0056b3;
+}
+
+.btn-guardar {
+    background-color: #ffc107;
+    color: #212529;
+}
+.btn-guardar:hover {
+    background-color: #e0a800;
+}
+
+/* Formularios */
+#crud-nuevo-form label {
+    font-weight: bold;
+    font-size: 14px;
+}
+#crud-nuevo-form input {
+    padding: 6px 8px;
+    font-size: 14px;
+}
+
+/* Alineación visual del formulario */
+.tabla-box .d-grid {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* Espaciado de la tabla nueva */
+.tabla-box.nuevos table {
+    margin-top: auto;
+}
+
+/* Mensajes */
+.alert {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
 }

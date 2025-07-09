@@ -1,7 +1,6 @@
-
-<!-- HTML completo corregido (integrado con filtros funcionales y gráficas activas) -->
 {% extends 'base_admin.html' %}
 {% load static %}
+
 {% block title %}Examen Admisión{% endblock %}
 
 {% block content %}
@@ -10,9 +9,7 @@
 <h1>Examen de Admisión y Nuevos ciclos</h1>
 
 {% if mensaje %}
-<div id="alertaCiclo" class="alerta-exito">
-    {{ mensaje|safe }}
-</div>
+<div id="alertaCiclo" class="alerta-exito">{{ mensaje|safe }}</div>
 <script>
 setTimeout(() => {
     const alerta = document.getElementById('alertaCiclo');
@@ -25,9 +22,9 @@ setTimeout(() => {
 </script>
 {% endif %}
 
+<!-- Botones y filtros -->
 <div class="contenedor-superior">
-    <form method="POST">
-        {% csrf_token %}
+    <form method="POST">{% csrf_token %}
         <button type="submit" name="crear_ciclo" class="btn btn-crear">
             <i class="fas fa-plus-circle"></i> Crear Ciclo / Periodo
         </button>
@@ -47,6 +44,7 @@ setTimeout(() => {
     </form>
 </div>
 
+<!-- Filtros -->
 <form method="GET" class="filtros-form">
     <div>
         <label><strong>Ciclo:</strong></label>
@@ -59,7 +57,7 @@ setTimeout(() => {
     </div>
 </form>
 
-<!-- Filtros visuales -->
+<!-- Contenedor de filtros -->
 <div class="filtros-vista">
     <h5>🎯 Filtros de Visualización</h5>
     <div class="filtro-checkboxes">
@@ -81,142 +79,37 @@ setTimeout(() => {
         <button type="button" id="resetFiltros" class="btn btn-secondary">Restablecer</button>
     </div>
 </div>
+<div id="datosGraficas"
+    data-examen="{{ datos_graficas.examen|default:0 }}"
+    data-renoes="{{ datos_graficas.renoes|default:0 }}"
+    data-uaem_gem="{{ datos_graficas.uaem_gem|default:0 }}"
+    data-pase_directo="{{ datos_graficas.pase_directo|default:0 }}">
+</div>
 
-<!-- Gráficas -->
+<!-- Sección de gráficas -->
 <div class="seccion-graficas">
     <h2>Visualización Dinámica de Modalidades</h2>
     <div class="graficas-grid">
         <div class="grafica-box" id="box-barras">
             <h5>📊 Gráfico de Barras</h5>
-            <canvas id="graficaBarras" width="400" height="320"></canvas>
+            <canvas id="graficaBarras"></canvas>
         </div>
         <div class="grafica-box" id="box-linea">
             <h5>📈 Gráfico de Línea</h5>
-            <canvas id="graficaLinea" width="400" height="30"></canvas>
+            <canvas id="graficaLinea"></canvas>
         </div>
         <div class="grafica-box" id="box-pastel">
             <h5>🥧 Gráfico de Pastel</h5>
-            <canvas id="graficaPastel" width="400" height="320"></canvas>
+            <canvas id="graficaPastel"></canvas>
         </div>
         <div class="grafica-box" id="box-gauss">
             <h5>📉 Campana de Gauss</h5>
-            <canvas id="graficaGauss" width="400" height="320"></canvas>
+            <canvas id="graficaGauss"></canvas>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const datos = {
-    examen: {{ datos_graficas.examen|default:0 }},
-    renoes: {{ datos_graficas.renoes|default:0 }},
-    uaem_gem: {{ datos_graficas.uaem_gem|default:0 }},
-    pase_directo: {{ datos_graficas.pase_directo|default:0 }},
-};
-
-const etiquetas = {
-    examen: "Examen",
-    renoes: "RENOES",
-    uaem_gem: "UAEM-GEM",
-    pase_directo: "Pase Directo"
-};
-
-let charts = {};
-
-function calcularGauss(data) {
-    const mean = data.reduce((a, b) => a + b, 0) / data.length;
-    const variance = data.reduce((a, b) => a + (b - mean) ** 2, 0) / data.length;
-    const stdDev = Math.sqrt(variance);
-    return data.map(x => Math.exp(-Math.pow(x - mean, 2) / (2 * stdDev * stdDev)));
-}
-
-function renderGraficas(seleccionadas, modalidades) {
-    const keys = modalidades.length ? modalidades : Object.keys(datos);
-    const labels = keys.map(k => etiquetas[k]);
-    const values = keys.map(k => datos[k]);
-
-    if (charts.barras) charts.barras.destroy();
-    if (charts.linea) charts.linea.destroy();
-    if (charts.pastel) charts.pastel.destroy();
-    if (charts.gauss) charts.gauss.destroy();
-
-    if (seleccionadas.includes("barras")) {
-        charts.barras = new Chart(document.getElementById("graficaBarras"), {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Total por modalidad",
-                    data: values,
-                    backgroundColor: ['#007bff', '#fd7e14', '#28a745', '#dc3545']
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (seleccionadas.includes("linea")) {
-        charts.linea = new Chart(document.getElementById("graficaLinea"), {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Total por modalidad",
-                    data: values,
-                    borderColor: "#17a2b8",
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (seleccionadas.includes("pastel")) {
-        charts.pastel = new Chart(document.getElementById("graficaPastel"), {
-            type: "pie",
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: ['#007bff', '#fd7e14', '#28a745', '#dc3545']
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (seleccionadas.includes("gauss")) {
-        charts.gauss = new Chart(document.getElementById("graficaGauss"), {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Campana de Gauss",
-                    data: calcularGauss(values),
-                    borderColor: "purple",
-                    backgroundColor: "rgba(153, 102, 255, 0.2)",
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-}
-
-
-
-// Eventos
-document.getElementById("aplicarFiltros").addEventListener("click", () => {
-    const graficas = [...document.querySelectorAll(".grafica-check:checked")].map(g => g.value);
-    const modalidades = [...document.querySelectorAll(".modalidad-check:checked")].map(m => m.value);
-    document.querySelectorAll(".grafica-box").forEach(div => {
-        div.style.display = graficas.includes(div.id.replace("box-", "")) ? "block" : "none";
-    });
-    renderGraficas(graficas, modalidades);
-});
-
-document.getElementById("resetFiltros").addEventListener("click", () => location.reload());
-
-renderGraficas(["barras", "linea", "pastel", "gauss"], Object.keys(datos));
-</script>
+<!-- Tabla -->
 <div class="tabla-detalle-programa">
     <h3>Detalle por Programa</h3>
     <table>
@@ -252,170 +145,17 @@ renderGraficas(["barras", "linea", "pastel", "gauss"], Object.keys(datos));
     </table>
 </div>
 
-<!-- Sección del botón de descarga PDF -->
 <div class="text-center mt-4">
     <button id="btnDescargarPDF" class="btn btn-danger">
         📥 Descargar PDF - Examen de Admisión
     </button>
 </div>
 
-<!-- Scripts necesarios para exportar -->
+<!-- Librerías y script JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<script>
-document.getElementById("btnDescargarPDF").addEventListener("click", async () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Examen de Admisión", pageWidth / 2, 20, { align: "center" });
-
-    const graficas = [
-        "box-barras", "box-linea", "box-pastel", "box-gauss"
-    ];
-
-    let y = 30;
-
-    for (const id of graficas) {
-        const container = document.getElementById(id);
-        if (container && container.style.display !== "none") {
-            const canvas = container.querySelector("canvas");
-await html2canvas(canvas, {
-    scale: 2,
-    useCORS: true
-}).then(c => {
-    const imgData = c.toDataURL("image/png");
-    const width = 180;
-    const height = c.height * (width / c.width);
-    if (y + height > 270) {
-        doc.addPage();
-        y = 20;
-    }
-    doc.addImage(imgData, "PNG", 15, y, width, height);
-    y += height + 10;
-});
-        }
-    }
-
-    doc.save("Examen_de_Admision.pdf");
-});
-</script>
-
-
-
-<div class="tablas-programas-container">
-    <div class="tabla-programa">
-        <h5 class="titulo-programa-azul">📘 Programas Antiguos</h5>
-        <div class="tabla-scroll">
-            <table class="tabla-programas">
-                <thead><tr><th>ID</th><th>Nombre</th></tr></thead>
-                <tbody>
-                    {% for pa in programas_antiguos %}
-                    <tr><td>{{ pa.id }}</td><td>{{ pa.nombre }}</td></tr>
-                    {% empty %}
-                    <tr><td colspan="2">No hay programas antiguos</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="tabla-programa">
-        <h5 class="titulo-programa-verde">📗 Programas Nuevos</h5>
-        <div class="tabla-scroll">
-            <table class="tabla-programas">
-                <thead><tr><th>ID</th><th>Nombre</th></tr></thead>
-                <tbody>
-                    {% for pn in programas_nuevos %}
-                    <tr><td>{{ pn.id }}</td><td>{{ pn.nombre }}</td></tr>
-                    {% empty %}
-                    <tr><td colspan="2">No hay programas nuevos</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-function aplicarFiltros() {
-    const modalidadChecks = document.querySelectorAll('.modalidad-check:checked');
-    const graficaChecks = document.querySelectorAll('.grafica-check:checked');
-
-    const modalidades = Array.from(modalidadChecks).map(chk => chk.value);
-    const graficas = Array.from(graficaChecks).map(chk => chk.value);
-
-    const baseData = {
-        examen: {{ datos_graficas.examen|default:0 }},
-        renoes: {{ datos_graficas.renoes|default:0 }},
-        uaem_gem: {{ datos_graficas.uaem_gem|default:0 }},
-        pase_directo: {{ datos_graficas.pase_directo|default:0 }}
-    };
-
-    const labels = modalidades.map(m => ({
-        examen: "Examen", renoes: "RENOES", uaem_gem: "UAEM-GEM", pase_directo: "Pase Directo"
-    }[m]));
-    const valores = modalidades.map(m => baseData[m]);
-
-    // Ocultar gráficas
-    ['barras','linea','pastel','gauss'].forEach(tipo => {
-        document.getElementById(`grafica${capitalize(tipo)}`).parentElement.style.display = graficas.includes(tipo) ? 'block' : 'none';
-    });
-
-    redibujarGraficas(labels, valores, graficas);
-}
-
-function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function redibujarGraficas(labels, data, visibles) {
-    window.chartRefs = window.chartRefs || {};
-    ['barras','linea','pastel','gauss'].forEach(tipo => {
-        if (window.chartRefs[tipo]) window.chartRefs[tipo].destroy();
-    });
-
-    const colores = ['#007bff', '#fd7e14', '#28a745', '#dc3545'];
-
-    if (visibles.includes('barras')) {
-        window.chartRefs.barras = new Chart(document.getElementById("graficaBarras"), {
-            type: "bar",
-            data: { labels: labels, datasets: [{ label: "Total por modalidad", data: data, backgroundColor: colores }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (visibles.includes('linea')) {
-        window.chartRefs.linea = new Chart(document.getElementById("graficaLinea"), {
-            type: "line",
-            data: { labels: labels, datasets: [{ label: "Total por modalidad", data: data, borderColor: "#17a2b8", fill: false, tension: 0.4 }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (visibles.includes('pastel')) {
-        window.chartRefs.pastel = new Chart(document.getElementById("graficaPastel"), {
-            type: "pie",
-            data: { labels: labels, datasets: [{ data: data, backgroundColor: colores }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-    if (visibles.includes('gauss')) {
-        const mean = data.reduce((a, b) => a + b, 0) / data.length;
-        const std = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length);
-        const gauss = data.map(x => Math.exp(-Math.pow(x - mean, 2) / (2 * std * std)));
-        window.chartRefs.gauss = new Chart(document.getElementById("graficaGauss"), {
-            type: "line",
-            data: { labels: labels, datasets: [{ label: "Campana de Gauss", data: gauss, borderColor: "purple", backgroundColor: "rgba(153, 102, 255, 0.2)", fill: true, tension: 0.4 }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-}
-</script>
-
-
-
+<script src="{% static 'js/examenadmision.js' %}"></script>
 
 {% endblock %}

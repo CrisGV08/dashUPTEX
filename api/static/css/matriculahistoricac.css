@@ -1,0 +1,100 @@
+/* ===== Estilos generales ===== */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* ===== Título ===== */
+h2 {
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+
+/* ===== Tabla ===== */
+.table th, .table td {
+    vertical-align: middle;
+    text-align: center;
+    font-size: 14px;
+}
+
+.table thead th {
+    background-color: #e3f2fd;
+    color: #000;
+}
+
+/* ===== Input de celda ===== */
+input[type="number"].form-control {
+    width: 100%;
+    padding: 6px;
+    font-size: 13px;
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* ===== Botón Guardar Cambios ===== */
+button.btn-primary {
+    background-color: #1976d2;
+    border: none;
+    padding: 10px 30px;
+    font-size: 15px;
+    border-radius: 6px;
+}
+
+/* ===== Filtros de gráficas ===== */
+#filtroGraficas label {
+    margin: 0 10px;
+    font-weight: 500;
+    font-size: 15px;
+    color: #333;
+}
+
+/* ===== Select (Choices.js) ===== */
+.choices__inner {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    min-height: 44px;
+}
+
+.choices__list--multiple .choices__item {
+    background-color: #42a5f5;
+    color: white;
+    border-radius: 15px;
+    padding: 5px 10px;
+    margin: 2px 5px;
+    font-size: 13px;
+}
+
+/* ===== Botón Mostrar Todas ===== */
+#btnMostrarTodas {
+    margin-top: 15px;
+    padding: 8px 20px;
+    font-size: 15px;
+    border-radius: 6px;
+    background-color: #388e3c;
+    color: white;
+    border: none;
+}
+
+/* ===== Gráficas ===== */
+canvas {
+    width: 100% !important;
+    max-width: 600px;        /* ← más grandes */
+    height: 320px !important; /* ← más alto */
+    margin: 0 auto;
+}
+
+/* ===== Contenedor de cada gráfica ===== */
+#graficoMatriculaTotalContainer,
+#graficoMatriculaCarreraContainer,
+#graficoPastelCarrerasContainer,
+#graficoGaussContainer {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}

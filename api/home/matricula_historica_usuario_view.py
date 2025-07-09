@@ -28,6 +28,7 @@ def matricula_historica_usuario_view(request):
         "labels_json": json.dumps(labels_ciclos),
         "totales_json": json.dumps(totales_lista),
         "programas_json": json.dumps(programas_totales),
+        "ciclos": ciclos,  # ✅ AHORA YA SE VEN EN EL SELECT
     }
 
     return render(request, "matricula_historica_usuario.html", context)

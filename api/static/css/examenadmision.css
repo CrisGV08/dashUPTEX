@@ -186,3 +186,170 @@ body {
     font-size: 16px;
     margin-bottom: 10px;
 }
+/* ----- Estilos generales ----- */
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* ----- Alerta de éxito ----- */
+.alerta-exito {
+    background-color: #d4edda;
+    border-left: 5px solid #28a745;
+    padding: 10px;
+    margin: 20px auto;
+    width: 80%;
+    color: #155724;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+/* ----- Botones superiores ----- */
+.botones-superiores,
+.contenedor-superior {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin: 20px auto;
+}
+
+.botones-superiores form,
+.botones-superiores a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.btn-crear {
+    background-color: #007bff;
+}
+.btn-crear:hover {
+    background-color: #0056b3;
+}
+
+.btn-descargar {
+    background-color: #28a745;
+}
+.btn-descargar:hover {
+    background-color: #1e7e34;
+}
+
+.btn-subir {
+    background-color: #fd7e14;
+}
+.btn-subir:hover {
+    background-color: #e8590c;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* ----- Filtros ----- */
+.filtros-form {
+    text-align: center;
+    margin-top: 20px;
+}
+.filtros-form select {
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* ----- Filtros visuales ----- */
+.filtros-vista {
+    margin: 30px auto;
+    padding: 20px;
+    width: 90%;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.filtro-checkboxes {
+    margin: 10px 0;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.filtro-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ----- Gráficas ----- */
+.seccion-graficas {
+    padding: 30px 20px;
+}
+.graficas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+.grafica-box {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    text-align: center;
+}
+.grafica-box h5 {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* ----- Tabla ----- */
+.tabla-detalle-programa {
+    margin: 30px auto;
+    width: 90%;
+}
+.tabla-detalle-programa table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.tabla-detalle-programa th,
+.tabla-detalle-programa td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+.tabla-detalle-programa th {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+.total-fila td {
+    background-color: #e2e6ea;
+    font-weight: bold;
+}
+
+/* ----- Botón PDF ----- */
+.text-center {
+    text-align: center;
+    margin: 30px 0;
+}

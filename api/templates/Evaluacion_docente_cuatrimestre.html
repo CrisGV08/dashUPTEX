@@ -3,101 +3,65 @@
 {% block title %}Evaluación Docente por Cuatrimestre{% endblock %}
 
 {% block content %}
+<!-- Estilo propio de esta vista -->
 <link rel="stylesheet" href="{% static 'css/evaluacion_docente.css' %}">
+<!-- CSS de Choices -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+<!-- JS de Choices -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
 
 <h2 class="titulo-principal">📊 Evaluación Docente por Cuatrimestre</h2>
 
-<!-- Botón para descargar PDF -->
+<!-- Botón para exportar PDF -->
 <div class="mt-4 text-center">
-    <button id="btnDescargarPDF" class="btn-descargar">
-        🧾 Descargar PDF con Gráficas
-    </button>
+    <button id="btnDescargarPDF" class="btn-descargar">🧾 Descargar PDF con Gráficas</button>
 </div>
 
-
-
-<!-- Formulario de captura superior -->
-<form method="POST">
-    {% csrf_token %}
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-
-            </select>
-        </div>
-
-    </div>
-</form>
-
-<!-- Tabla editable con Guardar Cambios -->
+<!-- Tabla editable con formulario -->
 <form method="POST" id="tabla-form">
     {% csrf_token %}
     <div class="table-responsive mt-4">
         <table class="table table-bordered table-evaluacion text-center">
             <thead class="table-primary">
-                <tr>
-                    <th>Ciclo Periodo</th>
-                    <th>Promedio General</th>
-                </tr>
+                <tr><th>Ciclo Periodo</th><th>Promedio General</th></tr>
             </thead>
             <tbody>
                 {% for item in datos %}
                 <tr>
-                    <td>
-                        {{ item.ciclo_periodo }}
+                    <td>{{ item.ciclo_periodo }}
                         <input type="hidden" name="ciclo_ids" value="{{ item.ciclo_periodo.id }}">
                     </td>
                     <td>
-                        <input type="number" step="0.01" name="promedios" value="{{ item.promedio_general }}" class="form-control text-center" required>
+                        <input type="number" step="0.01" name="promedios" value="{{ item.promedio_general }}"
+                            class="form-control text-center" required>
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
-                    <td colspan="2">No hay registros aún.</td>
-                </tr>
+                <tr><td colspan="2">No hay registros aún.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
-
-
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" name="guardar_tabla" class="btn-guardar w-100 ">Guardar Cambios</button>
-        </div>
-
-
-
+        <button type="submit" name="guardar_tabla" class="btn-guardar w-100">Guardar Cambios</button>
     </div>
 </form>
-<!-- Filtros -->
-<div class="mt-5">
-    <h5>🎯 Filtros de visualización</h5>
 
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" value="linea" checked>
-        <label class="form-check-label">Gráfico de Línea</label>
-    </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" value="barras" checked>
-        <label class="form-check-label">Gráfico de Barras</label>
-    </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" value="pastel" checked>
-        <label class="form-check-label">Gráfico de Pastel</label>
-    </div>
-    <div class="form-check">
-        <input type="checkbox" class="form-check-input" value="gauss" checked>
-        <label class="form-check-label">Gráfico Gaussiano</label>
-    </div>
+<!-- Filtros -->
+<div class="filtros mt-5">
+    <h5>🎯 Filtros de visualización</h5>
+    <div class="form-check"><input type="checkbox" class="form-check-input" value="linea" checked><label class="form-check-label">Gráfico de Línea</label></div>
+    <div class="form-check"><input type="checkbox" class="form-check-input" value="barras" checked><label class="form-check-label">Gráfico de Barras</label></div>
+    <div class="form-check"><input type="checkbox" class="form-check-input" value="pastel" checked><label class="form-check-label">Gráfico de Pastel</label></div>
+    <div class="form-check"><input type="checkbox" class="form-check-input" value="gauss" checked><label class="form-check-label">Gráfico Gaussiano</label></div>
 
     <!-- Selector de ciclos -->
-    <div class="mt-3">
-        <label><strong>Ciclos a mostrar:</strong></label>
-        <select id="filtro-ciclos" class="form-control" multiple size="5" style="min-height: 130px;">
-            {% for p in periodos %}
-                <option value="{{ p }}">{{ p }}</option>
-            {% endfor %}
-        </select>
-        <small class="text-muted">Mantén presionada Ctrl (o Cmd en Mac) para seleccionar múltiples ciclos</small>
-    </div>
+    <select id="filtro-ciclos" class="form-control" multiple>
+    {% for p in periodos %}
+        <option value="{{ p }}">{{ p }}</option>
+    {% endfor %}
+</select>
+
 
     <div class="mt-3">
         <button id="btnAplicar" class="btn btn-primary">Aplicar Filtros</button>
@@ -105,8 +69,8 @@
     </div>
 </div>
 
-<!-- Gráficas -->
-<div class="row mt-4">
+<!-- Contenedor de Gráficas -->
+<div class="row mt-4 graficas-container">
     <div class="col-md-6" id="grafico-linea-container">
         <h6>📈 Gráfico de Línea</h6>
         <canvas id="grafico-linea" height="300"></canvas>
@@ -125,145 +89,17 @@
     </div>
 </div>
 
+<!-- Librerías y Script externo -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const etiquetas = {{ etiquetas|safe }};
-    const valores = {{ promedios|safe }};
-
-    const charts = {
-        linea: new Chart(document.getElementById("grafico-linea"), {
-            type: 'line',
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    label: 'Promedio',
-                    data: valores,
-                    backgroundColor: 'rgba(0, 123, 255, 0.3)',
-                    borderColor: 'blue',
-                    tension: 0.3
-                }]
-            },
-            options: { responsive: true }
-        }),
-        barras: new Chart(document.getElementById("grafico-barras"), {
-            type: 'bar',
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    label: 'Promedio',
-                    data: valores,
-                    backgroundColor: 'rgba(40, 167, 69, 0.6)',
-                    borderColor: 'green',
-                    borderWidth: 1
-                }]
-            },
-            options: { responsive: true }
-        }),
-        pastel: new Chart(document.getElementById("grafico-pastel"), {
-            type: 'pie',
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    data: valores,
-                    backgroundColor: etiquetas.map((_, i) => `hsl(${i * 60}, 70%, 70%)`)
-                }]
-            },
-            options: { responsive: true }
-        }),
-        gauss: new Chart(document.getElementById("grafico-gauss"), {
-            type: 'line',
-            data: {
-                labels: etiquetas,
-                datasets: [{
-                    label: 'Distribución Gaussiana',
-                    data: calcularGauss(valores),
-                    borderColor: 'purple',
-                    backgroundColor: 'rgba(123, 0, 255, 0.2)',
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true }
-        })
-    };
-
-    document.getElementById("btnAplicar").addEventListener("click", () => {
-        const seleccionados = [...document.querySelectorAll('#filtro-ciclos option:checked')].map(opt => opt.value.trim());
-        const checks = [...document.querySelectorAll('.form-check-input')];
-
-        checks.forEach(chk => {
-            document.getElementById(`grafico-${chk.value}-container`).style.display = chk.checked ? 'block' : 'none';
-        });
-
-        const nuevasEtiquetas = [];
-        const nuevosValores = [];
-
-        etiquetas.forEach((et, i) => {
-            if (seleccionados.includes(et.trim())) {
-                nuevasEtiquetas.push(et);
-                nuevosValores.push(valores[i]);
-            }
-        });
-
-        Object.entries(charts).forEach(([key, chart]) => {
-            chart.data.labels = nuevasEtiquetas;
-            chart.data.datasets[0].data = key === 'gauss' ? calcularGauss(nuevosValores) : nuevosValores;
-            chart.update();
-        });
-    });
-
-    document.getElementById("btnReset").addEventListener("click", () => location.reload());
-
-    function calcularGauss(datos) {
-        const prom = datos.reduce((a, b) => a + b, 0) / datos.length;
-        const sigma = Math.sqrt(datos.reduce((a, b) => a + (b - prom) ** 2, 0) / datos.length);
-        return datos.map(x => Math.exp(-Math.pow(x - prom, 2) / (2 * sigma ** 2)));
-    }
-</script>
-<!-- Librerías para exportar a PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{% static 'js/evaluacion_docente.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
 
 <script>
-document.getElementById("btnDescargarPDF").addEventListener("click", async () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    // Encabezado
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text("Evaluación Docente por Cuatrimestre", pageWidth / 2, 20, { align: "center" });
-
-    const visibleCharts = [
-        "grafico-linea-container",
-        "grafico-barras-container",
-        "grafico-pastel-container",
-        "grafico-gauss-container"
-    ];
-
-    let yOffset = 30;
-
-    for (const id of visibleCharts) {
-        const container = document.getElementById(id);
-        if (container && container.style.display !== 'none') {
-            await html2canvas(container, { scale: 3 }).then(canvas => {
-                const maxWidth = 450;
-                const width = Math.min(maxWidth, canvas.width / 3);  // ajuste por scale
-                const height = canvas.height * (width / canvas.width);
-
-                if (yOffset + height > 280) {
-                    doc.addPage();
-                    yOffset = 20;
-                }
-
-                doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, yOffset, width, height);
-                yOffset += height + 15;
-            });
-        }
-    }
-
-    doc.save("Evaluacion_Docente_por_Cuatrimestre.pdf");
-});
+    const etiquetas = {{ etiquetas|safe }};
+    const promedios = {{ promedios|safe }};
 </script>
-
 {% endblock %}

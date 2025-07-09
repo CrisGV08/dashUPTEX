@@ -1,122 +1,66 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Matrícula Histórica{% endblock %}
 
 {% block content %}
-<h2 style="text-align: center;">Matrícula Histórica</h2>
-
-<!-- 🔥 Filtro de gráficas -->
-<div class="text-center mb-4">
-    <label><strong>Selecciona las gráficas:</strong></label>
-    <div id="filtroGraficas" class="d-flex justify-content-center flex-wrap gap-3 mt-2">
-        <div><input type="checkbox" id="chkTotal" value="graficoMatriculaTotal" checked> Matrícula Total</div>
-        <div><input type="checkbox" id="chkCarrera" value="graficoMatriculaCarrera" checked> Matrícula por Carrera</div>
-        <div><input type="checkbox" id="chkPastel" value="graficoPastelCarreras" checked> Distribución Total</div>
-    </div>
-    <button id="btnMostrarTodas" class="btn btn-success mt-3">Mostrar Todas</button>
-</div>
-
-<!-- Contenedor de gráficas -->
-<div id="contenedorGraficas" class="container">
-    <div class="row justify-content-center text-center">
-        <div id="graficoMatriculaTotalContainer" class="col-12 col-md-4 mb-4">
-            <canvas id="graficoMatriculaTotal" style="max-height: 250px;"></canvas>
-        </div>
-        <div id="graficoMatriculaCarreraContainer" class="col-12 col-md-4 mb-4">
-            <canvas id="graficoMatriculaCarrera" style="max-height: 250px;"></canvas>
-        </div>
-        <div id="graficoPastelCarrerasContainer" class="col-12 col-md-4 mb-4">
-            <canvas id="graficoPastelCarreras" style="max-height: 250px;"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Chart.js -->
+<link rel="stylesheet" href="{% static 'css/matriculahistoricac.css' %}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const labels = {{ labels_json|safe }};
-    const totales = {{ totales_json|safe }};
-    const programas = {{ programas_json|safe }};
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
-    const chartTotal = new Chart(document.getElementById('graficoMatriculaTotal'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Matrícula Total',
-                    data: totales,
-                    backgroundColor: 'rgba(255, 99, 132, 0.4)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Tendencia',
-                    data: totales,
-                    type: 'line',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    fill: false,
-                    tension: 0.3,
-                    pointRadius: 0
-                }
-            ]
-        },
-        options: { responsive: true }
-    });
+<div class="container-fluid px-4">
+    <h2 class="mt-4">📊 Matrícula Histórica</h2>
+    <div class="filtros-matricula">
+        <div id="filtroGraficas" class="form-group mb-2">
+            <label><strong>Selecciona las gráficas:</strong></label><br>
+            <label><input type="checkbox" value="graficoMatriculaTotal" checked> Matrícula Total (Gráfico Lineal)</label>
+            <label><input type="checkbox" value="graficoMatriculaCarrera" checked> Matrícula por Carrera (Gráfico de Barras)</label>
+            <label><input type="checkbox" value="graficoPastelCarreras" checked> Distribución por Carrera (Gráfico Pastel)</label>
+            <label><input type="checkbox" value="graficoGauss" checked> Distribución Gaussiana</label>
+        </div>
 
-    const datasetsProgramas = Object.entries(programas).map(([nombre, valores]) => ({
-        label: nombre,
-        data: valores,
-        backgroundColor: `hsla(${Math.random() * 360}, 70%, 60%, 0.6)`,
-        borderColor: `hsla(${Math.random() * 360}, 70%, 60%, 1)`,
-        borderWidth: 1
-    }));
+        <div class="form-group mb-2">
+            <label for="filtro-ciclos"><strong>Selecciona los ciclos:</strong></label>
+            <select id="filtro-ciclos" multiple></select>
+        </div>
 
-    const chartCarrera = new Chart(document.getElementById('graficoMatriculaCarrera'), {
-        type: 'bar',
-        data: { labels: labels, datasets: datasetsProgramas },
-        options: { responsive: true }
-    });
+        <div class="mb-3">
+            <button id="btnMostrarTodas" class="btn btn-primary">Mostrar Todo</button>
+        </div>
+    </div>
 
-    const primerCiclo = labels[0];
-    const datosPrimerCiclo = Object.entries(programas).map(([nombre, valores]) => ({
-        label: nombre,
-        value: valores[0] || 0
-    })).filter(item => item.value > 0);
+    <!-- 📈 Gráfico Lineal -->
+    <div id="graficoMatriculaTotalContainer" class="grafica-container">
+        <h5>Matrícula Total (Gráfico Lineal)</h5>
+        <canvas id="graficoMatriculaTotal"></canvas>
+    </div>
 
-    const chartPastel = new Chart(document.getElementById('graficoPastelCarreras'), {
-        type: 'pie',
-        data: {
-            labels: datosPrimerCiclo.map(d => d.label),
-            datasets: [{
-                data: datosPrimerCiclo.map(d => d.value),
-                backgroundColor: datosPrimerCiclo.map(() => `hsla(${Math.random() * 360}, 70%, 70%, 0.7)`),
-                borderColor: 'white',
-                borderWidth: 1
-            }]
-        },
-        options: { responsive: true }
-    });
+    <!-- 📊 Gráfico de Barras -->
+    <div id="graficoMatriculaCarreraContainer" class="grafica-container">
+        <h5>Matrícula por Carrera (Gráfico de Barras)</h5>
+        <canvas id="graficoMatriculaCarrera"></canvas>
+    </div>
+    <!-- 🍰 Gráfico Pastel -->
+    <div id="graficoPastelCarrerasContainer" class="grafica-container">
+        <h5>Distribución por Carrera (Gráfico Pastel)</h5>
+        <canvas id="graficoPastelCarreras"></canvas>
+    </div>
 
-    // Filtros de visibilidad
-    const checkboxes = document.querySelectorAll('#filtroGraficas input[type="checkbox"]');
-    const btnMostrarTodas = document.getElementById('btnMostrarTodas');
+    <!-- 🧠 Gráfico Gaussiano -->
+    <div id="graficoGaussContainer" class="grafica-container">
+        <h5>Distribución Gaussiana</h5>
+        <canvas id="graficoGauss"></canvas>
+    </div>
+</div>
 
-    checkboxes.forEach(chk => {
-        chk.addEventListener('change', actualizarGraficas);
-    });
+<!-- Datos en JSON -->
+<script id="labels-data" type="application/json">{{ labels_json|safe }}</script>
+<script id="totales-data" type="application/json">{{ totales_json|safe }}</script>
+<script id="programas-data" type="application/json">{{ programas_json|safe }}</script>
 
-    btnMostrarTodas.addEventListener('click', () => {
-        checkboxes.forEach(chk => chk.checked = true);
-        actualizarGraficas();
-    });
+<!-- Script principal -->
+<script src="{% static 'js/matriculahistoricac_usuario.js' %}"></script>
 
-    function actualizarGraficas() {
-        checkboxes.forEach(chk => {
-            const container = document.getElementById(chk.value + "Container");
-            container.style.display = chk.checked ? 'block' : 'none';
-        });
-    }
-
-    actualizarGraficas();
-</script>
 {% endblock %}

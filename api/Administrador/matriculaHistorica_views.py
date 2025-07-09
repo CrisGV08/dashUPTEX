@@ -3,6 +3,7 @@ from collections import defaultdict
 from api.models import CicloPeriodo, ProgramaEducativoAntiguo, ProgramaEducativoNuevo, MatriculaHistorica
 import json
 
+
 def matricula_historica(request):
     if request.method == 'POST':
         for key, value in request.POST.items():
@@ -54,7 +55,10 @@ def matricula_historica(request):
             programas_totales[nombre][index] += reg.cantidad
 
     labels_ciclos = [f"{cp.periodo.nombre} {cp.ciclo.anio}" for cp in ciclos]
-    totales_lista = [totales_por_ciclo.get(cp.id, 0) for cp in ciclos]
+    totales_dict = {
+        f"{cp.periodo.nombre} {cp.ciclo.anio}": totales_por_ciclo.get(cp.id, 0)
+        for cp in ciclos
+    }
 
     context = {
         "ciclos": ciclos,
@@ -63,7 +67,7 @@ def matricula_historica(request):
         "datos": datos,
         "totales_por_ciclo": totales_por_ciclo,
         "labels_json": json.dumps(labels_ciclos),
-        "totales_json": json.dumps(totales_lista),
+    "totales_json": json.dumps(totales_dict),
         "programas_json": json.dumps(programas_totales),
     }
 
