@@ -1,141 +1,107 @@
 {% extends 'base_admin.html' %}
 {% load static %}
 
-{% block title %}Matrícula H. Nuevo Ingreso {% endblock %}
+{% block title %}Matrícula Histórico de Nuevo Ingreso{% endblock %}
 
 {% block content %}
-<div class="admin-panel">
-    <h1 style="text-align: center; margin-bottom: 30px;">Matrícula H. Nuevo Ingreso</h1>
+<link rel="stylesheet" href="{% static 'css/matricula_nuevo_ingreso.css' %}">
 
-    <!-- 📁 Botones de acciones -->
-    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
-        <a href="{% url 'descargar_plantilla_matricula_h_nuevo_ingreso' %}" class="btn-admin">
-            📥 Descargar Plantilla
-        </a>
+<div class="container mt-4">
+    <h2 class="titulo-principal">📘 Matrícula Histórico de Nuevo Ingreso</h2>
 
-        <form method="POST" enctype="multipart/form-data" style="display: flex; align-items: center; gap: 10px;">
-            {% csrf_token %}
-            <input type="file" name="archivo_excel" accept=".xlsx, .xls" required class="input-file">
-            <button type="submit" class="btn-admin">⬆️ Subir Archivo</button>
-        </form>
-    </div>
-
-    <!-- 📣 Mensajes -->
     {% if messages %}
-        <div style="margin-bottom: 20px; text-align: center;">
+        <div class="mb-4">
             {% for message in messages %}
-                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin: 5px auto; width: 60%;">
-                    {{ message }}
-                </div>
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
         </div>
     {% endif %}
 
-    <hr style="margin: 30px 0;">
-
-    <!-- 🎯 Dashboard Visual -->
-    <h2 style="text-align: center; margin-bottom: 30px;">Dashboard de Matrícula</h2>
-
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
-        <div class="card-dashboard">
-            <h3 style="text-align:center; margin-bottom: 10px;">Total por Ciclo</h3>
-            <canvas id="graficaTotal" width="320" height="240"></canvas>
+    <!-- Filtros -->
+    <div class="row filtros mb-4">
+        <div class="col-md-12">
+            <label><strong>Selecciona las gráficas a mostrar:</strong></label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="graficaLineal" checked>
+                <label class="form-check-label" for="graficaLineal">📈 Línea</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="graficaBarras" checked>
+                <label class="form-check-label" for="graficaBarras">📊 Barras</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="graficaPastel" checked>
+                <label class="form-check-label" for="graficaPastel">🥧 Pastel</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="graficaGauss" checked>
+                <label class="form-check-label" for="graficaGauss">📉 Gauss</label>
+            </div>
         </div>
 
-        <div class="card-dashboard">
-            <h3 style="text-align:center; margin-bottom: 10px;">Distribución Modalidades</h3>
-            <canvas id="graficaPastel" width="300" height="300"></canvas>
+        <div class="col-md-6 mt-3">
+            <label for="filtro-ciclos"><strong>Selecciona Ciclos:</strong></label>
+            <select id="filtro-ciclos" multiple>
+                {% for ciclo in datos_dashboard.labels %}
+                    <option value="{{ ciclo }}" selected>{{ ciclo }}</option>
+                {% endfor %}
+            </select>
         </div>
     </div>
 
-    <div class="card-dashboard" style="margin-top: 40px;">
-        <h3 style="text-align:center; margin-bottom: 10px;">Matrícula por Programa Educativo</h3>
-        <canvas id="graficaProgramas" height="400"></canvas>
+    <!-- Choices.js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            new Choices("#filtro-ciclos", {
+                removeItemButton: true,
+                placeholderValue: "Selecciona uno o más ciclos"
+            });
+        });
+    </script>
+
+    <!-- Gráficas -->
+    <div class="graficas-container">
+        <div class="grafica" id="container-linea">
+            <canvas id="graficoLinea"></canvas>
+        </div>
+        <div class="grafica" id="container-barras">
+            <canvas id="graficoBarras"></canvas>
+        </div>
+        <div class="grafica" id="container-pastel">
+            <canvas id="graficoPastel"></canvas>
+        </div>
+        <div class="grafica" id="container-gauss">
+            <canvas id="graficoGauss"></canvas>
+        </div>
     </div>
 
+    <!-- Botones -->
+    <div class="acciones-matricula mt-5 mb-4">
+        <a href="{% url 'descargar_plantilla_matricula_h_nuevo_ingreso' %}" class="btn btn-success">
+            📥 Descargar Plantilla Excel
+        </a>
+<button id="descargarPDF" class="btn btn-success mt-4">📄 Descargar PDF</button>
+
+        <form method="POST" enctype="multipart/form-data" class="d-inline-block ms-3">
+            {% csrf_token %}
+            <input type="file" name="archivo_excel" accept=".xlsx" required>
+            <button type="submit" class="btn btn-primary">⬆️ Subir Archivo</button>
+        </form>
+    </div>
 </div>
 
-<!-- 🎨 ChartJS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Carga de datos y scripts -->
 <script>
-const datos = {{ datos_dashboard|safe }};
 
-// 📊 Gráfica barras total
-new Chart(document.getElementById('graficaTotal'), {
-    type: 'bar',
-    data: {
-        labels: datos.labels,
-        datasets: [{
-            label: 'Matrícula Total',
-            data: datos.totales,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 },
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
+    const datosDashboard = {{ datos_grafica_json|safe }};
 
-// 🥧 Gráfica pastel
-new Chart(document.getElementById('graficaPastel'), {
-    type: 'pie',
-    data: {
-        labels: ['Programas Antiguos', 'Programas Nuevos'],
-        datasets: [{
-            data: [datos.total_antiguos, datos.total_nuevos],
-            backgroundColor: ['#42a5f5', '#66bb6a']
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 }
-    }
-});
-
-// 📈 Gráfica matrícula por programa
-const datasetsProgramas = Object.entries(datos.programas_totales).map(([nombre, valores]) => ({
-    label: nombre,
-    data: valores,
-    borderColor: `hsla(${Math.random() * 360}, 70%, 50%, 1)`,
-    backgroundColor: `hsla(${Math.random() * 360}, 70%, 70%, 0.5)`,
-    fill: false,
-    tension: 0.4
-}));
-
-new Chart(document.getElementById('graficaProgramas'), {
-    type: 'line',
-    data: {
-        labels: datos.labels,
-        datasets: datasetsProgramas
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 },
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/matricula_nuevo_ingreso.js' %}"></script>
+<!-- Librería jsPDF completa con soporte de imágenes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
-<!-- ✨ Estilos extra para embellecer las tarjetas -->
-<style>
-.card-dashboard {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    width: 350px;
-    transition: transform 0.3s ease;
-}
-.card-dashboard:hover {
-    transform: translateY(-5px);
-}
-</style>
 {% endblock %}

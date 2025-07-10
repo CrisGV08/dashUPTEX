@@ -1,0 +1,102 @@
+/* Estilo principal del contenedor */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Título */
+.titulo-principal {
+    text-align: center;
+    font-weight: bold;
+    color: #343a40;
+    margin-bottom: 30px;
+}
+
+/* Estilo de los filtros */
+.filtros {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+}
+
+/* Gráficas */
+.graficas-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.grafica {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+.grafica:hover {
+    transform: translateY(-5px);
+}
+.grafica canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Botones */
+.acciones-matricula {
+    text-align: center;
+    margin-top: 40px;
+}
+.acciones-matricula input[type="file"] {
+    display: inline-block;
+    padding: 6px;
+}
+.btn {
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    margin-right: 10px;
+}
+.btn-success {
+    background-color: #28a745;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+.btn-primary {
+    background-color: #007bff;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+/* Alertas */
+.alert {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.alert-error,
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}

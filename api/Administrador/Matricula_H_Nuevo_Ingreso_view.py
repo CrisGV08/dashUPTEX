@@ -16,7 +16,6 @@ def matricula_h_nuevo_ingreso_view(request):
 
     if request.method == "POST" and request.FILES.get('archivo_excel'):
         excel_file = request.FILES['archivo_excel']
-
         try:
             df = pd.read_excel(excel_file)
             errores = []
@@ -25,16 +24,14 @@ def matricula_h_nuevo_ingreso_view(request):
             for i, fila in df.iterrows():
                 try:
                     ciclo_periodo = CicloPeriodo.objects.get(id=int(fila['ciclo_periodo_id']))
-
-                    # Validación y limpieza segura de programa_antiguo y programa_nuevo
                     programa_antiguo = None
                     programa_nuevo = None
 
-                    if pd.notna(fila['programa_antiguo_id']) and str(fila['programa_antiguo_id']).strip() != '':
-                        programa_antiguo = ProgramaEducativoAntiguo.objects.filter(id=int(fila['programa_antiguo_id'])).first()
+                    if pd.notna(fila['programa_antiguo_clave']) and str(fila['programa_antiguo_clave']).strip():
+                        programa_antiguo = ProgramaEducativoAntiguo.objects.filter(nombre__iexact=str(fila['programa_antiguo_clave']).strip()).first()
 
-                    if pd.notna(fila['programa_nuevo_id']) and str(fila['programa_nuevo_id']).strip() != '':
-                        programa_nuevo = ProgramaEducativoNuevo.objects.filter(id=int(fila['programa_nuevo_id'])).first()
+                    if pd.notna(fila['programa_nuevo_clave']) and str(fila['programa_nuevo_clave']).strip():
+                        programa_nuevo = ProgramaEducativoNuevo.objects.filter(nombre__iexact=str(fila['programa_nuevo_clave']).strip()).first()
 
                     if not programa_antiguo and not programa_nuevo:
                         errores.append(f"Fila {i+2}: Programa no encontrado.")
@@ -60,20 +57,27 @@ def matricula_h_nuevo_ingreso_view(request):
         except Exception as e:
             messages.error(request, f"❌ Error al procesar el archivo: {e}")
 
-    # 🔍 Preparar datos para gráficas
+    # 🧠 Generación de datos para gráficas
     datos_por_ciclo = defaultdict(int)
-    programas_totales = defaultdict(lambda: [0] * 20)  # Máximo 20 ciclos
+    programas_totales = {
+        "Programas Antiguos": [0] * 50,
+        "Programas Nuevos": [0] * 50
+    }
     ciclos_unicos = []
+    ciclos_set = set()
 
     for d in datos:
         ciclo_label = f"{d.ciclo_periodo.ciclo.anio} - {d.ciclo_periodo.periodo.clave}"
-        if ciclo_label not in ciclos_unicos:
+        if ciclo_label not in ciclos_set:
             ciclos_unicos.append(ciclo_label)
+            ciclos_set.add(ciclo_label)
         datos_por_ciclo[ciclo_label] += d.cantidad
-
-        prog = str(d.programa_antiguo or d.programa_nuevo)
         index = ciclos_unicos.index(ciclo_label)
-        programas_totales[prog][index] += d.cantidad
+
+        if d.programa_antiguo:
+            programas_totales["Programas Antiguos"][index] += d.cantidad
+        elif d.programa_nuevo:
+            programas_totales["Programas Nuevos"][index] += d.cantidad
 
     labels = ciclos_unicos
     valores = [datos_por_ciclo[label] for label in labels]
@@ -81,7 +85,7 @@ def matricula_h_nuevo_ingreso_view(request):
     total_antiguos = sum(d.cantidad for d in datos if d.programa_antiguo)
     total_nuevos = sum(d.cantidad for d in datos if d.programa_nuevo)
 
-    datos_dashboard = {
+    datos_dashboard_obj = {
         "labels": labels,
         "totales": valores,
         "total_antiguos": total_antiguos,
@@ -91,8 +95,8 @@ def matricula_h_nuevo_ingreso_view(request):
 
     return render(request, 'matricula_h_nuevo_ingreso.html', {
         'datos': datos,
-        'datos_grafica_json': json.dumps(datos_dashboard),
-        'datos_dashboard': json.dumps(datos_dashboard)
+        'datos_dashboard': datos_dashboard_obj,
+        'datos_grafica_json': json.dumps(datos_dashboard_obj)
     })
 
 
@@ -101,31 +105,29 @@ def descargar_plantilla_matricula_h_nuevo_ingreso(request):
     programas_antiguos = ProgramaEducativoAntiguo.objects.all()
     programas_nuevos = ProgramaEducativoNuevo.objects.all()
 
-    columnas = ['ciclo_periodo_id', 'programa_antiguo_id', 'programa_nuevo_id', 'cantidad']
+    columnas = ['ciclo_periodo_id', 'programa_antiguo_clave', 'programa_nuevo_clave', 'cantidad']
     datos = []
 
     for pa in programas_antiguos:
         datos.append({
             'ciclo_periodo_id': ciclo_periodo.id if ciclo_periodo else '',
-            'programa_antiguo_id': pa.id,
-            'programa_nuevo_id': '',
+            'programa_antiguo_clave': pa.nombre,
+            'programa_nuevo_clave': '',
             'cantidad': 0
         })
 
     for pn in programas_nuevos:
         datos.append({
             'ciclo_periodo_id': ciclo_periodo.id if ciclo_periodo else '',
-            'programa_antiguo_id': '',
-            'programa_nuevo_id': pn.id,
+            'programa_antiguo_clave': '',
+            'programa_nuevo_clave': pn.nombre,
             'cantidad': 0
         })
 
     df = pd.DataFrame(datos, columns=columnas)
-
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Plantilla')
-
     buffer.seek(0)
 
     response = HttpResponse(
@@ -133,5 +135,4 @@ def descargar_plantilla_matricula_h_nuevo_ingreso(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename=matricula_h_nuevo_ingreso.xlsx'
-
     return response

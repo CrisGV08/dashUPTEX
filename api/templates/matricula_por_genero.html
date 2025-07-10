@@ -5,131 +5,195 @@
 
 {% block content %}
 <h1>Matrícula por Género</h1>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
-{% if mensaje %}
-  <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-    {{ mensaje }}
-  </div>
-{% endif %}
-
-<form method="POST">
-  {% csrf_token %}
+<form method="POST">{% csrf_token %}
   <table border="1" style="border-collapse: collapse; width: 100%; text-align: center;">
     <thead>
-      <tr style="background-color: #e0ffe0;">
-        <th>Género</th>
-        {% for cp in ciclos %}
-          <th>{{ cp.periodo.nombre }} {{ cp.ciclo.anio }}</th>
-        {% endfor %}
+      <tr style="background-color: #e0ffe0;"><th>Género</th>
+        {% for cp in ciclos %}<th>{{ cp.periodo.nombre }} {{ cp.ciclo.anio }}</th>{% endfor %}
       </tr>
     </thead>
     <tbody>
-      <tr style="background-color: #fff9c4;">
-        <td><strong>Mujeres</strong></td>
-        {% for cp in ciclos %}
-          {% with dato=datos|get_item:cp.id %}
+      <tr style="background-color: #fff9c4;"><td><strong>Mujeres</strong></td>
+        {% for cp in ciclos %}{% with dato=datos|get_item:cp.id %}
           <td><input type="number" name="mujeres_{{ cp.id }}" value="{{ dato.mujeres|default_if_none:'' }}" min="0" style="width: 60px;" /></td>
-          {% endwith %}
-        {% endfor %}
+        {% endwith %}{% endfor %}
       </tr>
-      <tr style="background-color: #ffe0b2;">
-        <td><strong>Hombres</strong></td>
-        {% for cp in ciclos %}
-          {% with dato=datos|get_item:cp.id %}
+      <tr style="background-color: #ffe0b2;"><td><strong>Hombres</strong></td>
+        {% for cp in ciclos %}{% with dato=datos|get_item:cp.id %}
           <td><input type="number" name="hombres_{{ cp.id }}" value="{{ dato.hombres|default_if_none:'' }}" min="0" style="width: 60px;" /></td>
-          {% endwith %}
-        {% endfor %}
+        {% endwith %}{% endfor %}
       </tr>
-      <tr style="background-color: #ffcdd2; font-weight: bold;">
-        <td>MATRÍCULA</td>
-        {% for cp in ciclos %}
-          {% with dato=datos|get_item:cp.id %}
+      <tr style="background-color: #ffcdd2; font-weight: bold;"><td>MATRÍCULA</td>
+        {% for cp in ciclos %}{% with dato=datos|get_item:cp.id %}
           <td>{{ dato.total|default:"-" }}</td>
-          {% endwith %}
-        {% endfor %}
+        {% endwith %}{% endfor %}
       </tr>
     </tbody>
   </table>
-
-  <div style="margin-top: 20px;">
+  <div style="margin-top: 20px;">  
     <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border-radius: 5px; font-weight: bold;">
       Guardar Cambios
     </button>
   </div>
 </form>
 
-<!-- 🎨 Sección de gráficas -->
-<h2 style="margin-top: 50px; text-align: center;">Visualizaciones</h2>
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 30px;">
-  <div>
-    <h3 style="text-align:center;">Barras Apiladas</h3>
-    <canvas id="graficaBarras" width="300" height="250"></canvas>
-  </div>
-  <div>
-    <h3 style="text-align:center;">Gráfico de Línea</h3>
-    <canvas id="graficaLinea" width="300" height="250"></canvas>
-  </div>
-  <div>
-    <h3 style="text-align:center;">Distribución Total</h3>
-    <canvas id="graficaPastel" width="260" height="260"></canvas>
-  </div>
+<div style="margin-top: 40px; text-align: center;">
+  <h3>Filtros</h3>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaLinea" checked> Línea</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gauss</label>
+  <br><br>
+  <label><strong>Selecciona ciclos a visualizar:</strong></label><br>
+  <select id="filtro-ciclos" multiple style="min-width: 300px; padding: 5px;">
+    {% for cp in ciclos %}{% with nombre=cp.periodo.nombre anio=cp.ciclo.anio %}
+      <option value="{{ nombre }} {{ anio }}" selected>{{ nombre }} {{ anio }}</option>
+    {% endwith %}{% endfor %}
+  </select>
 </div>
 
+<h2 style="margin-top: 50px; text-align: center;">Visualizaciones</h2>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 30px;" id="contenedorGraficas">
+  <div><h3 style="text-align:center;">Barras Apiladas</h3><canvas id="graficaBarras"></canvas></div>
+  <div><h3 style="text-align:center;">Gráfico de Línea</h3><canvas id="graficaLinea"></canvas></div>
+  <div><h3 style="text-align:center;">Distribución Total</h3><canvas id="graficaPastel"></canvas></div>
+  <div><h3 style="text-align:center;">Campana de Gauss</h3><canvas id="graficaGauss"></canvas></div>
+</div>
+
+<button onclick="descargarPDF()" style="margin-top: 30px; display:block; margin-left:auto; margin-right:auto; padding: 10px 25px; background-color: #28a745; color:white; border:none; border-radius: 8px; font-weight:bold;">
+  📥 Descargar PDF
+</button>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  const datos = {{ datos_grafica_json|safe }};
-  
-  // Barras apiladas
-  new Chart(document.getElementById('graficaBarras'), {
-    type: 'bar',
-    data: {
-      labels: datos.labels,
-      datasets: [
-        { label: 'Mujeres', data: datos.mujeres, backgroundColor: '#f06292' },
-        { label: 'Hombres', data: datos.hombres, backgroundColor: '#64b5f6' }
-      ]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: { title: { display: true, text: 'Matrícula por Ciclo' } },
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-    }
-  });
+  const datos = JSON.parse('{{ datos_grafica_json|escapejs }}');
+  const selectCiclos = document.getElementById('filtro-ciclos');
+  new Choices(selectCiclos, { removeItemButton: true, shouldSort: false, searchEnabled: false });
 
-  // Línea de crecimiento
-  new Chart(document.getElementById('graficaLinea'), {
-    type: 'line',
-    data: {
-      labels: datos.labels,
-      datasets: [
-        { label: 'Mujeres', data: datos.mujeres, borderColor: '#f06292', fill: false, tension: 0.4 },
-        { label: 'Hombres', data: datos.hombres, borderColor: '#64b5f6', fill: false, tension: 0.4 }
-      ]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: { title: { display: true, text: 'Evolución por Ciclo' } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+  let chartBarras, chartLinea, chartPastel, chartGauss;
 
-  // Pastel total
-  new Chart(document.getElementById('graficaPastel'), {
-    type: 'pie',
-    data: {
-      labels: datos.pie_labels,
-      datasets: [{ data: datos.pie_data, backgroundColor: ['#64b5f6', '#f06292'] }]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Distribución General por Género' }
-      }
+  function actualizarGraficas() {
+    const ciclosSeleccionados = Array.from(selectCiclos.options).filter(opt => opt.selected).map(opt => opt.value);
+    const indices = datos.labels.map((label, i) => ciclosSeleccionados.includes(label) ? i : -1).filter(i => i !== -1);
+    const labels = indices.map(i => datos.labels[i]);
+    const mujeres = indices.map(i => datos.mujeres[i]);
+    const hombres = indices.map(i => datos.hombres[i]);
+    const totales = indices.map(i => datos.totales[i]);
+    const pie_data = [mujeres.reduce((a, b) => a + b, 0), hombres.reduce((a, b) => a + b, 0)];
+
+    chartBarras?.destroy(); chartLinea?.destroy(); chartPastel?.destroy(); chartGauss?.destroy();
+
+    if (document.querySelector('input[value="graficaBarras"]').checked) {
+      chartBarras = new Chart(document.getElementById('graficaBarras'), {
+        type: 'bar',
+        data: { labels, datasets: [
+          { label: 'Mujeres', data: mujeres, backgroundColor: '#f06292' },
+          { label: 'Hombres', data: hombres, backgroundColor: '#64b5f6' } ] },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              anchor: 'end', align: 'top', color: 'black', font: { weight: 'bold' },
+              formatter: Math.round
+            }
+          },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+        },
+        plugins: [ChartDataLabels]
+      });
     }
-  });
+
+    if (document.querySelector('input[value="graficaLinea"]').checked) {
+      chartLinea = new Chart(document.getElementById('graficaLinea'), {
+        type: 'line',
+        data: { labels, datasets: [
+          { label: 'Mujeres', data: mujeres, borderColor: '#f06292', fill: false },
+          { label: 'Hombres', data: hombres, borderColor: '#64b5f6', fill: false } ] },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              anchor: 'end', align: 'top', color: 'black', font: { weight: 'bold' },
+              formatter: Math.round
+            }
+          },
+          scales: { y: { beginAtZero: true } }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    if (document.querySelector('input[value="graficaPastel"]').checked) {
+      chartPastel = new Chart(document.getElementById('graficaPastel'), {
+        type: 'pie',
+        data: {
+          labels: ['Mujeres', 'Hombres'],
+          datasets: [{ data: pie_data, backgroundColor: ['#f06292', '#64b5f6'] }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              color: 'black', font: { weight: 'bold' },
+              formatter: (value, ctx) => ${ctx.chart.data.labels[ctx.dataIndex]}: ${value}
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    if (document.querySelector('input[value="graficaGauss"]').checked) {
+      const gaussData = generarGaussiana(totales);
+      chartGauss = new Chart(document.getElementById('graficaGauss'), {
+        type: 'line',
+        data: {
+          labels: gaussData.x_vals,
+          datasets: [{ label: 'Gauss', data: gaussData.y_vals, borderColor: '#9c27b0', fill: false }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } }
+        }
+      });
+    }
+  }
+
+  function generarGaussiana(datos) {
+    if (!datos.length) return { x_vals: [], y_vals: [] };
+    const media = datos.reduce((a, b) => a + b, 0) / datos.length;
+    const desviacion = Math.sqrt(datos.reduce((a, b) => a + Math.pow(b - media, 2), 0) / datos.length);
+    const x_vals = [], y_vals = [];
+    for (let i = -3; i <= 3; i += 0.1) {
+      const x = media + i * desviacion;
+      const y = (1 / (desviacion * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desviacion, 2));
+      x_vals.push(x.toFixed(1)); y_vals.push(y);
+    }
+    return { x_vals, y_vals };
+  }
+
+  function descargarPDF() {
+    const element = document.getElementById('contenedorGraficas');
+    html2pdf().set({
+      margin: 0.5,
+      filename: 'matricula_por_genero.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).from(element).save();
+  }
+
+  document.querySelectorAll('.filtro-grafica').forEach(cb => cb.addEventListener('change', actualizarGraficas));
+  selectCiclos.addEventListener('change', () => requestAnimationFrame(actualizarGraficas));
+
+  actualizarGraficas();
 </script>
 {% endblock %}

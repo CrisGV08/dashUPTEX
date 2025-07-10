@@ -1,114 +1,66 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Matrícula H. Nuevo Ingreso{% endblock %}
+{% block title %}Matrícula H. Nuevo Ingreso (Usuario){% endblock %}
 
 {% block content %}
-<div class="admin-panel">
-    <h1 style="text-align: center; margin-bottom: 30px;">Matrícula H. Nuevo Ingreso</h1>
+<link rel="stylesheet" href="{% static 'css/matricula_h_nuevo_ingreso_usuario.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- 🎯 Dashboard Visual -->
-    <h2 style="text-align: center; margin-bottom: 30px;">Dashboard de Matrícula</h2>
+<div class="contenedor-matricula">
+    <h1 class="titulo-vista">📘 Matrícula Histórica de Nuevo Ingreso</h1>
 
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;">
-        <div class="card-dashboard">
-            <h3 style="text-align:center; margin-bottom: 10px;">Total por Ciclo</h3>
-            <canvas id="graficaTotal" width="320" height="240"></canvas>
+    <!-- 🎯 Filtros -->
+    <div class="filtros">
+        <div class="filtro-ciclos">
+            <label>Filtrar por ciclos:</label>
+            <label>para seleccion multimple use ctrl + click</label>
+            <select id="filtro-ciclos" multiple>
+                {% for label in datos_dashboard.labels %}
+                    <option value="{{ label }}" selected>{{ label }}</option>
+                {% endfor %}
+            </select>
         </div>
 
-        <div class="card-dashboard">
-            <h3 style="text-align:center; margin-bottom: 10px;">Distribución Modalidades</h3>
-            <canvas id="graficaPastel" width="300" height="300"></canvas>
+        <div class="filtro-graficas">
+            <label>Mostrar gráficas:</label>
+            <label><input type="checkbox" id="graficaLineal" checked> Línea</label>
+            <label><input type="checkbox" id="graficaBarras" checked> Barras</label>
+            <label><input type="checkbox" id="graficaPastel" checked> Pastel</label>
+            <label><input type="checkbox" id="graficaGauss" checked> Gauss</label>
+        </div>
+
+        <div class="descargar-btn">
         </div>
     </div>
 
-    <div class="card-dashboard" style="margin-top: 40px;">
-        <h3 style="text-align:center; margin-bottom: 10px;">Matrícula por Programa Educativo</h3>
-        <canvas id="graficaProgramas" height="400"></canvas>
+    <!-- 📊 Contenedores de gráficas -->
+    <div id="container-linea" class="contenedor-grafica">
+        <h3>📈 Matrícula por Ciclo (Línea)</h3>
+        <canvas id="graficoLinea" height="120"></canvas>
+    </div>
+
+    <div id="container-barras" class="contenedor-grafica">
+        <h3>📊 Matrícula por Ciclo (Barras)</h3>
+        <canvas id="graficoBarras" height="120"></canvas>
+    </div>
+
+    <div id="container-pastel" class="contenedor-grafica">
+        <h3>🥧 Programas Antiguos vs Nuevos</h3>
+        <canvas id="graficoPastel" height="120"></canvas>
+    </div>
+
+    <div id="container-gauss" class="contenedor-grafica">
+        <h3>📉 Distribución Gaussiana</h3>
+        <canvas id="graficoGauss" height="120"></canvas>
     </div>
 </div>
 
-<!-- 🎨 ChartJS -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const datos = {{ datos_dashboard|safe }};
-
-// 📊 Gráfica barras total
-new Chart(document.getElementById('graficaTotal'), {
-    type: 'bar',
-    data: {
-        labels: datos.labels,
-        datasets: [{
-            label: 'Matrícula Total',
-            data: datos.totales,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 },
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
-
-// 🥧 Gráfica pastel
-new Chart(document.getElementById('graficaPastel'), {
-    type: 'pie',
-    data: {
-        labels: ['Programas Antiguos', 'Programas Nuevos'],
-        datasets: [{
-            data: [datos.total_antiguos, datos.total_nuevos],
-            backgroundColor: ['#42a5f5', '#66bb6a']
-        }]
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 }
-    }
-});
-
-// 📈 Gráfica matrícula por programa
-const datasetsProgramas = Object.entries(datos.programas_totales).map(([nombre, valores]) => ({
-    label: nombre,
-    data: valores,
-    borderColor: `hsla(${Math.random() * 360}, 70%, 50%, 1)`,
-    backgroundColor: `hsla(${Math.random() * 360}, 70%, 70%, 0.5)`,
-    fill: false,
-    tension: 0.4
-}));
-
-new Chart(document.getElementById('graficaProgramas'), {
-    type: 'line',
-    data: {
-        labels: datos.labels,
-        datasets: datasetsProgramas
-    },
-    options: {
-        responsive: true,
-        animation: { duration: 1500 },
-        scales: {
-            y: { beginAtZero: true }
-        }
-    }
-});
+    const datosDashboard = {{ datos_dashboard|safe }};
 </script>
-
-<!-- ✨ Estilos extra para embellecer las tarjetas -->
-<style>
-.card-dashboard {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    width: 350px;
-    transition: transform 0.3s ease;
-}
-.card-dashboard:hover {
-    transform: translateY(-5px);
-}
-</style>
+<script src="{% static 'js/matricula_h_nuevo_ingreso_usuario.js' %}"></script>
 {% endblock %}
