@@ -51,8 +51,11 @@ from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
     matricula_h_nuevo_ingreso_view, descargar_plantilla_matricula_h_nuevo_ingreso
 )
 from api.Administrador.titulados_historico_actual_view import (
-    titulados_historico_actual_view, descargar_plantilla_titulados_historico_actual
+    titulados_historico_actual_view,
+    subir_excel_titulados_historico_actual,
+    descargar_plantilla_titulados_historico_actual
 )
+
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
 from api.Administrador.subir_carreras_view import (
     subir_carreras_view, generar_plantilla_csv,
@@ -131,6 +134,11 @@ urlpatterns = [
     path('administrador/subir-excel-tasa-titulacion/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
 
     path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
+    
+    path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
+path('administrador/titulados-historico-actual/subir-excel/', subir_excel_titulados_historico_actual, name='subir_excel_titulados_historico_actual'),
+path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+
 
 
 ]

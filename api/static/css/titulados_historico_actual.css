@@ -1,0 +1,136 @@
+.admin-panel {
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.titulo {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #1d3557;
+    font-weight: bold;
+}
+
+.form-box {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.form-box form {
+    display: inline-block;
+}
+
+.btn-admin {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-admin:hover {
+    background-color: #0056b3;
+}
+
+.mensaje-exito {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.tabla-datos {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.tabla-datos th, .tabla-datos td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+}
+
+.tabla-datos th {
+    background-color: #343a40;
+    color: white;
+}
+
+.tabla-datos input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    text-align: center;
+}
+
+.btn-guardar {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-guardar:hover {
+    background-color: #218838;
+}
+
+.filtros {
+    margin: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.filtros label {
+    font-weight: bold;
+}
+
+.filtros select {
+    width: 200px;
+    padding: 5px;
+}
+
+.btn-descargar {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-descargar:hover {
+    background-color: #5a6268;
+}
+
+.graficas-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.grafica {
+    flex: 1 1 400px;
+    max-width: 500px;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
