@@ -324,20 +324,18 @@ class SeguimientoLaboral(models.Model):
 
 
 
-class EvaluacionDocente(models.Model):
-    ciclo_periodo = models.ForeignKey('CicloPeriodo', on_delete=models.CASCADE)
-    profesor = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=5, choices=[('PA', 'PA'), ('PTC', 'PTC')])
+class EvaluacionDocenteConcentrado(models.Model):
+    ciclo = models.CharField(max_length=20, unique=True)
+    promedio = models.FloatField()
+    mal = models.IntegerField(default=0)
+    regular = models.IntegerField(default=0)
+    bien = models.IntegerField(default=0)
+    muy_bien = models.IntegerField(default=0)
+    excelente = models.IntegerField(default=0)
+    total = models.IntegerField(default=0)
 
-    calificacion_grupal = models.FloatField()
-    evaluaciones_realizadas = models.IntegerField(default=0)
-    promedio_docente = models.FloatField()
-
-    class Meta:
-        unique_together = ('ciclo_periodo', 'profesor')
-
-    def __str__(self):
-        return f"{self.profesor} - {self.ciclo_periodo} ({self.tipo})"
+    def _str_(self):
+        return f"{self.ciclo} - {self.promedio}"
 
 
 

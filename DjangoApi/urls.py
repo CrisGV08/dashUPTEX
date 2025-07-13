@@ -19,6 +19,7 @@ from api.home.indicadores_generales_usuario_view import indicadores_generales_us
 from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuario_view
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
+from api.home.evaluacion_docente_concentrado_usuario_view import evaluacion_docente_concentrado_usuario_view
 
 # Login
 from api.login.login_views import login_view, logout_view
@@ -57,6 +58,7 @@ from api.Administrador.titulados_historico_actual_view import (
 )
 
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
+from api.Administrador.evaluacion_docente_concentrado_view import evaluacion_docente_concentrado_view
 from api.Administrador.subir_carreras_view import (
     subir_carreras_view, generar_plantilla_csv,
     generar_plantilla_nuevos_csv, exportar_carreras_pdf
@@ -90,6 +92,7 @@ urlpatterns = [
     path('usuario/indicadores-generales/', indicadores_generales_usuario_view, name='indicadores_generales_usuario'),
     path('usuario/eficiencia-terminal/', eficiencia_terminal_usuario_view, name='eficiencia_terminal_usuario'),
     path('usuario/titulados-historicos-actual/', titulados_historicos_actual_usuario_view, name='titulados_historicos_actual_usuario'),
+    path('evaluacion-docente-concentrado/', evaluacion_docente_concentrado_usuario_view, name='evaluacion_docente_concentrado_usuario'),
 
    
     # Administrador
@@ -132,16 +135,14 @@ urlpatterns = [
     path('administrador/tasa-de-titulacion/', tasa_de_titulacion_view, name='tasa_de_titulacion'),
     path('administrador/descargar-plantilla-tasa-titulacion/', descargar_plantilla_tasa_titulacion, name='descargar_plantilla_tasa_titulacion'),
     path('administrador/subir-excel-tasa-titulacion/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
-
     path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
     
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
-path('administrador/titulados-historico-actual/subir-excel/', subir_excel_titulados_historico_actual, name='subir_excel_titulados_historico_actual'),
-path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+    path('administrador/titulados-historico-actual/subir-excel/', subir_excel_titulados_historico_actual, name='subir_excel_titulados_historico_actual'),
+    path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
 
+    path('administrador/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_view, name='evaluacion_docente_concentrado'),]
 
-
-]
 
 # Archivos estáticos en modo desarrollo
 if settings.DEBUG:

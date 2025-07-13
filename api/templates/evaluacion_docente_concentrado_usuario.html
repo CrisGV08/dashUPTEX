@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Evaluación Docente Concentrado{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/evaluacion_docente_concentrado.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+<div class="container">
+  <h2 class="titulo-principal">📘 Evaluación Docente Concentrado</h2>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <h5>Filtros</h5>
+    <div class="form-group">
+      <label for="selectCiclos">Seleccionar ciclos:</label>
+      <select id="selectCiclos" multiple></select>
+    </div>
+    <div class="form-group">
+      <label>Seleccionar gráficas:</label><br>
+      <div class="form-check">
+        <input class="form-check-input grafica-check" type="checkbox" value="lineal" checked>
+        <label class="form-check-label">📈 Línea</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input grafica-check" type="checkbox" value="barras" checked>
+        <label class="form-check-label">📊 Barras</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input grafica-check" type="checkbox" value="pastel" checked>
+        <label class="form-check-label">🥧 Pastel</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input grafica-check" type="checkbox" value="gauss" checked>
+        <label class="form-check-label">📉 Campana de Gauss</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-contenedor">
+    <table class="table-evaluacion">
+      <thead>
+        <tr>
+          <th>Ciclo</th>
+          <th>Promedio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in datos %}
+          <tr>
+            <td>{{ item.anio }}</td>
+            <td>{{ item.promedio }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="graficas-container d-flex flex-wrap justify-content-center">
+    <div class="grafica-box">
+      <canvas id="graficaLineal"></canvas>
+    </div>
+    <div class="grafica-box">
+      <canvas id="graficaBarras"></canvas>
+    </div>
+    <div class="grafica-box">
+      <canvas id="graficaPastel"></canvas>
+    </div>
+    <div class="grafica-box">
+      <canvas id="graficaGauss"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const datosEvaluacion = [
+    {% for d in datos %}
+      { ciclo: "{{ d.anio }}", promedio: {{ d.promedio }} },
+    {% endfor %}
+  ];
+</script>
+<script src="{% static 'js/evaluacion_docente_concentrado_usuario.js' %}"></script>
+
+{% endblock %}
