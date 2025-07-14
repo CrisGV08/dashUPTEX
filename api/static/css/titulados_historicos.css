@@ -1,133 +1,118 @@
-/* Estilo general */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
-}
-
 .admin-panel {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: auto;
   padding: 30px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+  border-radius: 10px;
 }
 
-/* Títulos */
 .titulo {
   text-align: center;
-  margin-bottom: 25px;
-  font-size: 2rem;
-  color: #1a237e;
+  margin-bottom: 30px;
+  font-size: 2em;
+  color: #2c3e50;
 }
 
-.subtitulo {
-  margin-top: 40px;
-  font-size: 1.3rem;
-  color: #333;
+.mensaje-exito {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  text-align: center;
 }
 
-/* Formularios */
 .form-box {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   flex-wrap: wrap;
+  margin-bottom: 30px;
   gap: 20px;
-  margin-bottom: 40px;
+}
+
+.form-box form {
+  background-color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .form-box h3 {
   margin-bottom: 10px;
 }
 
-.form-box form {
-  flex: 1 1 45%;
-  padding: 15px;
-  background-color: #e3f2fd;
-  border-radius: 8px;
-}
-
-/* Botones */
-.btn-admin, .btn-exportar {
-  margin-top: 10px;
-  background-color: #1976d2;
+.btn-admin {
+  background-color: #007bff;
   color: white;
-  font-weight: bold;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 8px 20px;
+  margin-top: 10px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  border-radius: 5px;
+  font-weight: bold;
 }
 
-.btn-admin:hover, .btn-exportar:hover {
-  background-color: #0d47a1;
+.btn-admin:hover {
+  background-color: #0056b3;
 }
 
-/* Mensajes */
-.mensaje-exito {
-  background-color: #d4edda;
-  color: #155724;
-  padding: 12px;
-  margin: 20px 0;
-  border-left: 6px solid #28a745;
-  border-radius: 4px;
-}
-
-/* Tabla */
 .tabla-admin {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
-  background: #fafafa;
-}
-
-.tabla-admin thead {
-  background-color: #1976d2;
-  color: white;
+  margin-top: 20px;
+  font-size: 14px;
 }
 
 .tabla-admin th, .tabla-admin td {
-  padding: 10px;
+  border: 1px solid #ccc;
+  padding: 8px;
   text-align: center;
-  border: 1px solid #ddd;
 }
 
-.tabla-admin tbody tr:nth-child(even) {
-  background-color: #f1f1f1;
+.tabla-admin th {
+  background-color: #e0f7fa;
+  font-weight: bold;
 }
 
-/* Filtros */
 .filtros {
-  margin-top: 40px;
-  padding: 20px;
-  background-color: #e8f5e9;
-  border-radius: 8px;
+  margin: 30px 0 20px;
   text-align: center;
 }
 
 .filtros label {
-  margin-right: 20px;
-  font-weight: bold;
+  margin-right: 15px;
+  font-weight: 500;
 }
 
-/* Gráficas */
+.btn-exportar {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-weight: bold;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.btn-exportar:hover {
+  background-color: #218838;
+}
+
 .graficas {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 50px;
   margin-top: 40px;
-  padding: 0 20px;
 }
 
-canvas {
-  width: 100% !important;
-  max-width: 1000px;
+.graficas canvas {
+  max-width: 100%;
+  width: 80% !important;
   height: auto !important;
-  aspect-ratio: 16 / 9;
-  background: #fff;
-  border: 1px solid #ddd;
+  background-color: white;
+  padding: 15px;
   border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }

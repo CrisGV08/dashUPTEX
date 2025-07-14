@@ -53,12 +53,12 @@ def titulados_historicos_view(request):
                         errores.append(f"❌ Fila {i + 2}: Programa '{clave}' no encontrado.")
                         continue
 
-                    ingreso = int(fila.get('AÑO INGRESO', 0))
-                    egreso = int(fila.get('AÑO EGRESO', 0))
-                    tit_h = int(fila.get('TITULADOS H', 0))
-                    tit_m = int(fila.get('TITULADOS M', 0))
-                    reg_h = int(fila.get('REG DGP H', 0))
-                    reg_m = int(fila.get('REG DGP M', 0))
+                    ingreso = int(fila.get('AÑO INGRESO', 0) or 0)
+                    egreso = int(fila.get('AÑO EGRESO', 0) or 0)
+                    tit_h = int(fila.get('TITULADOS H', 0) or 0)
+                    tit_m = int(fila.get('TITULADOS M', 0) or 0)
+                    reg_h = int(fila.get('REG DGP H', 0) or 0)
+                    reg_m = int(fila.get('REG DGP M', 0) or 0)
 
                     existe = TituladosHistoricos.objects.filter(
                         anio_ingreso=ingreso,
@@ -68,7 +68,7 @@ def titulados_historicos_view(request):
                     ).exists()
 
                     if existe:
-                        errores.append(f"⚠️ Fila {i + 2}: Ya existe el registro para ese año y programa.")
+                        errores.append(f"⚠️ Fila {i + 2}: Ya existe un registro con el mismo año y programa.")
                         continue
 
                     TituladosHistoricos.objects.create(
@@ -89,7 +89,7 @@ def titulados_historicos_view(request):
             if registros_exitosos:
                 messages.success(request, f"✅ {registros_exitosos} registros cargados correctamente.")
             if errores:
-                messages.error(request, "Errores detectados:<br>" + "<br>".join(errores))
+                messages.error(request, "Errores encontrados:<br>" + "<br>".join(errores))
 
             return redirect('titulados_historicos')
 
