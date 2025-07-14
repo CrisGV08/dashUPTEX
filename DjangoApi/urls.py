@@ -53,7 +53,6 @@ from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
 )
 from api.Administrador.titulados_historico_actual_view import (
     titulados_historico_actual_view,
-    subir_excel_titulados_historico_actual,
     descargar_plantilla_titulados_historico_actual
 )
 
@@ -68,6 +67,12 @@ from api.Administrador.subir_carreras_view import exportar_carreras_pdf
 from api.Administrador.tasa_de_titulacion_view import (
     tasa_de_titulacion_view, descargar_plantilla_tasa_titulacion, subir_excel_tasa_titulacion
 )
+
+from api.Administrador.titulados_historicos_view import (
+    titulados_historicos_view,
+    descargar_plantilla_titulados_historicos
+)
+
 
 
 urlpatterns = [
@@ -138,10 +143,19 @@ urlpatterns = [
     path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
     
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
-    path('administrador/titulados-historico-actual/subir-excel/', subir_excel_titulados_historico_actual, name='subir_excel_titulados_historico_actual'),
+   
     path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
 
-    path('administrador/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_view, name='evaluacion_docente_concentrado'),]
+    path('administrador/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_view, name='evaluacion_docente_concentrado'),
+    
+    # 👇 
+    path('administrador/titulados-historicos/', titulados_historicos_view, name='titulados_historicos'),
+    path('administrador/titulados-historicos/descargar-plantilla/', descargar_plantilla_titulados_historicos, name='descargar_plantilla_titulados_historicos'),
+    
+    
+    ]
+
+
 
 
 # Archivos estáticos en modo desarrollo

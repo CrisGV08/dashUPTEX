@@ -107,8 +107,11 @@
 
 
             <li class="menu-item">
-                <a href="#"><i class="fas fa-graduation-cap"></i> Titulados Históricos</a>
-            </li>
+    <a href="{% url 'titulados_historicos' %}" data-menu="/titulados_historicos/">
+        <i class="fas fa-certificate"></i> Titulados Históricos
+    </a>
+</li>
+
 
             <li class="menu-item">
                 <a href="{% url 'subir_carreras' %}" data-menu="/subir_carreras/"><i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas</a>

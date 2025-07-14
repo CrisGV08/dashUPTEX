@@ -1,141 +1,163 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const datos = JSON.parse(document.getElementById("jsonDatos").textContent || "[]");
-
-    const filtroAnio = document.getElementById("filtro_anio");
-    const filtroPrograma = document.getElementById("filtro_programa");
-    const filtroGrafica = document.getElementById("filtro_grafica");
-
-    const ctxLinea = document.getElementById("graficaLinea").getContext("2d");
-    const ctxBarras = document.getElementById("graficaBarras").getContext("2d");
-    const ctxPastel = document.getElementById("graficaPastel").getContext("2d");
-    const ctxGauss = document.getElementById("graficaGauss").getContext("2d");
-
-    let chartLinea, chartBarras, chartPastel, chartGauss;
-
-    function inicializarFiltros() {
-        const anios = [...new Set(datos.map(d => d.anio_ingreso))].sort();
-        const programas = [...new Set(datos.map(d => d.programa))].sort();
-
-        anios.forEach(anio => {
-            const opt = new Option(anio, anio);
-            opt.selected = true;
-            filtroAnio.add(opt);
-        });
-
-        programas.forEach(p => {
-            const opt = new Option(p, p);
-            opt.selected = true;
-            filtroPrograma.add(opt);
-        });
-
-        Array.from(filtroGrafica.options).forEach(opt => opt.selected = true);
-    }
-
-    function obtenerSeleccionados(select) {
-        return Array.from(select.selectedOptions).map(opt => opt.value);
-    }
+document.addEventListener('DOMContentLoaded', function () {
+    const charts = {};
+    const datos = datosTitulados || [];
 
     function filtrarDatos() {
-        const anios = obtenerSeleccionados(filtroAnio);
-        const programas = obtenerSeleccionados(filtroPrograma);
-        return datos
-            .filter(d => anios.includes(d.anio_ingreso.toString()) && programas.includes(d.programa))
-            .sort((a, b) => a.anio_ingreso - b.anio_ingreso);
+        return datos;
     }
 
-    function crearGraficas() {
-        const filtrados = filtrarDatos();
-        const visibleGraficas = obtenerSeleccionados(filtroGrafica);
+    function destruirGraficas() {
+        Object.values(charts).forEach(chart => chart.destroy());
+        Object.keys(charts).forEach(k => delete charts[k]);
+    }
 
-        if (chartLinea) chartLinea.destroy();
-        if (chartBarras) chartBarras.destroy();
-        if (chartPastel) chartPastel.destroy();
-        if (chartGauss) chartGauss.destroy();
+    function renderGraficas() {
+        destruirGraficas();
+        const datosFiltrados = filtrarDatos();
 
-        document.querySelectorAll(".grafica").forEach(div => div.style.display = "none");
+        const etiquetas = datosFiltrados.map(d => `${d.nombre_programa} (${d.anio})`);
+        const valores = datosFiltrados.map(d => d.total_titulados);
 
-        if (filtrados.length === 0) return;
-
-        const etiquetas = filtrados.map(d => `${d.programa} (${d.anio_ingreso})`);
-        const valores = filtrados.map(d => d.tasa_titulacion);
-
-        const data = {
-            labels: etiquetas,
-            datasets: [{
-                label: 'Tasa de Titulación (%)',
-                data: valores,
-                borderWidth: 1,
-                backgroundColor: 'rgba(255, 193, 7, 0.4)',
-                borderColor: 'rgba(255, 193, 7, 1)'
-            }]
+        const configEtiquetas = {
+            plugins: {
+                datalabels: {
+                    color: '#000',
+                    anchor: 'end',
+                    align: 'top',
+                    font: { weight: 'bold' },
+                    formatter: Math.round
+                },
+                tooltip: { enabled: true },
+                legend: { display: false }
+            }
         };
 
-        if (visibleGraficas.includes("linea")) {
-            document.getElementById("graficaLinea").parentElement.style.display = "block";
-            chartLinea = new Chart(ctxLinea, {
+        if (document.getElementById('grafica-lineal') && document.querySelector('.filtro-grafica[value="graficaLinea"]').checked) {
+            const ctx = document.getElementById('grafica-lineal').getContext('2d');
+            charts.linea = new Chart(ctx, {
                 type: 'line',
-                data: data,
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        if (visibleGraficas.includes("barras")) {
-            document.getElementById("graficaBarras").parentElement.style.display = "block";
-            chartBarras = new Chart(ctxBarras, {
-                type: 'bar',
-                data: data,
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        if (visibleGraficas.includes("pastel")) {
-            document.getElementById("graficaPastel").parentElement.style.display = "block";
-            chartPastel = new Chart(ctxPastel, {
-                type: 'pie',
-                data: data,
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        if (visibleGraficas.includes("gauss")) {
-            document.getElementById("graficaGauss").parentElement.style.display = "block";
-            chartGauss = new Chart(ctxGauss, {
-                type: 'scatter',
                 data: {
+                    labels: etiquetas,
                     datasets: [{
-                        label: 'Distribución Gaussiana',
-                        data: valores.map((y, i) => ({ x: i, y })),
-                        showLine: true,
-                        borderColor: 'rgba(0, 123, 255, 0.7)',
-                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        label: 'Total Titulados',
+                        data: valores,
+                        borderWidth: 2,
+                        borderColor: '#2196F3',
+                        backgroundColor: '#BBDEFB',
+                        fill: false
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    ...configEtiquetas
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        if (document.getElementById('grafica-barras') && document.querySelector('.filtro-grafica[value="graficaBarras"]').checked) {
+            const ctx = document.getElementById('grafica-barras').getContext('2d');
+            charts.barras = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Total Titulados',
+                        data: valores,
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    ...configEtiquetas
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        if (document.getElementById('grafica-pastel') && document.querySelector('.filtro-grafica[value="graficaPastel"]').checked) {
+            const ctx = document.getElementById('grafica-pastel').getContext('2d');
+            charts.pastel = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Titulados',
+                        data: valores,
+                        backgroundColor: etiquetas.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        datalabels: {
+                            color: '#000',
+                            formatter: Math.round
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        if (document.getElementById('grafica-gauss') && document.querySelector('.filtro-grafica[value="graficaGauss"]').checked) {
+            const ctx = document.getElementById('grafica-gauss').getContext('2d');
+
+            const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+            const desviacion = Math.sqrt(valores.map(x => Math.pow(x - media, 2)).reduce((a, b) => a + b, 0) / valores.length);
+
+            const gaussLabels = Array.from({ length: 100 }, (_, i) =>
+                media - 3 * desviacion + i * (6 * desviacion / 99)
+            );
+            const gaussData = gaussLabels.map(x =>
+                (1 / (desviacion * Math.sqrt(2 * Math.PI))) *
+                Math.exp(-0.5 * Math.pow((x - media) / desviacion, 2))
+            );
+
+            charts.gauss = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: gaussLabels.map(x => x.toFixed(1)),
+                    datasets: [{
+                        label: 'Distribución Gaussiana',
+                        data: gaussData,
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.3)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: { enabled: false },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { ticks: { display: false }, grid: { display: false } },
+                        x: { ticks: { display: false }, grid: { display: false } }
+                    }
+                }
             });
         }
     }
 
-    function descargarPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+    document.querySelectorAll('.filtro-grafica').forEach(input => {
+        input.addEventListener('change', renderGraficas);
+    });
 
-        let y = 10;
-        document.querySelectorAll("canvas").forEach(canvas => {
-            if (canvas.offsetParent !== null) {
-                const imgData = canvas.toDataURL("image/png");
-                doc.addImage(imgData, "PNG", 10, y, 180, 60);
-                y += 70;
-            }
-        });
-
-        doc.save("titulados_historicos.pdf");
-    }
-
-    filtroAnio.addEventListener("change", crearGraficas);
-    filtroPrograma.addEventListener("change", crearGraficas);
-    filtroGrafica.addEventListener("change", crearGraficas);
-    window.descargarPDF = descargarPDF;
-
-    inicializarFiltros();
-    crearGraficas();
+    renderGraficas();
 });
+
+function exportarPDF() {
+    const contenedor = document.getElementById('contenedorGraficas');
+    const opt = {
+        margin: 0.5,
+        filename: 'titulados_historicos.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(contenedor).save();
+}

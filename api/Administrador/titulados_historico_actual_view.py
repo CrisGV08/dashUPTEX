@@ -1,123 +1,119 @@
-import json
 import pandas as pd
-from datetime import datetime
+import io
+import json
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from django.http import HttpResponse
-from django.views.decorators.http import require_http_methods
+from django.contrib import messages
 from api.models import GeneracionCarrera, ProgramaEducativoAntiguo, ProgramaEducativoNuevo
 
-
 def titulados_historico_actual_view(request):
-    registros = GeneracionCarrera.objects.all().order_by('fecha_ingreso')
+    generaciones = GeneracionCarrera.objects.select_related(
+        'programa_antiguo', 'programa_nuevo'
+    ).order_by('fecha_ingreso')
 
-    # Guardar cambios desde tabla editable
-    if request.method == 'POST' and 'guardar' in request.POST:
-        registro_id = request.POST.get('guardar')
+    # ✅ JSON corregido para que coincida con los filtros del JS
+    generaciones_json = json.dumps([
+        {
+            "nombre_programa": g.programa_antiguo.nombre if g.programa_antiguo else g.programa_nuevo.nombre,
+            "anio": g.fecha_ingreso.year,
+            "tasa_titulacion": g.tasa_titulacion
+        }
+        for g in generaciones
+    ])
+
+    if request.method == 'POST' and request.FILES.get('archivo_excel'):
+        excel = request.FILES['archivo_excel']
         try:
-            registro = GeneracionCarrera.objects.get(id=registro_id)
-            registro.titulados_h = int(request.POST.get(f'titulados_h_{registro_id}', 0))
-            registro.titulados_m = int(request.POST.get(f'titulados_m_{registro_id}', 0))
-            registro.registrados_dgp_h = int(request.POST.get(f'dgp_h_{registro_id}', 0))
-            registro.registrados_dgp_m = int(request.POST.get(f'dgp_m_{registro_id}', 0))
-            registro.save()
-            messages.success(request, "Cambios guardados correctamente.")
-        except GeneracionCarrera.DoesNotExist:
-            messages.error(request, "Registro no encontrado.")
-        return redirect('titulados_historico_actual')
+            df = pd.read_excel(excel)
+            registros = 0
+            errores = []
 
-    # Convertir registros a JSON para JS
-    datos_json = []
-    for reg in registros:
-        programa = reg.programa_antiguo.nombre if reg.programa_antiguo else reg.programa_nuevo.nombre
-        datos_json.append({
-            'id': reg.id,
-            'nombre_programa': programa,
-            'anio': reg.fecha_ingreso.year,
-            'titulados': reg.total_titulados,
-            'registrados': reg.total_dgp,
-            'tasa_titulacion': reg.tasa_titulacion,
-        })
+            for i, fila in df.iterrows():
+                try:
+                    id_programa = str(fila['PROGRAMA EDUCATIVO']).strip().upper()
 
-    context = {
-        'registros': registros,
-        'datos_json': json.dumps(datos_json, ensure_ascii=False)
-    }
-    return render(request, 'titulados_historico_actual.html', context)
+                    programa = ProgramaEducativoAntiguo.objects.filter(id=id_programa).first()
+                    if not programa:
+                        programa = ProgramaEducativoNuevo.objects.filter(id=id_programa).first()
 
+                    if not programa:
+                        errores.append(f"Fila {i+2}: 'PROGRAMA EDUCATIVO' ({id_programa}) no encontrado")
+                        continue
 
-# Descargar plantilla vacía
+                    ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
+                    egreso = pd.to_datetime(fila['EGRESO'], errors='coerce')
+
+                    if pd.isna(ingreso) or pd.isna(egreso):
+                        errores.append(f"Fila {i+2}: Fechas inválidas")
+                        continue
+
+                    GeneracionCarrera.objects.create(
+                        programa_antiguo=programa if isinstance(programa, ProgramaEducativoAntiguo) else None,
+                        programa_nuevo=programa if isinstance(programa, ProgramaEducativoNuevo) else None,
+                        fecha_ingreso=ingreso,
+                        fecha_egreso=egreso,
+                        ingreso_hombres=int(fila['ING H']),
+                        ingreso_mujeres=int(fila['ING M']),
+                        egresados_cohorte_h=int(fila['EGR COH H']),
+                        egresados_cohorte_m=int(fila['EGR COH M']),
+                        egresados_rezagados_h=int(fila['EGR REZ H']),
+                        egresados_rezagados_m=int(fila['EGR REZ M']),
+                        titulados_h=int(fila['TIT H']),
+                        titulados_m=int(fila['TIT M']),
+                        registrados_dgp_h=int(fila['REG H']),
+                        registrados_dgp_m=int(fila['REG M']),
+                    )
+                    registros += 1
+                except Exception as e:
+                    errores.append(f"Fila {i+2}: {str(e)}")
+
+            if registros:
+                messages.success(request, f"✅ {registros} registros cargados correctamente.")
+            if errores:
+                messages.error(request, "⚠️ Errores: " + " | ".join(errores))
+
+            return redirect('titulados_historico_actual')
+
+        except Exception as e:
+            messages.error(request, f"❌ Error al leer el archivo: {e}")
+
+    return render(request, 'titulados_historico_actual.html', {
+        'generaciones': generaciones,
+        'generaciones_json': generaciones_json
+    })
+
 def descargar_plantilla_titulados_historico_actual(request):
-    columnas = [
-        'Programa', 'Fecha Ingreso', 'Fecha Egreso',
-        'Ingreso Hombres', 'Ingreso Mujeres',
-        'Egresados Cohorte H', 'Egresados Cohorte M',
-        'Egresados Rezagados H', 'Egresados Rezagados M',
-        'Titulados H', 'Titulados M',
-        'Registrados DGP H', 'Registrados DGP M'
+    antiguos = ProgramaEducativoAntiguo.objects.all()
+    nuevos = ProgramaEducativoNuevo.objects.all()
+
+    datos = []
+    for p in antiguos:
+        datos.append({'PROGRAMA EDUCATIVO': p.id})
+    for p in nuevos:
+        datos.append({'PROGRAMA EDUCATIVO': p.id})
+
+    columnas_extra = [
+        'INGRESO', 'EGRESO', 'ING H', 'ING M',
+        'EGR COH H', 'EGR COH M',
+        'EGR REZ H', 'EGR REZ M',
+        'TIT H', 'TIT M',
+        'REG H', 'REG M'
     ]
-    df = pd.DataFrame(columns=columnas)
-    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=plantilla_titulados_historico_actual.xlsx'
-    with pd.ExcelWriter(response, engine='openpyxl') as writer:
+
+    for row in datos:
+        for col in columnas_extra:
+            row[col] = 0 if 'INGRESO' not in col and 'EGRESO' not in col else ''
+
+    df = pd.DataFrame(datos)
+
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Titulados')
+
+    buffer.seek(0)
+    response = HttpResponse(
+        buffer,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=titulados_historico_actual.xlsx'
     return response
-
-
-# Subir Excel con datos
-@require_http_methods(["POST"])
-def subir_excel_titulados_historico_actual(request):
-    archivo = request.FILES.get('archivo_excel')
-    if not archivo:
-        messages.error(request, "Debes seleccionar un archivo.")
-        return redirect('titulados_historico_actual')
-
-    try:
-        df = pd.read_excel(archivo)
-
-        for _, row in df.iterrows():
-            nombre_programa = str(row['Programa']).strip()
-            programa = ProgramaEducativoAntiguo.objects.filter(nombre=nombre_programa).first() \
-                       or ProgramaEducativoNuevo.objects.filter(nombre=nombre_programa).first()
-
-            if not programa:
-                continue
-
-            fecha_ingreso = pd.to_datetime(row['Fecha Ingreso'], errors='coerce')
-            fecha_egreso = pd.to_datetime(row['Fecha Egreso'], errors='coerce')
-
-            if pd.isna(fecha_ingreso) or pd.isna(fecha_egreso):
-                continue
-
-            # Determinar tipo de programa
-            if isinstance(programa, ProgramaEducativoAntiguo):
-                programa_antiguo = programa
-                programa_nuevo = None
-            else:
-                programa_antiguo = None
-                programa_nuevo = programa
-
-            GeneracionCarrera.objects.update_or_create(
-                programa_antiguo=programa_antiguo,
-                programa_nuevo=programa_nuevo,
-                fecha_ingreso=fecha_ingreso,
-                fecha_egreso=fecha_egreso,
-                defaults={
-                    'ingreso_hombres': int(row['Ingreso Hombres']),
-                    'ingreso_mujeres': int(row['Ingreso Mujeres']),
-                    'egresados_cohorte_h': int(row['Egresados Cohorte H']),
-                    'egresados_cohorte_m': int(row['Egresados Cohorte M']),
-                    'egresados_rezagados_h': int(row['Egresados Rezagados H']),
-                    'egresados_rezagados_m': int(row['Egresados Rezagados M']),
-                    'titulados_h': int(row['Titulados H']),
-                    'titulados_m': int(row['Titulados M']),
-                    'registrados_dgp_h': int(row['Registrados DGP H']),
-                    'registrados_dgp_m': int(row['Registrados DGP M']),
-                }
-            )
-
-        messages.success(request, "Archivo cargado correctamente.")
-    except Exception as e:
-        messages.error(request, f"Error al procesar el archivo: {e}")
-
-    return redirect('titulados_historico_actual')

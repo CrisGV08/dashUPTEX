@@ -5,105 +5,134 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/titulados_historico_actual.css' %}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
 <div class="admin-panel">
-  <h1 class="titulo">📘 Titulados Histórico Actual</h1>
+    <h1 class="titulo">📘 Titulados Histórico Actual</h1>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="mensaje-exito">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mensaje-exito">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
 
-  <!-- Subir / Descargar Excel -->
-  <div class="form-box">
-    <form method="post" enctype="multipart/form-data" action="{% url 'subir_excel_titulados_historico_actual' %}">
-      {% csrf_token %}
-      <input type="file" name="archivo_excel" accept=".xlsx, .xls" required>
-      <button type="submit" class="btn-admin">📤 Subir Excel</button>
-    </form>
-    <form method="get" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
-      <button type="submit" class="btn-admin">📥 Descargar Plantilla</button>
-    </form>
-  </div>
-
-  <!-- Tabla editable -->
-  <form method="post">
-    {% csrf_token %}
-    <div class="table-container">
-      <table class="tabla-datos">
-        <thead>
-          <tr>
-            <th>Ingreso</th>
-            <th>Programa</th>
-            <th>Tit. H</th>
-            <th>Tit. M</th>
-            <th>DGP H</th>
-            <th>DGP M</th>
-            <th>Guardar</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for registro in registros %}
-          <tr>
-            <td>{{ registro.fecha_ingreso.year }}</td>
-            <td>
-              {% if registro.programa_antiguo %}
-                {{ registro.programa_antiguo.nombre }}
-              {% elif registro.programa_nuevo %}
-                {{ registro.programa_nuevo.nombre }}
-              {% else %}
-                Sin programa
-              {% endif %}
-            </td>
-            <td><input type="number" name="titulados_h_{{ registro.id }}" value="{{ registro.titulados_h }}"></td>
-            <td><input type="number" name="titulados_m_{{ registro.id }}" value="{{ registro.titulados_m }}"></td>
-            <td><input type="number" name="dgp_h_{{ registro.id }}" value="{{ registro.registrados_dgp_h }}"></td>
-            <td><input type="number" name="dgp_m_{{ registro.id }}" value="{{ registro.registrados_dgp_m }}"></td>
-            <td><button type="submit" name="guardar" value="{{ registro.id }}" class="btn-guardar">💾</button></td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="7">No hay registros disponibles.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="form-box">
+        <form method="GET" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
+            <h3>📥 Descargar Plantilla</h3>
+            <button type="submit" class="btn-admin">Descargar Excel</button>
+        </form>
     </div>
-  </form>
 
-  <!-- Filtros -->
-  <div class="filtros">
-    <label for="selectCarreras"><strong>Programas:</strong></label>
-    <select id="selectCarreras" multiple></select>
+    <div class="form-box">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h3>📤 Subir Archivo Excel</h3>
+            <input type="file" name="archivo_excel" required>
+            <button type="submit" class="btn-admin">Subir</button>
+        </form>
+    </div>
+    <h2 class="titulo-tabla">📑 Generaciones Registradas</h2>
+    <div class="tabla-box">
+        <table class="crud-table">
+            <thead>
+                <tr>
+                    <th>Programa</th>
+                    <th>Ingreso</th>
+                    <th>Egreso</th>
+                    <th>Ingreso Total</th>
+                    <th>Egresados</th>
+                    <th>Titulados</th>
+                    <th>Registrados DGP</th>
+                    <th>Tasa de Titulación (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gen in generaciones %}
+                <tr>
+                    <td>
+                        {% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}
+                        {% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}
+                        {% else %}Sin programa{% endif %}
+                    </td>
+                    <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
+                    <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
+                    <td>{{ gen.total_ingreso }}</td>
+                    <td>{{ gen.total_egresados }}</td>
+                    <td>{{ gen.total_titulados }}</td>
+                    <td>{{ gen.total_dgp }}</td>
+                    <td>{{ gen.tasa_titulacion }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">No hay registros.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <label for="selectGraficas"><strong>Gráficas:</strong></label>
-    <select id="selectGraficas" multiple>
-      <option value="linea">Línea</option>
-      <option value="barras">Barras</option>
-      <option value="pastel">Pastel</option>
-      <option value="gauss">Gauss</option>
-    </select>
+    {% if generaciones %}
+    <div class="graficas-box">
+        <h2>📈 Gráficas de Tasa de Titulación</h2>
 
-    <button type="button" class="btn-descargar" onclick="descargarPDF()">📄 Descargar PDF</button>
-  </div>
+        <div class="filtros-graficas">
+            <label><input type="checkbox" class="filtro-grafica" value="graficaLineal" checked> Línea</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
+        </div>
 
-  <!-- Contenedor de gráficas -->
-  <div class="graficas-container">
-    <div class="grafica"><canvas id="graficaLinea"></canvas></div>
-    <div class="grafica"><canvas id="graficaBarras"></canvas></div>
-    <div class="grafica"><canvas id="graficaPastel"></canvas></div>
-    <div class="grafica"><canvas id="graficaGauss"></canvas></div>
-  </div>
+        <div class="filtros-carreras">
+            <label for="selectCarreras"><strong>Filtrar por Carrera:</strong></label>
+            <select id="selectCarreras" class="choices-multiple" multiple>
+                {% for gen in generaciones %}
+                    {% if gen.programa_antiguo %}
+                        <option value="{{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                            {{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+                        </option>
+                    {% elif gen.programa_nuevo %}
+                        <option value="{{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                            {{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
 
-  <!-- JSON de datos para gráficas -->
-  <script type="application/json" id="jsonDatos">
-    {{ datos_json|safe }}
-  </script>
+        <div class="graficas-container">
+            <canvas id="graficaLineal" class="grafica"></canvas>
+            <canvas id="graficaBarras" class="grafica"></canvas>
+            <canvas id="graficaPastel" class="grafica"></canvas>
+            <canvas id="graficaGauss" class="grafica"></canvas>
+        </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="{% static 'js/titulados_historico_actual.js' %}"></script>
+ 
+    {% endif %}
 </div>
-{% endblock %}
+<script>
+    const datosGeneraciones = {{ generaciones_json|safe }};
+</script>
+
+<!-- Librerías externas -->
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- JS personalizado -->
+<script src="{% static 'js/titulados_historico_actual.js' %}"></script>
+
+<script>
+    // Activar Choices.js
+    const selectCarreras = document.getElementById('selectCarreras');
+    if (selectCarreras) {
+        new Choices(selectCarreras, {
+            removeItemButton: true,
+            shouldSort: false,
+            placeholderValue: 'Seleccione una o más carreras'
+        });
+    }
+
+
+</script>
+
+{% endblock content %}
+
+

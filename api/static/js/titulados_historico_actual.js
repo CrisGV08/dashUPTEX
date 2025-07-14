@@ -1,187 +1,173 @@
+
 document.addEventListener('DOMContentLoaded', function () {
-    const datosGeneraciones = JSON.parse(document.getElementById('jsonDatos').textContent);
+    if (!datosGeneraciones || datosGeneraciones.length === 0) return;
+
     const selectCarreras = document.getElementById('selectCarreras');
-    const selectGraficas = document.getElementById('selectGraficas');
+    const charts = {};
 
-    const charts = {
-        linea: null,
-        barras: null,
-        pastel: null,
-        gauss: null
-    };
-
-    const colores = [
-        '#4e79a7', '#f28e2b', '#e15759', '#76b7b2',
-        '#59a14f', '#edc949', '#af7aa1', '#ff9da7',
-        '#9c755f', '#bab0ab'
-    ];
-
-    new Choices(selectCarreras, {
+    const choices = new Choices(selectCarreras, {
         removeItemButton: true,
+        placeholder: true,
         placeholderValue: 'Selecciona una o más carreras',
         searchEnabled: true
     });
 
-    new Choices(selectGraficas, {
-        removeItemButton: true,
-        placeholderValue: 'Selecciona tipo de gráfica'
-    });
-
-    function actualizarGraficas() {
-        const carrerasSeleccionadas = Array.from(selectCarreras.selectedOptions).map(op => op.value);
-        const tiposGraficas = Array.from(selectGraficas.selectedOptions).map(op => op.value);
-
-        const datosFiltrados = datosGeneraciones.filter(reg => {
-            const etiqueta = `${reg.nombre_programa} (${reg.anio})`;
+    function actualizarGraficasPorCarrera(carrerasSeleccionadas) {
+        const filtrados = datosGeneraciones.filter(gen => {
+            const etiqueta = `${gen.nombre_programa} (${gen.anio})`;
             return carrerasSeleccionadas.length === 0 || carrerasSeleccionadas.includes(etiqueta);
         });
 
-        const etiquetas = datosFiltrados.map(reg => `${reg.nombre_programa} (${reg.anio})`);
-        const valores = datosFiltrados.map(reg => reg.tasa_titulacion);
+        const etiquetas = filtrados.map(gen => `${gen.nombre_programa} (${gen.anio})`);
+        const tasas = filtrados.map(gen => gen.tasa_titulacion);
 
-        // Destruir gráficas anteriores si existen
-        Object.keys(charts).forEach(tipo => {
-            if (charts[tipo]) {
-                charts[tipo].destroy();
-                charts[tipo] = null;
-            }
-        });
-
-        // Línea
-        if (tiposGraficas.includes('linea')) {
-            const ctx = document.getElementById('graficaLinea').getContext('2d');
-            charts.linea = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: etiquetas,
-                    datasets: [{
-                        label: 'Tasa de Titulación',
-                        data: valores,
-                        borderColor: colores[0],
-                        fill: false,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: true }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+        if (charts.lineal) {
+            charts.lineal.data.labels = etiquetas;
+            charts.lineal.data.datasets[0].data = tasas;
+            charts.lineal.update();
         }
-
-        // Barras
-        if (tiposGraficas.includes('barras')) {
-            const ctx = document.getElementById('graficaBarras').getContext('2d');
-            charts.barras = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: etiquetas,
-                    datasets: [{
-                        label: 'Tasa de Titulación',
-                        data: valores,
-                        backgroundColor: colores
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: true }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+        if (charts.barras) {
+            charts.barras.data.labels = etiquetas;
+            charts.barras.data.datasets[0].data = tasas;
+            charts.barras.update();
         }
-
-        // Pastel
-        if (tiposGraficas.includes('pastel')) {
-            const ctx = document.getElementById('graficaPastel').getContext('2d');
-            charts.pastel = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: etiquetas,
-                    datasets: [{
-                        label: 'Tasa de Titulación',
-                        data: valores,
-                        backgroundColor: colores
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { position: 'right' },
-                        tooltip: { enabled: true }
-                    }
-                }
+        if (charts.pastel) {
+            const acumulado = {};
+            filtrados.forEach(g => {
+                acumulado[g.nombre_programa] = (acumulado[g.nombre_programa] || 0) + g.tasa_titulacion;
             });
+            charts.pastel.data.labels = Object.keys(acumulado);
+            charts.pastel.data.datasets[0].data = Object.values(acumulado);
+            charts.pastel.update();
         }
-
-        // Gaussiana
-        if (tiposGraficas.includes('gauss')) {
-            const ctx = document.getElementById('graficaGauss').getContext('2d');
-            const media = valores.reduce((a, b) => a + b, 0) / valores.length;
-            const desviacion = Math.sqrt(valores.map(x => Math.pow(x - media, 2)).reduce((a, b) => a + b, 0) / valores.length);
-
-            const xValues = [];
-            const yValues = [];
-
-            for (let x = media - 3 * desviacion; x <= media + 3 * desviacion; x += 0.5) {
-                const y = (1 / (desviacion * Math.sqrt(2 * Math.PI))) *
-                    Math.exp(-0.5 * Math.pow((x - media) / desviacion, 2));
-                xValues.push(x.toFixed(2));
-                yValues.push(y);
-            }
-
-            charts.gauss = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: xValues,
-                    datasets: [{
-                        label: 'Distribución Gaussiana',
-                        data: yValues,
-                        borderColor: colores[1],
-                        fill: false,
-                        tension: 0.2
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: true },
-                        tooltip: { enabled: true }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+        if (charts.gauss) {
+            const media = tasas.reduce((a, b) => a + b, 0) / (tasas.length || 1);
+            const desv = Math.sqrt(tasas.reduce((acc, v) => acc + Math.pow(v - media, 2), 0) / (tasas.length || 1));
+            const valoresX = Array.from({ length: 100 }, (_, i) => media - 3 * desv + i * (6 * desv / 100));
+            const valoresY = valoresX.map(x =>
+                (1 / (desv * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desv, 2))
+            );
+            charts.gauss.data.labels = valoresX.map(x => x.toFixed(1));
+            charts.gauss.data.datasets[0].data = valoresY;
+            charts.gauss.update();
         }
     }
 
-    // Escuchar cambios
-    selectCarreras.addEventListener('change', actualizarGraficas);
-    selectGraficas.addEventListener('change', actualizarGraficas);
+    // Mostrar/ocultar gráficas
+    document.querySelectorAll('.filtro-grafica').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const canvas = document.getElementById(checkbox.value);
+            if (canvas) {
+                if (checkbox.checked) {
+                    canvas.style.display = 'block';
+                } else {
+                    canvas.style.display = 'none';
+                }
+            }
+        });
+    });
 
-    // Mostrar al cargar
-    actualizarGraficas();
+    // Crear gráficas al cargar
+    const etiquetasIniciales = datosGeneraciones.map(gen => `${gen.nombre_programa} (${gen.anio})`);
+    const tasasIniciales = datosGeneraciones.map(gen => gen.tasa_titulacion);
+
+    charts.lineal = new Chart(document.getElementById('graficaLineal'), {
+        type: 'line',
+        data: {
+            labels: etiquetasIniciales,
+            datasets: [{
+                label: 'Tasa de Titulación (%)',
+                data: tasasIniciales,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Tasa de Titulación - Línea' }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: '%' } }
+            }
+        }
+    });
+
+    charts.barras = new Chart(document.getElementById('graficaBarras'), {
+        type: 'bar',
+        data: {
+            labels: etiquetasIniciales,
+            datasets: [{
+                label: 'Tasa de Titulación (%)',
+                data: tasasIniciales,
+                backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                title: { display: true, text: 'Tasa de Titulación - Barras' }
+            },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    const acumuladoInicial = {};
+    datosGeneraciones.forEach(gen => {
+        acumuladoInicial[gen.nombre_programa] = (acumuladoInicial[gen.nombre_programa] || 0) + gen.tasa_titulacion;
+    });
+
+    charts.pastel = new Chart(document.getElementById('graficaPastel'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(acumuladoInicial),
+            datasets: [{
+                data: Object.values(acumuladoInicial),
+                backgroundColor: Object.keys(acumuladoInicial).map(() => `hsl(${Math.random() * 360}, 70%, 65%)`)
+            }]
+        },
+        options: {
+            plugins: { title: { display: true, text: 'Distribución Tasa de Titulación - Pastel' } }
+        }
+    });
+
+    const mediaInicial = tasasIniciales.reduce((a, b) => a + b, 0) / tasasIniciales.length;
+    const desvInicial = Math.sqrt(tasasIniciales.reduce((acc, val) => acc + Math.pow(val - mediaInicial, 2), 0) / tasasIniciales.length);
+    const valoresXInicial = Array.from({ length: 100 }, (_, i) => mediaInicial - 3 * desvInicial + i * (6 * desvInicial / 100));
+    const valoresYInicial = valoresXInicial.map(x =>
+        (1 / (desvInicial * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mediaInicial) / desvInicial, 2))
+    );
+
+    charts.gauss = new Chart(document.getElementById('graficaGauss'), {
+        type: 'line',
+        data: {
+            labels: valoresXInicial.map(x => x.toFixed(1)),
+            datasets: [{
+                label: 'Distribución Gaussiana',
+                data: valoresYInicial,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.4)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            plugins: { title: { display: true, text: 'Distribución Gaussiana (Simulada)' } },
+            scales: {
+                y: { beginAtZero: true },
+                x: { title: { display: true, text: 'Tasa (%)' } }
+            }
+        }
+    });
+
+    selectCarreras.addEventListener('change', () => {
+        const seleccionadas = Array.from(selectCarreras.selectedOptions).map(opt => opt.value);
+        actualizarGraficasPorCarrera(seleccionadas);
+    });
 });
 
-// Exportar PDF
-function descargarPDF() {
-    const contenedor = document.querySelector('.graficas-container');
-    import('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js').then(html2pdf => {
-        html2pdf.default()
-            .from(contenedor)
-            .set({
-                filename: 'titulados_historico_actual.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
-            })
-            .save();
-    });
-}

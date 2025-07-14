@@ -1,138 +1,131 @@
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import HttpResponse
-from api.models import GeneracionCarrera, ProgramaEducativoAntiguo, ProgramaEducativoNuevo
-import openpyxl
-import json
+import pandas as pd
 import io
+import json
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.contrib import messages
+from api.models import ProgramaEducativoAntiguo, ProgramaEducativoNuevo, TituladosHistoricos
+
 
 def titulados_historicos_view(request):
-    registros = GeneracionCarrera.objects.all().order_by('anio_ingreso')
+    datos = TituladosHistoricos.objects.select_related(
+        'programa_antiguo', 'programa_nuevo'
+    ).order_by('anio_ingreso')
 
-    if request.method == 'POST' and 'guardar' in request.POST:
+    datos_json = json.dumps([
+        {
+            "nombre_programa": (
+                d.programa_antiguo.nombre if d.programa_antiguo
+                else d.programa_nuevo.nombre if d.programa_nuevo
+                else "No definido"
+            ),
+            "clave_programa": (
+                d.programa_antiguo.id if d.programa_antiguo
+                else d.programa_nuevo.id if d.programa_nuevo
+                else "ND"
+            ),
+            "anio": d.anio_ingreso,
+            "egreso": d.anio_egreso,
+            "titulados_hombres": d.titulados_hombres,
+            "titulados_mujeres": d.titulados_mujeres,
+            "registrados_dgp_h": d.registrados_dgp_h,
+            "registrados_dgp_m": d.registrados_dgp_m,
+            "total_titulados": d.total_titulados,
+            "total_dgp": d.total_dgp
+        }
+        for d in datos
+    ])
+
+    if request.method == 'POST' and request.FILES.get('archivo_excel'):
+        archivo_excel = request.FILES['archivo_excel']
         try:
-            id_registro = int(request.POST.get('guardar'))
-            registro = GeneracionCarrera.objects.get(id=id_registro)
-            registro.anio_ingreso = int(request.POST.get(f'anio_ingreso_{id_registro}', 0))
-            registro.anio_egreso = int(request.POST.get(f'anio_egreso_{id_registro}', 0))
-            registro.genero = request.POST.get(f'genero_{id_registro}', '')
-            registro.titulados = int(request.POST.get(f'titulados_{id_registro}', 0))
-            registro.registrados_dgp = int(request.POST.get(f'registrados_{id_registro}', 0))
+            df = pd.read_excel(archivo_excel)
+            registros_exitosos = 0
+            errores = []
 
-            # Calcula tasa
-            if registro.titulados > 0:
-                registro.tasa_titulacion = round((registro.registrados_dgp / registro.titulados) * 100, 2)
-            else:
-                registro.tasa_titulacion = 0.0
+            for i, fila in df.iterrows():
+                try:
+                    clave = str(fila.get('PROGRAMA EDUCATIVO')).strip().upper()
+                    programa = ProgramaEducativoAntiguo.objects.filter(id=clave).first() or \
+                               ProgramaEducativoNuevo.objects.filter(id=clave).first()
 
-            registro.save()
-            messages.success(request, "✅ Registro actualizado correctamente.")
+                    if not programa:
+                        errores.append(f"❌ Fila {i + 2}: Programa '{clave}' no encontrado.")
+                        continue
+
+                    ingreso = int(fila.get('AÑO INGRESO', 0))
+                    egreso = int(fila.get('AÑO EGRESO', 0))
+                    tit_h = int(fila.get('TITULADOS H', 0))
+                    tit_m = int(fila.get('TITULADOS M', 0))
+                    reg_h = int(fila.get('REG DGP H', 0))
+                    reg_m = int(fila.get('REG DGP M', 0))
+
+                    existe = TituladosHistoricos.objects.filter(
+                        anio_ingreso=ingreso,
+                        anio_egreso=egreso,
+                        programa_antiguo=programa if isinstance(programa, ProgramaEducativoAntiguo) else None,
+                        programa_nuevo=programa if isinstance(programa, ProgramaEducativoNuevo) else None
+                    ).exists()
+
+                    if existe:
+                        errores.append(f"⚠️ Fila {i + 2}: Ya existe el registro para ese año y programa.")
+                        continue
+
+                    TituladosHistoricos.objects.create(
+                        anio_ingreso=ingreso,
+                        anio_egreso=egreso,
+                        titulados_hombres=tit_h,
+                        titulados_mujeres=tit_m,
+                        registrados_dgp_h=reg_h,
+                        registrados_dgp_m=reg_m,
+                        programa_antiguo=programa if isinstance(programa, ProgramaEducativoAntiguo) else None,
+                        programa_nuevo=programa if isinstance(programa, ProgramaEducativoNuevo) else None
+                    )
+                    registros_exitosos += 1
+
+                except Exception as e:
+                    errores.append(f"⚠️ Fila {i + 2}: Error inesperado. {str(e)}")
+
+            if registros_exitosos:
+                messages.success(request, f"✅ {registros_exitosos} registros cargados correctamente.")
+            if errores:
+                messages.error(request, "Errores detectados:<br>" + "<br>".join(errores))
+
             return redirect('titulados_historicos')
+
         except Exception as e:
-            messages.error(request, f"❌ Error al actualizar: {e}")
+            messages.error(request, f"❌ Error al leer el archivo Excel: {str(e)}")
 
-    # Datos auxiliares
-    anios = GeneracionCarrera.objects.values_list('anio_ingreso', flat=True).distinct().order_by('anio_ingreso')
-    programas_antiguos = ProgramaEducativoAntiguo.objects.all()
-    programas_nuevos = ProgramaEducativoNuevo.objects.all()
+    return render(request, 'titulados_historicos.html', {
+        'datos': datos,
+        'datos_json': datos_json
+    })
 
-    # JSON para gráficas
-    datos_json = []
-    for r in registros:
-        nombre_programa = r.programa_antiguo.nombre if r.programa_antiguo else (r.programa_nuevo.nombre if r.programa_nuevo else "Sin Programa")
-        datos_json.append({
-            'programa': nombre_programa,
-            'anio_ingreso': r.anio_ingreso,
-            'anio_egreso': r.anio_egreso,
-            'genero': r.genero,
-            'titulados': r.titulados,
-            'registrados_dgp': r.registrados_dgp,
-            'tasa_titulacion': r.tasa_titulacion,
+
+def descargar_plantilla_titulados_historicos(request):
+    antiguos = ProgramaEducativoAntiguo.objects.all()
+    nuevos = ProgramaEducativoNuevo.objects.all()
+
+    filas = []
+    for p in list(antiguos) + list(nuevos):
+        filas.append({
+            'PROGRAMA EDUCATIVO': p.id,
+            'AÑO INGRESO': '',
+            'AÑO EGRESO': '',
+            'TITULADOS H': 0,
+            'TITULADOS M': 0,
+            'REG DGP H': 0,
+            'REG DGP M': 0,
         })
 
-    context = {
-        'registros': registros,
-        'anios': anios,
-        'programas_antiguos': programas_antiguos,
-        'programas_nuevos': programas_nuevos,
-        'datos_json': json.dumps(datos_json)
-    }
+    df = pd.DataFrame(filas)
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Titulados')
 
-    return render(request, 'titulados_historicos.html', context)
-
-
-def descargar_plantilla_titulados(request):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Titulados Históricos"
-    ws.append(["Programa Antiguo", "Programa Nuevo", "Año Ingreso", "Año Egreso", "Género", "Titulados", "Registrados DGP"])
-
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=plantilla_titulados_historicos.xlsx'
+    buffer.seek(0)
+    response = HttpResponse(
+        buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="plantilla_titulados_historicos.xlsx"'
     return response
-
-
-def subir_excel_titulados(request):
-    if request.method == 'POST' and request.FILES.get('archivo_excel'):
-        archivo = request.FILES['archivo_excel']
-        try:
-            wb = openpyxl.load_workbook(archivo)
-            ws = wb.active
-            filas = list(ws.iter_rows(min_row=2, values_only=True))
-
-            nuevos, omitidos = 0, 0
-            for fila in filas:
-                if len(fila) < 7:
-                    omitidos += 1
-                    continue
-
-                prog_antiguo, prog_nuevo, anio_in, anio_out, genero, titulados, registrados = fila
-
-                if not anio_in or titulados is None or registrados is None:
-                    omitidos += 1
-                    continue
-
-                pa = ProgramaEducativoAntiguo.objects.filter(nombre=prog_antiguo).first() if prog_antiguo else None
-                pn = ProgramaEducativoNuevo.objects.filter(nombre=prog_nuevo).first() if prog_nuevo else None
-
-                if not (pa or pn):
-                    omitidos += 1
-                    continue
-
-                registro, created = GeneracionCarrera.objects.get_or_create(
-                    programa_antiguo=pa,
-                    programa_nuevo=pn,
-                    anio_ingreso=anio_in,
-                    anio_egreso=anio_out,
-                    genero=genero,
-                    defaults={
-                        'titulados': titulados or 0,
-                        'registrados_dgp': registrados or 0
-                    }
-                )
-
-                if not created:
-                    registro.titulados = titulados or 0
-                    registro.registrados_dgp = registrados or 0
-
-                if registro.titulados > 0:
-                    registro.tasa_titulacion = round((registro.registrados_dgp / registro.titulados) * 100, 2)
-                else:
-                    registro.tasa_titulacion = 0.0
-
-                registro.save()
-                nuevos += 1
-
-            msg = f"✅ Se cargaron {nuevos} registros."
-            if omitidos > 0:
-                msg += f" ⚠️ {omitidos} filas omitidas."
-            messages.success(request, msg)
-
-        except Exception as e:
-            messages.error(request, f"❌ Error al procesar el archivo: {e}")
-
-    return redirect('titulados_historicos')

@@ -1,0 +1,79 @@
+.titulo-vista {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.tabla-genero {
+  width: 100%;
+  text-align: center;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tabla-genero th {
+  background-color: #d0f0d0;
+  padding: 8px;
+}
+
+.tabla-genero td {
+  padding: 6px;
+}
+
+.tabla-genero input {
+  width: 60px;
+  padding: 4px;
+  text-align: center;
+}
+
+.fila-total {
+  background-color: #ffcdd2;
+  font-weight: bold;
+}
+
+.btn-guardar {
+  margin-top: 15px;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-guardar:hover {
+  background-color: #0056b3;
+}
+
+.filtros {
+  text-align: center;
+  margin-top: 40px;
+}
+
+#filtro-ciclos {
+  min-width: 300px;
+  padding: 6px;
+}
+
+.titulo-graficas {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 22px;
+}
+
+.contenedor-graficas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.contenedor-graficas canvas {
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 10px;
+}

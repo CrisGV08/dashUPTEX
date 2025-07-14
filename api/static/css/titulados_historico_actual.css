@@ -1,136 +1,117 @@
 .admin-panel {
-    padding: 20px;
-    background-color: #f8f9fa;
+    max-width: 1300px;
+    margin: auto;
+    padding: 30px 20px;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f9f9f9;
 }
 
-.titulo {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #1d3557;
-    font-weight: bold;
+h1, h2, h3 {
+    color: #2c3e50;
+    text-align: center;
 }
 
 .form-box {
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.form-box form {
-    display: inline-block;
+    background-color: #ffffff;
+    padding: 20px;
+    margin: 10px auto;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
 }
 
 .btn-admin {
-    background-color: #007bff;
+    background-color: #2980b9;
     color: white;
     border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 15px;
     cursor: pointer;
-    font-weight: bold;
 }
 
 .btn-admin:hover {
-    background-color: #0056b3;
+    background-color: #21618c;
 }
 
-.mensaje-exito {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
+.crud-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
 }
 
-.table-container {
-    overflow-x: auto;
+.crud-table thead {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.crud-table th, .crud-table td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #e1e1e1;
+}
+
+.crud-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Nueva distribución para las gráficas: 1 por fila */
+.graficas-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    margin-top: 40px;
+}
+
+.filtros-graficas {
+    text-align: center;
     margin-bottom: 20px;
 }
 
-.tabla-datos {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-}
-
-.tabla-datos th, .tabla-datos td {
-    border: 1px solid #dee2e6;
-    padding: 10px;
-    text-align: center;
-}
-
-.tabla-datos th {
-    background-color: #343a40;
-    color: white;
-}
-
-.tabla-datos input[type="number"] {
-    width: 80px;
-    padding: 5px;
-    text-align: center;
-}
-
-.btn-guardar {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.btn-guardar:hover {
-    background-color: #218838;
-}
-
-.filtros {
-    margin: 20px 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 15px;
-}
-
-.filtros label {
-    font-weight: bold;
-}
-
-.filtros select {
-    width: 200px;
-    padding: 5px;
-}
-
-.btn-descargar {
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.btn-descargar:hover {
-    background-color: #5a6268;
-}
-
+/* 🎯 Gráficas en columna */
 .graficas-container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    gap: 25px;
-    margin-top: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 60px;
+    width: 100%;
 }
 
+/* 🎯 Canvas full width y con altura dinámica */
 .grafica {
-    flex: 1 1 400px;
-    max-width: 500px;
-    padding: 10px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 100% !important;
+    max-width: 1200px;
+    height: auto !important;
+    min-height: 380px;
+}
+
+.filtros-carreras {
+    margin: 20px auto;
+    text-align: center;
+}
+
+#selectCarreras {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+#btnExportPDF {
+    display: block;
+    margin: 25px auto;
+    background-color: #27ae60;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+#btnExportPDF:hover {
+    background-color: #1e8449;
 }
