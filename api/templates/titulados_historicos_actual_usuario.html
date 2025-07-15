@@ -4,12 +4,13 @@
 {% block title %}Titulados Histórico Actual{% endblock %}
 
 {% block content %}
-<div class="admin-panel">
-    <h1>Titulados Histórico Actual</h1>
+<link rel="stylesheet" href="{% static 'css/titulados_historico_actual.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
-    <!-- Tabla de Generaciones -->
-    <h2 style="text-align: center;">Generaciones Registradas</h2>
-    <div class="table-responsive" style="margin-top: 20px;">
+<div class="admin-panel">
+    <h1 class="titulo">📘 Titulados Histórico Actual</h1>
+
+    <div class="tabla-box">
         <table class="crud-table">
             <thead>
                 <tr>
@@ -27,13 +28,9 @@
                 {% for gen in generaciones %}
                 <tr>
                     <td>
-                        {% if gen.programa_antiguo %}
-                            {{ gen.programa_antiguo.nombre }}
-                        {% elif gen.programa_nuevo %}
-                            {{ gen.programa_nuevo.nombre }}
-                        {% else %}
-                            Sin programa
-                        {% endif %}
+                        {% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}
+                        {% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}
+                        {% else %}Sin programa{% endif %}
                     </td>
                     <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
                     <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
@@ -44,71 +41,56 @@
                     <td>{{ gen.tasa_titulacion }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="8">No hay registros disponibles.</td></tr>
+                <tr><td colspan="8">No hay registros.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Gráfica -->
     {% if generaciones %}
-    <div style="margin-top: 50px;">
-        <h2 style="text-align: center;">Evolución de Tasa de Titulación</h2>
-        <canvas id="graficaTasaTitulacion" width="100%" height="40"></canvas>
+    <div class="graficas-box">
+        <h2>📈 Gráficas de Tasa de Titulación</h2>
+
+        <div class="filtros-graficas">
+            <label><input type="checkbox" class="filtro-grafica" value="graficaLineal" checked> Línea</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
+            <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
+        </div>
+
+        <div class="filtros-carreras">
+            <label for="selectCarreras"><strong>Filtrar por Carrera:</strong></label>
+            <select id="selectCarreras" class="choices-multiple" multiple>
+                {% for gen in generaciones %}
+                    {% if gen.programa_antiguo %}
+                        <option value="{{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                            {{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+                        </option>
+                    {% elif gen.programa_nuevo %}
+                        <option value="{{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                            {{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="graficas-container">
+            <canvas id="graficaLineal" class="grafica"></canvas>
+            <canvas id="graficaBarras" class="grafica"></canvas>
+            <canvas id="graficaPastel" class="grafica"></canvas>
+            <canvas id="graficaGauss" class="grafica"></canvas>
+        </div>
     </div>
     {% endif %}
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    {% if generaciones %}
-    const ctx = document.getElementById('graficaTasaTitulacion').getContext('2d');
-    const etiquetas = [
-        {% for gen in generaciones %}
-            "{% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}{% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}{% else %}Sin programa{% endif %} ({{ gen.fecha_ingreso|date:"Y" }})",
-        {% endfor %}
-    ];
-    const tasas = [
-        {% for gen in generaciones %}
-            {{ gen.tasa_titulacion }},
-        {% endfor %}
-    ];
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: etiquetas,
-            datasets: [{
-                label: 'Tasa de Titulación (%)',
-                data: tasas,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.4)',
-                fill: true,
-                tension: 0.3,
-                pointRadius: 5,
-                pointHoverRadius: 8,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Tasa de Titulación por Generación'
-                },
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Porcentaje (%)'
-                    }
-                }
-            }
-        }
-    });
-    {% endif %}
+    const datosGeneraciones = {{ generaciones_json|safe }};
 </script>
-{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/titulados_historico_actual.js' %}"></script>
+
+{% endblock content %}

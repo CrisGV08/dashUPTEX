@@ -1,80 +1,42 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Matrícula por Género{% endblock %}
 
 {% block content %}
-<h1 style="text-align: center;">Matrícula por Género</h1>
+<link rel="stylesheet" href="{% static 'css/matricula_genero.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-<!-- 🎨 Sección de gráficas -->
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 30px;">
-  <div>
-    <h3 style="text-align:center;">Barras Apiladas</h3>
-    <canvas id="graficaBarras" width="300" height="250"></canvas>
-  </div>
-  <div>
-    <h3 style="text-align:center;">Gráfico de Línea</h3>
-    <canvas id="graficaLinea" width="300" height="250"></canvas>
-  </div>
-  <div>
-    <h3 style="text-align:center;">Distribución Total</h3>
-    <canvas id="graficaPastel" width="260" height="260"></canvas>
+<h2 class="titulo-vista">📊 Matrícula por Género</h2>
+
+<div class="filtros">
+  <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaLinea" checked> Línea</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
+  <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gauss</label>
+  <br><br>
+  <select id="filtro-ciclos" multiple>
+  {% for etiqueta in etiquetas %}
+    <option value="{{ etiqueta }}" selected>{{ etiqueta }}</option>
+  {% endfor %}
+</select>
+
+  </select>
+</div>
+
+<div id="contenedor-pdf" style="margin-top: 40px;">
+  <div class="graficas-grid">
+    <div><h3>Barras Apiladas</h3><canvas id="graficaBarras"></canvas></div>
+    <div><h3>Gráfico de Línea</h3><canvas id="graficaLinea"></canvas></div>
+    <div><h3>Distribución Total</h3><canvas id="graficaPastel"></canvas></div>
+    <div><h3>Campana de Gauss</h3><canvas id="graficaGauss"></canvas></div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const datos = {{ datos_grafica_json|safe }};
-  
-  // Barras apiladas
-  new Chart(document.getElementById('graficaBarras'), {
-    type: 'bar',
-    data: {
-      labels: datos.labels,
-      datasets: [
-        { label: 'Mujeres', data: datos.mujeres, backgroundColor: '#f06292' },
-        { label: 'Hombres', data: datos.hombres, backgroundColor: '#64b5f6' }
-      ]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: { title: { display: true, text: 'Matrícula por Ciclo' } },
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-    }
-  });
-
-  // Línea de crecimiento
-  new Chart(document.getElementById('graficaLinea'), {
-    type: 'line',
-    data: {
-      labels: datos.labels,
-      datasets: [
-        { label: 'Mujeres', data: datos.mujeres, borderColor: '#f06292', fill: false, tension: 0.4 },
-        { label: 'Hombres', data: datos.hombres, borderColor: '#64b5f6', fill: false, tension: 0.4 }
-      ]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: { title: { display: true, text: 'Evolución por Ciclo' } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-
-  // Pastel total
-  new Chart(document.getElementById('graficaPastel'), {
-    type: 'pie',
-    data: {
-      labels: datos.pie_labels,
-      datasets: [{ data: datos.pie_data, backgroundColor: ['#64b5f6', '#f06292'] }]
-    },
-    options: {
-      responsive: true,
-      animation: { duration: 2000 },
-      plugins: {
-        legend: { position: 'top' },
-        title: { display: true, text: 'Distribución General por Género' }
-      }
-    }
-  });
+<script id="datos-json" type="application/json">
+  {{ datos_grafica_json|safe }}
 </script>
+<script src="{% static 'js/matricula_genero.js' %}"></script>
 {% endblock %}

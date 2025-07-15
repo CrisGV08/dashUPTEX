@@ -24,6 +24,7 @@ def matricula_por_genero_usuario_view(request):
         hombres.append(h)
         mujeres.append(m)
         totales.append(h + m)
+
         total_global_hombres += h
         total_global_mujeres += m
 
@@ -37,5 +38,7 @@ def matricula_por_genero_usuario_view(request):
     })
 
     return render(request, "matricula_por_genero_usuario.html", {
+        "ciclos": ciclos,
+        "etiquetas": labels,
         "datos_grafica_json": datos_grafica_json
     })
