@@ -58,8 +58,11 @@ from api.Administrador.indicadores_generales_view import (
     descargar_plantilla_indicadores
 )
 
-from api.Administrador.eficiencia_terminal_view import eficiencia_terminal_view
-from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
+from api.Administrador.eficiencia_terminal_view import (
+    eficiencia_terminal_view,
+    descargar_plantilla_eficiencia_terminal,
+    cargar_eficiencia_terminal,
+)
 from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
     matricula_h_nuevo_ingreso_view, descargar_plantilla_matricula_h_nuevo_ingreso
 )
@@ -138,7 +141,8 @@ urlpatterns = [
     path('cargar-indicadores-generales/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
     path('descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'), 
     path('eficiencia-terminal/', eficiencia_terminal_view, name='eficiencia_terminal'),
-    path('descargar-plantilla-eficiencia/', descargar_plantilla_eficiencia, name='descargar_plantilla_eficiencia'),
+    path('eficiencia-terminal/descargar-plantilla/', descargar_plantilla_eficiencia_terminal, name='descargar_plantilla_eficiencia_terminal'),
+    path('eficiencia-terminal/cargar/', cargar_eficiencia_terminal, name='cargar_eficiencia_terminal'),
     path('administrador/matricula-h-nuevo-ingreso/', matricula_h_nuevo_ingreso_view, name='matricula_h_nuevo_ingreso'),
     path('administrador/descargar-plantilla-matricula-h-nuevo-ingreso/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
