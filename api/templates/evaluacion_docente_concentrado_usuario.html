@@ -54,6 +54,10 @@
             <td>{{ item.promedio }}</td>
           </tr>
         {% endfor %}
+        <tr>
+          <th style="text-align:right;">Promedio General Total:</th>
+          <td style="font-weight:bold; text-align:center;">{{ promedio_general_total|floatformat:2 }}</td>
+        </tr>
       </tbody>
     </table>
   </div>

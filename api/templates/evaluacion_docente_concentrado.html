@@ -5,99 +5,106 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/evaluacion_docente_concentrado.css' %}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 <div class="admin-panel">
-    <h1 class="titulo">📘 Evaluación Docente Concentrado</h1>
+  <h1 class="titulo">📘 Evaluación Docente Concentrado</h1>
 
-    <!-- Botón PDF -->
-    <div class="botones-superiores">
-        <button id="btnDescargarPDF" class="btn-admin">🧾 Descargar PDF con Gráficas</button>
-    </div>
+  <!-- Botón PDF -->
+  <div class="botones-superiores">
+    <button id="btnDescargarPDF" class="btn-admin">🧾 Descargar PDF con Gráficas</button>
+  </div>
 
-    <!-- Tabla visible en pantalla -->
-    <div class="table-responsive mt-4">
-        <table class="table table-bordered text-center">
-            <thead class="table-primary">
-                <tr>
-                    <th>Año Escolar</th>
-                    <th>Promedio General</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in datos %}
-                <tr>
-                    <td>{{ d.anio }}</td>
-                    <td>{{ d.promedio }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="2">No hay datos disponibles</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <!-- Tabla -->
+  <div class="table-responsive mt-4">
+    <table class="table table-bordered text-center">
+      <thead class="table-primary">
+        <tr>
+          <th>Año Escolar</th>
+          <th>Promedio General</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in datos %}
+        <tr>
+          <td>{{ d.anio }}</td>
+          <td>{{ d.promedio|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2">No hay datos disponibles</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th style="text-align: right;">Promedio General Total:</th>
+          <td style="text-align: center; font-weight: bold;">
+            {{ promedio_general_total|floatformat:2 }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 
-    <!-- Filtros -->
-    <div class="filtros mt-5">
-        <h5>🎯 Filtros</h5>
-        <div class="form-check"><input type="checkbox" class="grafica-check" value="lineal" checked> Línea</div>
-        <div class="form-check"><input type="checkbox" class="grafica-check" value="barras" checked> Barras</div>
-        <div class="form-check"><input type="checkbox" class="grafica-check" value="pastel" checked> Pastel</div>
-        <div class="form-check"><input type="checkbox" class="grafica-check" value="gauss" checked> Gauss</div>
+  <!-- Contenido para PDF (incluye tabla y gráficas) -->
+  <div id="contenidoParaPDF" class="fila-graficas">
 
-        <label class="mt-2">Selecciona ciclos:</label>
-        <select id="selectCiclos" class="form-control" multiple></select>
-    </div>
-
-    <!-- Contenido para PDF -->
-    <div id="contenidoParaPDF" class="mt-5">
-
-        <!-- Gráficas -->
-        <div class="row mt-4 graficas-container">
-            <div class="col-md-6 d-flex justify-content-center">
-                <div class="grafica-box">
-                    <h6 class="text-center">📈 Línea</h6>
-                    <canvas id="graficaLineal"></canvas>
-                </div>
-            </div>
-            <div class="col-md-6 d-flex justify-content-center">
-                <div class="grafica-box">
-                    <h6 class="text-center">📊 Barras</h6>
-                    <canvas id="graficaBarras"></canvas>
-                </div>
-            </div>
-            <div class="col-md-6 d-flex justify-content-center">
-                <div class="grafica-box">
-                    <h6 class="text-center">🥧 Pastel</h6>
-                    <canvas id="graficaPastel"></canvas>
-                </div>
-            </div>
-            <div class="col-md-6 d-flex justify-content-center">
-                <div class="grafica-box">
-                    <h6 class="text-center">📉 Gaussiana</h6>
-                    <canvas id="graficaGauss"></canvas>
-                </div>
-            </div>
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="columna-total">
+      <div id="filtrosContainer">
+        <div class="filtros">
+          <h5>📌 Filtros Promedio General Total</h5>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="lineaTotal" checked><label class="form-check-label" for="lineaTotal">Línea (Promedio Total)</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="barrasTotal" checked><label class="form-check-label" for="barrasTotal">Barras (Promedio Total)</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="pastelTotal" checked><label class="form-check-label" for="pastelTotal">Pastel (Promedio Total)</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="gaussTotal" checked><label class="form-check-label" for="gaussTotal">Gaussiana (Promedio Total)</label></div>
         </div>
-    </div>
-</div>
+        <div class="filtros mt-3">
+          <h5>🎯 Filtros por Año</h5>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="linea" checked><label class="form-check-label" for="linea">Línea</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="barras" checked><label class="form-check-label" for="barras">Barras</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="pastel" checked><label class="form-check-label" for="pastel">Pastel</label></div>
+          <div class="form-check"><input type="checkbox" class="form-check-input" id="gauss" checked><label class="form-check-label" for="gauss">Gauss</label></div>
+          <div class="form-group mt-2">
+            <label for="select-ciclos">Selecciona ciclos:</label>
+            <select id="select-ciclos" class="form-control" multiple></select>
+          </div>
+        </div>
+      </div>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-  const datosEvaluacion = [
-    {% for d in datos %}
-      {
-        ciclo: "{{ d.anio }}",
-        promedio: {{ d.promedio }}
-      },
-    {% endfor %}
-  ];
-</script>
-<script src="{% static 'js/evaluacion_docente_concentrado.js' %}"></script>
+      <!-- GRÁFICAS PROMEDIO GENERAL -->
+      <div class="grafica-total-box" id="grafica-linea-total-container"><canvas id="grafica-linea-total"></canvas></div>
+      <div class="grafica-total-box" id="grafica-barras-total-container"><canvas id="grafica-barras-total"></canvas></div>
+      <div class="grafica-total-box" id="grafica-pastel-total-container"><canvas id="grafica-pastel-total"></canvas></div>
+      <div class="grafica-total-box" id="grafica-gauss-total-container"><canvas id="grafica-gauss-total"></canvas></div>
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div class="columna-ciclo">
+      <!-- GRÁFICAS POR CICLO -->
+      <div class="graficas-container">
+        <div class="grafica-box" id="grafica-linea-container"><h6>📈 Línea</h6><canvas id="grafica-linea"></canvas></div>
+        <div class="grafica-box" id="grafica-barras-container"><h6>📊 Barras</h6><canvas id="grafica-barras"></canvas></div>
+        <div class="grafica-box" id="grafica-pastel-container"><h6>🥧 Pastel</h6><canvas id="grafica-pastel"></canvas></div>
+        <div class="grafica-box" id="grafica-gauss-container"><h6>📉 Gaussiana</h6><canvas id="grafica-gauss"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    const datosEvaluacion = [
+      {% for d in datos %}
+        { ciclo: "{{ d.anio }}", promedio: {{ d.promedio }} },
+      {% endfor %}
+    ];
+    const promedioGeneralTotal = {{ promedio_general_total|default:0.0 }};
+  </script>
+  <script src="{% static 'js/evaluacion_docente_concentrado.js' %}"></script>
+</div>
 {% endblock %}

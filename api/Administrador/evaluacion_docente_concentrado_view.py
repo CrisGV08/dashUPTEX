@@ -11,7 +11,8 @@ def evaluacion_docente_concentrado_view(request):
     for registro in evaluaciones:
         ciclo = str(registro.ciclo_periodo)  # Ej: "2021-1"
         anio = ciclo.split('-')[0]           # Ej: "2021"
-        promedios_por_anio[anio].append(registro.promedio_general)
+        if registro.promedio_general is not None:
+            promedios_por_anio[anio].append(registro.promedio_general)
 
     # Calcular promedio final por año
     promedios_agrupados = []
@@ -25,6 +26,11 @@ def evaluacion_docente_concentrado_view(request):
     # Ordenar por año
     promedios_agrupados.sort(key=lambda x: x['anio'])
 
+    # Cálculo del promedio general total (suma de todos los promedios individuales)
+    total_promedios = sum(item['promedio'] for item in promedios_agrupados)
+    cantidad_anios = len(promedios_agrupados)
+    promedio_general_total = round(total_promedios / cantidad_anios, 2) if cantidad_anios > 0 else 0.0
+
     # Datos para JS
     datos_js = {
         'anios': [item['anio'] for item in promedios_agrupados],
@@ -35,4 +41,5 @@ def evaluacion_docente_concentrado_view(request):
         'datos': promedios_agrupados,
         'datos_js': datos_js,
         'anios_validos': datos_js['anios'],
+        'promedio_general_total': promedio_general_total,
     })
