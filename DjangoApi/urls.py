@@ -20,6 +20,10 @@ from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuari
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 from api.home.evaluacion_docente_concentrado_usuario_view import evaluacion_docente_concentrado_usuario_view
+from api.home.aprovechamiento_usuario_view import aprovechamiento_usuario_view
+
+
+
 
 # Login
 from api.login.login_views import login_view, logout_view
@@ -41,8 +45,13 @@ from api.Administrador.matricula_cuatrimestre_views import (
     descargar_plantilla_matricula_cuatrimestre, subir_csv_matricula_cuatrimestre
 )
 from api.Administrador.eficiencia3anios_views import eficiencia_3anios_view
-from api.Administrador.aprovechamiento_views import aprovechamiento_view
-from api.Administrador.aprovechamiento_tools import descargar_plantilla_aprovechamiento
+from api.Administrador.aprovechamiento_views import (
+    aprovechamiento_view,
+    descargar_plantilla_aprovechamiento,
+    cargar_aprovechamiento,
+)
+
+
 from api.Administrador.indicadores_generales_view import (
     reprobacion_desercion_view,
     cargar_indicadores_generales,
@@ -124,6 +133,7 @@ urlpatterns = [
     path('administrador/eficiencia-3anios/', eficiencia_3anios_view, name='eficiencia_3anios'),
     path('administrador/aprovechamiento/', aprovechamiento_view, name='aprovechamiento'),
     path('administrador/descargar-plantilla-aprovechamiento/', descargar_plantilla_aprovechamiento, name='descargar_plantilla_aprovechamiento'),
+    path('administrador/cargar-aprovechamiento/', cargar_aprovechamiento, name='cargar_aprovechamiento'),
     path('reprobacion-desercion/', reprobacion_desercion_view, name='indicadores_generales'),
     path('cargar-indicadores-generales/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
     path('descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'), 
