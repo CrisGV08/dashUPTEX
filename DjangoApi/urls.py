@@ -37,8 +37,9 @@ from api.Administrador import matriculagenero_views
 from api.Administrador.matriculaHistorica_views import matricula_historica
 from api.Administrador.matricula_anual_views import matricula_por_anio_view
 from api.Administrador.matricula_cuatrimestre_views import (
-    importar_matricula_cuatrimestres, matricula_por_cuatrimestre_view,
-    descargar_plantilla_matricula_cuatrimestre, subir_csv_matricula_cuatrimestre
+    matricula_por_cuatrimestre_view,
+    descargar_plantilla_matricula_cuatrimestre,
+    subir_csv_matricula_cuatrimestre
 )
 from api.Administrador.eficiencia3anios_views import eficiencia_3anios_view
 from api.Administrador.aprovechamiento_views import aprovechamiento_view
@@ -118,8 +119,9 @@ urlpatterns = [
     path('administrador/matricula-historica/', matricula_historica, name='matricula_historica'),
     path('administrador/matricula-por-anio/', matricula_por_anio_view, name='matricula_por_anio'),
     path('administrador/matricula-cuatrimestre/', matricula_por_cuatrimestre_view, name='matricula_por_cuatrimestre'),
-    path('administrador/importar-matricula-cuatrimestres/', importar_matricula_cuatrimestres, name='importar_matricula_cuatrimestres'),
-    path('administrador/descargar-plantilla-cuatrimestre/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_cuatrimestre'),
+    path('matricula-cuatrimestre/', matricula_por_cuatrimestre_view, name='matricula_por_cuatrimestre'),
+    path('matricula-cuatrimestre/descargar-plantilla/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_matricula_cuatrimestre'),
+    path('matricula-cuatrimestre/subir-csv/', subir_csv_matricula_cuatrimestre, name='subir_csv_matricula_cuatrimestre'),    path('administrador/descargar-plantilla-cuatrimestre/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_cuatrimestre'),
     path('administrador/subir-csv-cuatrimestre/', subir_csv_matricula_cuatrimestre, name='subir_csv_cuatrimestre'),
     path('administrador/eficiencia-3anios/', eficiencia_3anios_view, name='eficiencia_3anios'),
     path('administrador/aprovechamiento/', aprovechamiento_view, name='aprovechamiento'),

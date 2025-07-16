@@ -1,0 +1,122 @@
+/* ===== CONTENEDOR GENERAL ===== */
+.admin-panel {
+  background-color: #f4f8fb;
+  padding: 30px;
+  border-radius: 10px;
+}
+
+/* ===== TÍTULO ===== */
+.titulo-vista {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+/* ===== FILTROS ===== */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-end;
+  margin-bottom: 30px;
+}
+
+.filtro-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.filtro-item label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #34495e;
+}
+
+.filtro-item select,
+.filtro-item input[type="file"] {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* ===== BOTONES ===== */
+.btn-admin {
+  background-color: #2980b9;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-admin:hover {
+  background-color: #1f6694;
+}
+
+/* ===== TABLA ===== */
+.contenedor-tabla {
+  overflow-x: auto;
+}
+
+.crud-table {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.crud-table thead {
+  background-color: #3498db;
+  color: white;
+}
+
+.crud-table th,
+.crud-table td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.crud-table tbody tr:hover {
+  background-color: #ecf6ff;
+}
+
+/* ===== GRÁFICAS ===== */
+.graficas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+  margin-top: 40px;
+  padding: 0 20px 50px;
+}
+
+.graficas canvas {
+  width: 100% !important;
+  max-width: 500px;
+  height: auto !important;
+  aspect-ratio: 2 / 1;
+}
+
+/* ===== RESPONSIVO ===== */
+@media screen and (min-width: 768px) {
+  .graficas {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filtros {
+    justify-content: space-between;
+  }
+}

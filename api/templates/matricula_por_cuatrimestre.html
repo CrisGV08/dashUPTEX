@@ -1,54 +1,75 @@
 {% extends 'base_admin.html' %}
 {% load static %}
 
-{% block title %}Matrícula por Cuatrimestre{% endblock %}
+{% block title %}📘 Matrícula por Cuatrimestre{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'css/matricula_por_cuatrimestre.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
 <div class="admin-panel">
-  <h1>Matrícula por Cuatrimestre</h1>
+  <h2 class="titulo-vista">📘 Matrícula por Cuatrimestre</h2>
 
   <!-- Filtros -->
-  <form method="get" class="crud-form">
-    <select name="ciclo">
-      <option value="Todos">Todos los ciclos</option>
-      {% for c in ciclos %}
-        <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
-          {{ c.ciclo.anio }} - {{ c.periodo.clave }}
-        </option>
-      {% endfor %}
-    </select>
+  <form method="get" class="filtros">
+    <div class="filtro-item">
+      <label for="filtroCiclo">Ciclo:</label>
+      <select name="ciclo" id="filtroCiclo">
+        <option value="Todos">Todos</option>
+        {% for c in ciclos %}
+          <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
+            {{ c.ciclo.anio }} - {{ c.periodo.clave }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
 
-    <select name="programa">
-      <option value="Todos">Todos los programas</option>
-      {% for p in programas %}
-        <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
-      {% endfor %}
-    </select>
+    <div class="filtro-item">
+      <label for="filtroPrograma">Programa Educativo:</label>
+      <select name="programa" id="filtroPrograma">
+        <option value="Todos">Todos</option>
+        {% for p in programas %}
+          <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-    <button type="submit" class="btn-admin">Filtrar</button>
+    <div class="filtro-item">
+      <button type="submit" class="btn-admin">Aplicar filtros</button>
+      <button type="button" id="btnDescargarPDF" class="btn-admin">📄 Descargar PDF</button>
+    </div>
   </form>
 
-  <!-- CSV -->
-  <div class="crud-form mt-4">
-    <form method="get" action="{% url 'descargar_plantilla_cuatrimestre' %}">
-      <button type="submit" class="btn-admin">Descargar plantilla CSV</button>
+  <!-- Botones CSV -->
+  <div class="filtros">
+    <form method="get" action="{% url 'descargar_plantilla_matricula_cuatrimestre' %}">
+      <button type="submit" class="btn-admin">📥 Descargar Plantilla CSV</button>
     </form>
-    <form method="post" enctype="multipart/form-data" action="{% url 'subir_csv_cuatrimestre' %}">
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'subir_csv_matricula_cuatrimestre' %}">
       {% csrf_token %}
       <input type="file" name="archivo_csv" accept=".csv" required>
-      <button type="submit" class="btn-admin">Subir CSV</button>
+      <button type="submit" class="btn-admin">📤 Subir CSV</button>
     </form>
   </div>
 
   <!-- Tabla -->
-  <div class="mt-3">
+  <div class="contenedor-tabla mt-4">
     <table class="crud-table">
       <thead>
-        <tr><th>Programa</th><th>Periodo</th><th>Matrícula</th></tr>
+        <tr>
+          <th>Periodo</th>
+          <th>Programa</th>
+          <th>Cantidad</th>
+        </tr>
       </thead>
       <tbody>
         {% for fila in tabla %}
-          <tr><td>{{ fila.programa }}</td><td>{{ fila.periodo }}</td><td>{{ fila.cantidad }}</td></tr>
+          <tr>
+            <td>{{ fila.periodo }}</td>
+            <td>{{ fila.programa }}</td>
+            <td>{{ fila.cantidad }}</td>
+          </tr>
         {% empty %}
           <tr><td colspan="3">No hay datos disponibles.</td></tr>
         {% endfor %}
@@ -57,78 +78,15 @@
   </div>
 
   <!-- Gráficas -->
-  <div class="mt-5">
-    <canvas id="graficaHorizontal" height="60"></canvas>
-    <canvas id="graficaArea" height="60" class="mt-5"></canvas>
-    <canvas id="graficaRadar" height="60" class="mt-5"></canvas>
+<div id="contenedorGraficas" class="graficas mt-5" data-grafica-json='{{ datos_grafica|safe }}'>
+    <canvas id="graficaBarras" width="600" height="300"></canvas>
+    <canvas id="graficaLinea" width="600" height="300"></canvas>
+    <canvas id="graficaPastel" width="600" height="300"></canvas>
+    <canvas id="graficaGauss" width="600" height="300"></canvas>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  const datos = JSON.parse('{{ datos_grafica|safe }}');
-  const labels = datos.labels;
-  const valores = datos.valores;
-
-  // Gráfico de barras horizontales
-  new Chart(document.getElementById('graficaHorizontal'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Matrícula por Periodo',
-        data: valores,
-        backgroundColor: 'rgba(255, 99, 132, 0.6)'
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      scales: { x: { beginAtZero: true } }
-    }
-  });
-
-  // Gráfico de área (línea con relleno)
-  new Chart(document.getElementById('graficaArea'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Tendencia acumulada',
-        data: valores,
-        fill: true,
-        backgroundColor: 'rgba(153, 102, 255, 0.3)',
-        borderColor: 'rgba(153, 102, 255, 1)',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-
-  // Gráfico de radar
-  new Chart(document.getElementById('graficaRadar'), {
-    type: 'radar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Comparativa radar',
-        data: valores,
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        pointBackgroundColor: 'rgba(54, 162, 235, 1)'
-      }]
-    },
-    options: {
-      responsive: true,
-      elements: {
-        line: {
-          borderWidth: 2
-        }
-      }
-    }
-  });
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="{% static 'js/matricula_por_cuatrimestre.js' %}"></script>
 {% endblock %}

@@ -1,42 +1,58 @@
-# api/home/matricula_anual_usuario_view.py
-
 from django.shortcuts import render
 from collections import defaultdict
 from api.models import NuevoIngreso, ProgramaEducativoAntiguo, ProgramaEducativoNuevo
 import json
 
 def matricula_anual_usuario_view(request):
-    registros = NuevoIngreso.objects.select_related('ciclo_periodo', 'programa_antiguo', 'programa_nuevo')
+    registros = NuevoIngreso.objects.select_related(
+        'ciclo_periodo', 'programa_antiguo', 'programa_nuevo'
+    )
 
     datos_antiguos = defaultdict(lambda: {'Enero - Abril': 0, 'Mayo - Agosto': 0, 'Septiembre - Diciembre': 0})
     datos_nuevos = defaultdict(lambda: {'Enero - Abril': 0, 'Mayo - Agosto': 0, 'Septiembre - Diciembre': 0})
-
     anios_set = set()
+    tabla_datos = []
 
     for reg in registros:
-        anio = reg.ciclo_periodo.ciclo.anio
-        periodo = reg.ciclo_periodo.periodo.nombre
-        total = (reg.examen or 0) + (reg.renoes or 0) + (reg.uaem_gem or 0) + (reg.pase_directo or 0)
-
-        if reg.programa_antiguo:
-            programa = reg.programa_antiguo.nombre
-            key = f"{anio}-{programa}"
-            datos_antiguos[key][periodo] += total
-        elif reg.programa_nuevo:
-            programa = reg.programa_nuevo.nombre
-            key = f"{anio}-{programa}"
-            datos_nuevos[key][periodo] += total
-
+        ciclo = reg.ciclo_periodo
+        anio = ciclo.ciclo.anio
+        periodo = ciclo.periodo.nombre
+        total = sum(filter(None, [reg.examen, reg.renoes, reg.uaem_gem, reg.pase_directo]))
         anios_set.add(str(anio))
 
-    programas_antiguos = list(ProgramaEducativoAntiguo.objects.values_list('nombre', flat=True))
-    programas_nuevos = list(ProgramaEducativoNuevo.objects.values_list('nombre', flat=True))
+        if reg.programa_antiguo:
+            nombre = reg.programa_antiguo.nombre
+            key = f"{anio}-{nombre}"
+            datos_antiguos[key][periodo] += total
+        elif reg.programa_nuevo:
+            nombre = reg.programa_nuevo.nombre
+            key = f"{anio}-{nombre}"
+            datos_nuevos[key][periodo] += total
+
+    # Construcción de la tabla por año
+    for key, periodos in {**datos_antiguos, **datos_nuevos}.items():
+        anio, programa = key.split('-', 1)
+        sep_dic = periodos.get('Septiembre - Diciembre', 0)
+        ene_abr = periodos.get('Enero - Abril', 0)
+        may_ago = periodos.get('Mayo - Agosto', 0)
+        total = sep_dic + ene_abr + may_ago
+
+        tabla_datos.append({
+            'anio': anio,
+            'programa': programa,
+            'sep_dic': sep_dic,
+            'ene_abr': ene_abr,
+            'may_ago': may_ago,
+            'total': total
+        })
 
     context = {
         'anios_lista': sorted(anios_set),
-        'programas_antiguos_lista': sorted(programas_antiguos),
-        'programas_nuevos_lista': sorted(programas_nuevos),
+        'programas_antiguos_lista': json.dumps(list(ProgramaEducativoAntiguo.objects.values_list('nombre', flat=True))),
+        'programas_nuevos_lista': json.dumps(list(ProgramaEducativoNuevo.objects.values_list('nombre', flat=True))),
         'data_antiguos_json': json.dumps(datos_antiguos),
         'data_nuevos_json': json.dumps(datos_nuevos),
+        'tabla_datos': tabla_datos,
     }
+
     return render(request, 'matricula_anual_usuario.html', context)

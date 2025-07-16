@@ -1,0 +1,117 @@
+.titulo-vista {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #007bff; /* Azul institucional */
+  font-weight: bold;
+}
+
+.admin-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Filtros */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 30px;
+  justify-content: space-between;
+}
+
+.filtros .form-group {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.filtros label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.filtros select {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Botón PDF */
+.btn-pdf {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  align-self: center;
+  margin-top: auto;
+}
+
+.btn-pdf:hover {
+  background-color: #0056b3;
+}
+
+/* Gráficas */
+#contenedorGraficas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+canvas {
+  max-width: 100%;
+  height: 300px !important;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tabla */
+.tabla-container {
+  margin-top: 40px;
+}
+
+.tabla-container h4 {
+  font-size: 22px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.tabla-matricula {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  background-color: #ffffff;
+}
+
+.tabla-matricula th,
+.tabla-matricula td {
+  border: 1px solid #dee2e6;
+  padding: 10px;
+}
+
+.tabla-matricula th {
+  background-color: #e3f2fd;
+  font-weight: bold;
+  color: #333;
+}
+
+.tabla-matricula tr:nth-child(even) {
+  background-color: #f1f8ff;
+}
+
+.tabla-matricula tr:hover {
+  background-color: #e0f0ff;
+}
