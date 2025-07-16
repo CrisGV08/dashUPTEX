@@ -1,207 +1,138 @@
 {% extends 'base_admin.html' %}
 {% load static %}
 
-{% block title %}Eficiencia Terminal{% endblock %}
+{% block title %}📊 Eficiencia Terminal{% endblock %}
 
 {% block content %}
-<h2 class="text-center mt-3">Eficiencia Terminal Histórica</h2>
+<link rel="stylesheet" href="{% static 'css/eficiencia_terminal.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Botones -->
-<!-- Botones sin Bootstrap -->
-<div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
-    <a href="{% url 'descargar_plantilla_eficiencia' %}" class="btn btn-primary" style="margin-right: 10px;">📥 Descargar Plantilla</a>
-    <form method="POST" enctype="multipart/form-data" style="display: inline-block;">
-        {% csrf_token %}
-        <input type="file" name="archivo_excel" style="margin-right: 10px;">
-        <button type="submit" class="btn btn-success">📊 Subir Eficiencia</button>
+<div class="container-fluid">
+  <h1 class="titulo-vista">📘 Eficiencia Terminal</h1>
+
+  <!-- ✅ Botones de archivo -->
+  <div class="botones mb-4">
+    <a href="{% url 'descargar_plantilla_eficiencia_terminal' %}" class="btn btn-primary">
+      Descargar Plantilla
+    </a>
+
+    <form method="POST" action="{% url 'cargar_eficiencia_terminal' %}" enctype="multipart/form-data" class="d-inline">
+      {% csrf_token %}
+      <input type="file" name="archivo_csv" id="fileInput" class="d-none" accept=".csv" required>
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+        Subir CSV
+      </button>
+      <button type="submit" class="btn btn-success d-none" id="submitBtn">Procesar</button>
     </form>
-</div>
+  </div>
 
+  <!-- ✅ Filtros -->
+  <div class="card mb-4">
+    <div class="card-body d-flex justify-content-between flex-wrap">
+      <form method="GET" class="form-inline">
+        <label for="filtroAnio"><strong>Ciclo:</strong></label>
+        <select id="filtroAnio" name="filtro_anio" class="form-control mx-2">
+          <option value="Todos">Todos</option>
+          {% for anio in anios %}
+            <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+          {% endfor %}
+        </select>
+      </form>
 
-<!-- Filtros -->
-<div class="d-flex justify-content-center gap-3 mb-4">
-    <label><strong>Ciclo:</strong></label>
-    <select id="filtroCiclo" onchange="filtrarDatos()" class="form-select">
-        <option value="Todos">Todos</option>
-        {% for ciclo in ciclos %}
-            <option value="{{ ciclo }}">{{ ciclo }}</option>
-        {% endfor %}
-    </select>
+      <div class="form-inline">
+        <label class="mr-2"><strong>Gráficas:</strong></label>
+        <label class="form-check form-check-inline">
+          <input class="form-check-input grafica-check" type="checkbox" value="barras" checked> Barras
+        </label>
+        <label class="form-check form-check-inline">
+          <input class="form-check-input grafica-check" type="checkbox" value="linea" checked> Línea
+        </label>
+        <label class="form-check form-check-inline">
+          <input class="form-check-input grafica-check" type="checkbox" value="pastel" checked> Pastel
+        </label>
+        <label class="form-check form-check-inline">
+          <input class="form-check-input grafica-check" type="checkbox" value="gauss" checked> Gauss
+        </label>
+        <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
+        <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+      </div>
+    </div>
+  </div>
 
-    <label><strong>Tipo de gráfica:</strong></label>
-    <select id="filtroGrafica" onchange="filtrarDatos()" class="form-select">
-        <option value="Todos">Todos</option>
-        <option value="barras">Barras</option>
-        <option value="linea">Línea</option>
-        <option value="pastel">Pastel</option>
-    </select>
-</div>
+  <!-- ✅ Gráficas -->
+  <div class="row">
+    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
+      <div class="card h-100">
+        <div class="card-header text-center">📊 Gráfico de Barras</div>
+        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
+      <div class="card h-100">
+        <div class="card-header text-center">📈 Gráfico de Línea</div>
+        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
+      <div class="card h-100">
+        <div class="card-header text-center">🥧 Gráfico de Pastel</div>
+        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
+      <div class="card h-100">
+        <div class="card-header text-center">📉 Campana de Gauss</div>
+        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
+      </div>
+    </div>
+  </div>
 
-<!-- Tabla de detalle -->
-<!-- Tabla de detalle -->
-<!-- Tabla sin Bootstrap -->
-<div style="margin: 20px auto; width: 95%;">
-    <table border="1" cellspacing="0" cellpadding="10" style="width: 100%; border-collapse: collapse; text-align: center;">
-        <thead style="background-color: #dcedc8;">
-            <tr>
-                <th>Programa</th>
-                <th>Prom. Eficiencia</th>
-            </tr>
+  <!-- ✅ Tabla Detallada -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>📋 Detalle por Programa y Ciclo</strong></div>
+    <div class="card-body table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="thead-light">
+          <tr>
+            <th>Ciclo</th>
+            <th>Programa</th>
+            <th>Matrícula Ingreso</th>
+            <th>Egresados</th>
+            <th>% Eficiencia</th>
+          </tr>
         </thead>
         <tbody>
-            {% for item in eficiencia_por_programa %}
-                <tr>
-                    <td>{{ item.programa }}</td>
-                    <td>{{ item.promedio }}%</td>
-                </tr>
-            {% endfor %}
+          {% for fila in detalle_ciclos %}
+          <tr>
+            <td>{{ fila.ciclo }}</td>
+            <td>{{ fila.programa }}</td>
+            <td>{{ fila.matricula_ingreso }}</td>
+            <td>{{ fila.egresados }}</td>
+            <td>{{ fila.porcentaje }}%</td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
-</div>
-
-
-
-<!-- Gráficas -->
-<div class="container text-center">
-    <h4 class="mb-4">Visualización Dinámica de Eficiencia Terminal</h4>
-    <div class="d-flex justify-content-center align-items-start flex-wrap gap-4">
-
-        <!-- Gráfica de Barras -->
-        <div style="width: 600px;">
-            <canvas id="graficaBarras" height="500"></canvas>
-        </div>
-
-        <!-- Gráfica de Línea -->
-        <div style="width: 600px;">
-            <canvas id="graficaLinea" height="500"></canvas>
-        </div>
-
-        <!-- Gráfica de Pastel -->
-        <div style="width: 600px;">
-            <canvas id="graficaPastel" height="600"></canvas>
-        </div>
-
+      </table>
     </div>
+  </div>
 
-    <p id="mensajeSinDatos" class="text-danger mt-3" style="display: none;">No hay datos disponibles para graficar</p>
+  <!-- ✅ Botón PDF -->
+  <div class="text-center mb-4">
+    <button id="btnDescargarPDF" class="btn btn-danger">
+      <i class="fas fa-file-pdf"></i> Descargar PDF
+    </button>
+  </div>
 </div>
 
-
-
-
-
-
-<!-- Leyenda de Programas -->
-<div class="container text-center mb-4">
-    <div class="row">
-        <div class="col-md-12">
-            <h5><strong>📘 Programas antiguos:</strong></h5>
-            <p>
-                ISC - Ingeniería en Sistemas Computacionales<br>
-                IRO - Ingeniería en Robótica<br>
-                ILT - Ingeniería en Logística y Transporte<br>
-                IET - Ingeniería en Electrónica<br>
-                LCIA - Licenciatura en Comercio Internacional y Aduanas<br>
-                LAGE - Licenciatura en Administración y Gestión de Empresas
-            </p>
-            <h5><strong>📗 Programas nuevos:</strong></h5>
-            <p>
-                ILG - Ingeniería en Logística<br>
-                ISE - Ingeniería en Sistemas Electrónicos<br>
-                IMC - Ingeniería Mecatrónica<br>
-                ITID - Ingeniería en Tecnologías de la Información e Innovación<br>
-                LCI - Licenciatura en Comercio Internacional<br>
-                LAD - Licenciatura en Administración
-            </p>
-        </div>
-    </div>
-</div>
-
-
-<!-- JS para gráficas -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const datos = {{ eficiencia_por_programa|safe }};
-    const selectCiclo = document.getElementById('filtroCiclo');
-    const selectGrafica = document.getElementById('filtroGrafica');
-    const sinDatos = document.getElementById('mensajeSinDatos');
-
-    let graficaBarras, graficaLinea, graficaPastel;
-
-    const pastelColors = [
-        'rgba(255, 179, 186, 0.7)', 'rgba(255, 223, 186, 0.7)', 'rgba(255, 255, 186, 0.7)',
-        'rgba(186, 255, 201, 0.7)', 'rgba(186, 225, 255, 0.7)', 'rgba(204, 204, 255, 0.7)',
-        'rgba(255, 204, 229, 0.7)', 'rgba(204, 255, 229, 0.7)', 'rgba(229, 204, 255, 0.7)'
-    ];
-
-    function obtenerDatosFiltrados() {
-        const cicloSeleccionado = selectCiclo.value;
-        return datos.filter(item => cicloSeleccionado === "Todos" || item.ciclo == cicloSeleccionado);
-    }
-
-    function destruirGraficas() {
-        if (graficaBarras) graficaBarras.destroy();
-        if (graficaLinea) graficaLinea.destroy();
-        if (graficaPastel) graficaPastel.destroy();
-    }
-
-    function crearGraficas() {
-        const filtrados = obtenerDatosFiltrados();
-        if (filtrados.length === 0) {
-            sinDatos.style.display = 'block';
-            destruirGraficas();
-            return;
-        } else {
-            sinDatos.style.display = 'none';
-        }
-
-        const programas = filtrados.map(d => d.programa);
-        const porcentajes = filtrados.map(d => d.promedio);
-
-        const configBase = {
-            labels: programas,
-            datasets: [{
-                label: 'Eficiencia Terminal %',
-                data: porcentajes,
-                backgroundColor: pastelColors,
-                borderColor: pastelColors,
-                borderWidth: 1
-            }]
-        };
-
-        destruirGraficas();
-
-        const tipoGrafica = selectGrafica.value;
-
-        if (tipoGrafica === 'Todos' || tipoGrafica === 'barras') {
-            graficaBarras = new Chart(document.getElementById('graficaBarras'), {
-                type: 'bar',
-                data: configBase,
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-        }
-
-        if (tipoGrafica === 'Todos' || tipoGrafica === 'linea') {
-            graficaLinea = new Chart(document.getElementById('graficaLinea'), {
-                type: 'line',
-                data: configBase,
-                options: { responsive: true, plugins: { legend: { display: false } } }
-            });
-        }
-
-        if (tipoGrafica === 'Todos' || tipoGrafica === 'pastel') {
-            graficaPastel = new Chart(document.getElementById('graficaPastel'), {
-                type: 'pie',
-                data: configBase,
-                options: { responsive: true }
-            });
-        }
-    }
-
-    function filtrarDatos() {
-        crearGraficas();
-    }
-
-    window.addEventListener('load', crearGraficas);
+<!-- Datos JSON para JS -->
+<script id="datosGraficas" type="application/json">
+  {
+    "eficiencia": "{{ datos_graficas.eficiencia|floatformat:2 }}"
+  }
 </script>
+
+<script src="{% static 'js/eficiencia_terminal.js' %}"></script>
 {% endblock %}

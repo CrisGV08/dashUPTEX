@@ -1,159 +1,132 @@
 {% extends 'base.html' %}
-{% block title %}Indicadores Generales{% endblock %}
+{% load static %}
+
+{% block title %}Reprobación y Deserción{% endblock %}
 
 {% block content %}
-<h1 style="text-align: center;">Reprobación y Deserción</h1>
+<link rel="stylesheet" href="{% static 'css/indicadores_generales.css' %}">
 
-<form method="GET" style="margin-top: 30px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-    <div>
-        <label><strong>Ciclo:</strong></label>
-        <select id="filtroAnio" name="filtro_anio" onchange="this.form.submit()">
-            <option value="Todos">Todos</option>
-            {% for anio in anios %}
+<h1 class="text-center mt-4 mb-4">📉 Reprobación y Deserción</h1>
+
+<div class="container-fluid">
+
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <form method="GET" class="form-inline">
+            <label class="mr-2"><strong>Ciclo:</strong></label>
+            <select id="filtroAnio" name="filtro_anio" class="form-control">
+              <option value="Todos">Todos</option>
+              {% for anio in anios %}
                 <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div>
-        <label><strong>Tipo de gráfica:</strong></label>
-        <select id="filtroGrafica">
-            <option value="Todos">Todos</option>
-            <option value="Barras">Barras</option>
-            <option value="Pastel">Pastel</option>
-            <option value="Linea">Línea</option>
-        </select>
-    </div>
-</form>
-
-<div style="margin-top: 30px; display: flex; justify-content: center; flex-wrap: wrap;">
-    <div style="flex: 1; max-width: 600px; margin: auto;">
-        <h2 style="margin-bottom: 20px; text-align: center;">Visualización Dinámica de Indicadores</h2>
-        <div id="contenedorGraficas"
-             style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-items: center;">
-            <canvas id="graficaBarras" width="100" height="80" style="border-radius: 12px;"></canvas>
-            <canvas id="graficaLinea" width="100" height="80" style="border-radius: 12px;"></canvas>
-            <canvas id="graficaPastel" width="100" height="100" style="border-radius: 12px;"></canvas>
+              {% endfor %}
+            </select>
+          </form>
         </div>
-        <p id="mensajeSinDatos" style="text-align: center; color: red; font-weight: bold; display: none; margin-top: 10px;">No hay datos disponibles para graficar</p>
+        <div class="col-md-6 text-right">
+          <label class="mr-2"><strong>Gráficas:</strong></label>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+            <label class="form-check-label" for="checkBarras">Barras</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+            <label class="form-check-label" for="checkLinea">Línea</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+            <label class="form-check-label" for="checkPastel">Pastel</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+            <label class="form-check-label" for="checkGauss">Gauss</label>
+          </div>
+          <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
+          <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div style="flex: 1; margin-top: 40px;">
-        <h3 style="text-align: center;">Detalle de Indicadores</h3>
-        <table border="1" cellspacing="0" cellpadding="5" style="width: 100%; text-align: center; border-collapse: collapse;">
-            <thead style="background-color: #f0f0f0;">
-                <tr>
-                    <th>Matrícula</th>
-                    <th>Deserción</th>
-                    <th>Reprobación</th>
-                    <th>Egresados</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in indicadores %}
-                <tr>
-                    <td>{{ i.matricula_total }}</td>
-                    <td>{{ i.desertores }}</td>
-                    <td>{{ i.reprobados }}</td>
-                    <td>{{ i.egresados }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <!-- Gráficas -->
+  <div class="row">
+    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="m-0">📊 Gráfico de Barras</h5></div>
+        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
+      </div>
     </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="m-0">📈 Gráfico de Línea</h5></div>
+        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="m-0">🥧 Gráfico de Pastel</h5></div>
+        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
+      <div class="card h-100">
+        <div class="card-header"><h5 class="m-0">📉 Campana de Gauss</h5></div>
+        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de detalle -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="m-0">📋 Detalle por Ciclo</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered text-center">
+          <thead class="thead-light">
+            <tr>
+              <th>Ciclo</th>
+              <th>Matrícula</th>
+              <th>Deserción</th>
+              <th>Reprobación</th>
+              <th>Egresados</th>
+              <th>% Deserción</th>
+              <th>% Reprobación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in detalle_ciclos %}
+            <tr>
+              <td>{{ fila.ciclo }}</td>
+              <td>{{ fila.matricula }}</td>
+              <td>{{ fila.desercion }}</td>
+              <td>{{ fila.reprobacion }}</td>
+              <td>{{ fila.egresados }}</td>
+              <td>{{ fila.porcentaje_desercion }}%</td>
+              <td>{{ fila.porcentaje_reprobacion }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-{{ datos_matricula|json_script:"datos_matricula" }}
-{{ datos_desercion|json_script:"datos_desercion" }}
-{{ datos_reprobacion|json_script:"datos_reprobacion" }}
-{{ datos_egresados|json_script:"datos_egresados" }}
-{{ ciclos_mostrar|json_script:"datos_ciclos_mostrar" }}
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const charts = {};
-const datos = {
-    matricula: JSON.parse(document.getElementById('datos_matricula').textContent),
-    desercion: JSON.parse(document.getElementById('datos_desercion').textContent),
-    reprobacion: JSON.parse(document.getElementById('datos_reprobacion').textContent),
-    egresados: JSON.parse(document.getElementById('datos_egresados').textContent),
-    ciclos_mostrar: JSON.parse(document.getElementById('datos_ciclos_mostrar').textContent)
-};
-
-function renderGraficas(tipo = 'Todos') {
-    if (charts.barras) charts.barras.destroy();
-    if (charts.linea) charts.linea.destroy();
-    if (charts.pastel) charts.pastel.destroy();
-
-    if (datos.ciclos_mostrar.length === 0) {
-        document.getElementById('mensajeSinDatos').style.display = 'block';
-        return;
-    } else {
-        document.getElementById('mensajeSinDatos').style.display = 'none';
-    }
-
-    const coloresPastel = ['#A7C7E7', '#B5EAD7', '#FFF7AE', '#FFB3BA', '#C7CEEA', '#D5F3F0'];
-
-    if (tipo === 'Barras' || tipo === 'Todos') {
-        charts.barras = new Chart(document.getElementById('graficaBarras'), {
-            type: 'bar',
-            data: {
-                labels: ['Matrícula', 'Deserción', 'Reprobación', 'Egresados'],
-                datasets: [{
-                    label: 'Indicadores',
-                    data: [
-                        datos.matricula.reduce((a, b) => a + b, 0),
-                        datos.desercion.reduce((a, b) => a + b, 0),
-                        datos.reprobacion.reduce((a, b) => a + b, 0),
-                        datos.egresados.reduce((a, b) => a + b, 0)
-                    ],
-                    backgroundColor: coloresPastel
-                }]
-            },
-            options: { responsive: true }
-        });
-    }
-
-    if (tipo === 'Linea' || tipo === 'Todos') {
-        charts.linea = new Chart(document.getElementById('graficaLinea'), {
-            type: 'line',
-            data: {
-                labels: datos.ciclos_mostrar,
-                datasets: [{
-                    label: 'Deserción (%)',
-                    data: datos.desercion.map((d, i) => (d / (datos.matricula[i] || 1)) * 100),
-                    borderColor: '#A7C7E7',
-                    backgroundColor: '#D5F3F0',
-                    tension: 0.4
-                }]
-            },
-            options: { responsive: true }
-        });
-    }
-
-    if (tipo === 'Pastel' || tipo === 'Todos') {
-        charts.pastel = new Chart(document.getElementById('graficaPastel'), {
-            type: 'pie',
-            data: {
-                labels: ['Matrícula', 'Deserción', 'Reprobación', 'Egresados'],
-                datasets: [{
-                    data: [
-                        datos.matricula.reduce((a, b) => a + b, 0),
-                        datos.desercion.reduce((a, b) => a + b, 0),
-                        datos.reprobacion.reduce((a, b) => a + b, 0),
-                        datos.egresados.reduce((a, b) => a + b, 0)
-                    ],
-                    backgroundColor: coloresPastel
-                }]
-            },
-            options: { responsive: true }
-        });
-    }
+<!-- Datos para JS -->
+<script id="datosGraficas" type="application/json">
+{
+  "desercion": "{{ datos_graficas.desercion|default:'0' }}",
+  "reprobacion": "{{ datos_graficas.reprobacion|default:'0' }}"
 }
-
-document.getElementById('filtroGrafica').addEventListener('change', (e) => {
-    renderGraficas(e.target.value);
-});
-
-renderGraficas();
 </script>
+
+<!-- Librerías -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="{% static 'js/indicadores_generales.js' %}"></script>
 {% endblock %}

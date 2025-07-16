@@ -20,6 +20,10 @@ from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuari
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 from api.home.evaluacion_docente_concentrado_usuario_view import evaluacion_docente_concentrado_usuario_view
+from api.home.aprovechamiento_usuario_view import aprovechamiento_usuario_view
+
+
+
 
 # Login
 from api.login.login_views import login_view, logout_view
@@ -42,16 +46,24 @@ from api.Administrador.matricula_cuatrimestre_views import (
     subir_csv_matricula_cuatrimestre
 )
 from api.Administrador.eficiencia3anios_views import eficiencia_3anios_view
-from api.Administrador.aprovechamiento_views import aprovechamiento_view
-from api.Administrador.aprovechamiento_tools import descargar_plantilla_aprovechamiento
+from api.Administrador.aprovechamiento_views import (
+    aprovechamiento_view,
+    descargar_plantilla_aprovechamiento,
+    cargar_aprovechamiento,
+)
+
+
 from api.Administrador.indicadores_generales_view import (
     reprobacion_desercion_view,
     cargar_indicadores_generales,
     descargar_plantilla_indicadores
 )
 
-from api.Administrador.eficiencia_terminal_view import eficiencia_terminal_view
-from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
+from api.Administrador.eficiencia_terminal_view import (
+    eficiencia_terminal_view,
+    descargar_plantilla_eficiencia_terminal,
+    cargar_eficiencia_terminal,
+)
 from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
     matricula_h_nuevo_ingreso_view, descargar_plantilla_matricula_h_nuevo_ingreso
 )
@@ -126,11 +138,13 @@ urlpatterns = [
     path('administrador/eficiencia-3anios/', eficiencia_3anios_view, name='eficiencia_3anios'),
     path('administrador/aprovechamiento/', aprovechamiento_view, name='aprovechamiento'),
     path('administrador/descargar-plantilla-aprovechamiento/', descargar_plantilla_aprovechamiento, name='descargar_plantilla_aprovechamiento'),
+    path('administrador/cargar-aprovechamiento/', cargar_aprovechamiento, name='cargar_aprovechamiento'),
     path('reprobacion-desercion/', reprobacion_desercion_view, name='indicadores_generales'),
     path('cargar-indicadores-generales/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
     path('descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'), 
     path('eficiencia-terminal/', eficiencia_terminal_view, name='eficiencia_terminal'),
-    path('descargar-plantilla-eficiencia/', descargar_plantilla_eficiencia, name='descargar_plantilla_eficiencia'),
+    path('eficiencia-terminal/descargar-plantilla/', descargar_plantilla_eficiencia_terminal, name='descargar_plantilla_eficiencia_terminal'),
+    path('eficiencia-terminal/cargar/', cargar_eficiencia_terminal, name='cargar_eficiencia_terminal'),
     path('administrador/matricula-h-nuevo-ingreso/', matricula_h_nuevo_ingreso_view, name='matricula_h_nuevo_ingreso'),
     path('administrador/descargar-plantilla-matricula-h-nuevo-ingreso/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
