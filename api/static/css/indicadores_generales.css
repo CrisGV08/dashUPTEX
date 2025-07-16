@@ -1,0 +1,122 @@
+
+  body {
+    background-color: #f5f8fc;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 30px 0 20px;
+    font-size: 30px;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  .btn {
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    margin: 6px 5px 6px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    transition: 0.2s ease;
+  }
+
+  .btn:hover {
+    opacity: 0.95;
+    transform: scale(1.03);
+  }
+
+  .btn-primary { background-color: #007bff; color: white; }
+  .btn-secondary { background-color: #6c757d; color: white; }
+  .btn-success { background-color: #28a745; color: white; }
+  .btn-outline-secondary {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+  }
+  .btn-danger { background-color: #dc3545; color: white; }
+
+  .container-fluid {
+    padding: 0 30px;
+  }
+
+  .card {
+    border: none;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    margin-bottom: 30px;
+  }
+
+  .card-header {
+    background-color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-body canvas {
+    display: block;
+    margin: auto;
+    height: 250px !important;
+  }
+
+  .form-inline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .form-check-inline {
+    margin-right: 12px;
+  }
+
+  .table {
+    font-size: 0.9rem;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+  }
+
+  .table th {
+    background-color: #e9f5ff;
+    color: #333;
+    font-weight: bold;
+  }
+
+  .table td, .table th {
+    padding: 12px;
+    vertical-align: middle;
+  }
+
+  .text-center {
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .form-inline {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-inline > * {
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .card-body canvas {
+      width: 100% !important;
+    }
+  }

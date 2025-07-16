@@ -1,129 +1,504 @@
 {% extends 'base_admin.html' %}
 {% load static %}
+<style>
+  body {
+    background-color: #f5f8fc;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 30px 0 20px;
+    font-size: 30px;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  .btn {
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 18px;
+    margin: 6px 5px 6px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    transition: 0.2s ease;
+  }
+
+  .btn:hover {
+    opacity: 0.95;
+    transform: scale(1.03);
+  }
+
+  .btn-primary { background-color: #007bff; color: white; }
+  .btn-secondary { background-color: #6c757d; color: white; }
+  .btn-success { background-color: #28a745; color: white; }
+  .btn-outline-secondary {
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+  }
+  .btn-danger { background-color: #dc3545; color: white; }
+
+  .container-fluid {
+    padding: 0 30px;
+  }
+
+  .card {
+    border: none;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    margin-bottom: 30px;
+  }
+
+  .card-header {
+    background-color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 12px;
+  }
+
+  .card-body {
+    padding: 20px;
+  }
+
+  .card-body canvas {
+    display: block;
+    margin: auto;
+    height: 250px !important;
+  }
+
+  .form-inline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .form-check-inline {
+    margin-right: 12px;
+  }
+
+  .table {
+    font-size: 0.9rem;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 8px;
+  }
+
+  .table th {
+    background-color: #e9f5ff;
+    color: #333;
+    font-weight: bold;
+  }
+
+  .table td, .table th {
+    padding: 12px;
+    vertical-align: middle;
+  }
+
+  .text-center {
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .form-inline {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-inline > * {
+      margin-bottom: 8px;
+    }
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .card-body canvas {
+      width: 100% !important;
+    }
+  }
+</style>
 
 {% block title %}Reprobación y Deserción{% endblock %}
 
 {% block content %}
-<h2 class="titulo-seccion"><i class="fas fa-user-minus"></i> Reprobación y Deserción</h2>
+<link rel="stylesheet" href="{% static 'css/indicadores_generales.css' %}">
 
-<!-- 🧩 Botones de acciones -->
-<div style="margin-bottom: 20px; display: flex; gap: 10px;">
-  <a href="{% url 'descargar_plantilla_indicador' %}" class="btn btn-primary">
-    <i class="fas fa-download"></i> Descargar plantilla
-  </a>
+<h1>📉 Reprobación y Deserción</h1>
 
-  <form action="{% url 'cargar_indicadores_generales' %}" method="POST" enctype="multipart/form-data" style="display:inline-block;">
-    {% csrf_token %}
-    <input type="file" name="archivo" accept=".xlsx,.xls" required>
-    <button type="submit" class="btn btn-success">
-      <i class="fas fa-upload"></i> Subir indicadores
-    </button>
-  </form>
-</div>
+<!-- Mensajes flash -->
+{% if mensaje %}
+<div class="alert alert-success">{{ mensaje|safe }}</div>
+{% endif %}
 
-<!-- 🎯 Filtros -->
-<form method="get" class="filtro-form">
-  <fieldset style="border: 1px solid #ccc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-    <legend><strong>Filtros</strong></legend>
+<!-- Contenedor principal -->
+<div class="container-fluid">
 
-    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-      <div>
-        <label for="anio">Año:</label>
-        <select name="anio" id="anio" class="form-control">
-          <option value="">Todos</option>
-          {% for ciclo in ciclos %}
-            <option value="{{ ciclo.anio }}" {% if ciclo.anio|stringformat:"s" == anio_actual %}selected{% endif %}>{{ ciclo.anio }}</option>
-          {% endfor %}
-        </select>
-      </div>
+  <!-- Sección de botones -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <a href="{% url 'descargar_plantilla_indicadores' %}" class="btn btn-primary">
+        <i class="fas fa-download"></i> Descargar plantilla
+      </a>
+      <form method="POST" action="{% url 'cargar_indicadores_generales' %}" enctype="multipart/form-data" class="d-inline">
+        {% csrf_token %}
+        <input type="file" name="archivo_csv" class="d-none" id="fileInput" accept=".csv" required>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-upload"></i> Subir CSV
+        </button>
+        <button type="submit" class="btn btn-success ml-2 d-none" id="submitBtn">Procesar</button>
+      </form>
+    </div>
+  </div>
 
-      <div>
-        <label for="periodo">Periodo:</label>
-<select name="periodo" id="periodo">
-    <option value="">Todos</option>
-    {% for p in periodos %}
-        <option value="{{ p.clave }}" {% if periodo_actual == p.clave %}selected{% endif %}>
-            {{ p.nombre }}
-        </option>
-    {% endfor %}
-</select>
-      </div>
-
-      <div>
-        <label for="tipo_programa">Tipo de programa:</label>
-        <select name="tipo_programa" id="tipo_programa" class="form-control">
-          <option value="">Todos</option>
-          <option value="nuevo" {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevos</option>
-          <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguos</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="carrera">Carrera:</label>
-        <select name="carrera" id="carrera">
-        <option value="">Todas</option>
-        {% for carrera in carreras %}
-        <option value="{{ carrera.id }}" {% if carrera_actual == carrera.id|stringformat:"s" %}selected{% endif %}>
-            {{ carrera.nombre }}
-        </option>
-        {% endfor %}
-        </select>
-
-      </div>
-
-      <div>
-        <label for="grafica">Tipo de gráfica:</label>
-        <select name="grafica" id="grafica" class="form-control">
-          <option value="">Todos</option>
-          <option value="barras" {% if tipo_grafica == 'barras' %}selected{% endif %}>Barras</option>
-          <option value="pastel" {% if tipo_grafica == 'pastel' %}selected{% endif %}>Pastel</option>
-          <option value="linea" {% if tipo_grafica == 'linea' %}selected{% endif %}>Línea</option>
-          <option value="gauss" {% if tipo_grafica == 'gauss' %}selected{% endif %}>Campana de Gauss</option>
-        </select>
-      </div>
-
-      <div style="align-self: flex-end;">
-        <button type="submit" class="btn btn-outline-primary"><i class="fas fa-filter"></i> Aplicar</button>
+  <!-- Filtros -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <form method="GET" class="form-inline">
+            <label class="mr-2"><strong>Ciclo:</strong></label>
+            <select id="filtroAnio" name="filtro_anio" class="form-control">
+              <option value="Todos">Todos</option>
+              {% for anio in anios %}
+                <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+        <div class="col-md-6">
+          <div class="form-inline float-right">
+            <label class="mr-2"><strong>Gráficas:</strong></label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+              <label class="form-check-label" for="checkBarras">Barras</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+              <label class="form-check-label" for="checkLinea">Línea</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+              <label class="form-check-label" for="checkPastel">Pastel</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+              <label class="form-check-label" for="checkGauss">Gauss</label>
+            </div>
+            <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
+            <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+          </div>
+        </div>
       </div>
     </div>
-  </fieldset>
-</form>
+  </div>
 
-<!-- 📊 Resultados -->
-<h4 class="mt-4"><i class="fas fa-chart-bar"></i> Detalle de indicadores</h4>
+  <!-- Gráficas -->
+  <div class="row">
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100" id="box-barras">
+        <div class="card-header">
+          <h5 class="m-0">📊 Gráfico de Barras</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="graficaBarras" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100" id="box-linea">
+        <div class="card-header">
+          <h5 class="m-0">📈 Gráfico de Línea</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="graficaLinea" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100" id="box-pastel">
+        <div class="card-header">
+          <h5 class="m-0">🥧 Gráfico de Pastel</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="graficaPastel" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100" id="box-gauss">
+        <div class="card-header">
+          <h5 class="m-0">📉 Campana de Gauss</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="graficaGauss" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<table class="table table-bordered table-striped mt-3">
-  <thead class="table-dark">
-    <tr>
-      <th>Periodo</th>
-      <th>Matrícula</th>
-      <th>Deserción</th>
-      <th>Reprobación</th>
-      <th>Egresados</th>
-      <th>% Deserción</th>
-      <th>% Reprobación</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for d in datos %}
-    <tr>
-      <td>{{ d.periodo }}</td>
-      <td>{{ d.matricula }}</td>
-      <td>{{ d.desertores }}</td>
-      <td>{{ d.reprobados }}</td>
-      <td>{{ d.egresados }}</td>
-      <td>{{ d.porc_desercion }}%</td>
-      <td>{{ d.porc_reprobacion }}%</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="7" class="text-center text-danger">No hay datos disponibles para mostrar.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <!-- Tabla -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="m-0">📋 Detalle por Ciclo</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th>Ciclo</th>
+              <th>Matrícula</th>
+              <th>Deserción</th>
+              <th>Reprobación</th>
+              <th>Egresados</th>
+              <th>% Deserción</th>
+              <th>% Reprobación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in detalle_ciclos %}
+            <tr>
+              <td>{{ fila.ciclo }}</td>
+              <td>{{ fila.matricula }}</td>
+              <td>{{ fila.desercion }}</td>
+              <td>{{ fila.reprobacion }}</td>
+              <td>{{ fila.egresados }}</td>
+              <td>{{ fila.porcentaje_desercion }}%</td>
+              <td>{{ fila.porcentaje_reprobacion }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-<!-- 🧠 Aquí puedes insertar tus gráficas con JS -->
-<div id="contenedor-graficas" class="mt-4">
-  <!-- Gráfica dinámica se cargará aquí usando Chart.js -->
+  <!-- Botón PDF -->
+  <div class="text-center mb-4">
+    <button id="btnDescargarPDF" class="btn btn-danger">
+      <i class="fas fa-file-pdf"></i> Descargar PDF
+    </button>
+  </div>
+
 </div>
+
+<!-- Datos para JS -->
+<script id="datosGraficas" type="application/json">
+{
+  "desercion": "{{ datos_graficas.desercion|default:'0' }}",
+  "reprobacion": "{{ datos_graficas.reprobacion|default:'0' }}"
+}
+</script>
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+// Versión simplificada y garantizada para tu caso
+document.addEventListener("DOMContentLoaded", function() {
+  // 1. Configuración básica
+  const datos = JSON.parse(document.getElementById('datosGraficas').textContent);
+  const charts = {};
+  
+  // 2. Función para renderizar gráficas
+  function renderGraficas(seleccionadas) {
+    const valores = [
+      parseFloat(datos.desercion) || 0,
+      parseFloat(datos.reprobacion) || 0
+    ];
+    
+    const labels = ['Deserción', 'Reprobación'];
+    const colors = ['#FF6384', '#36A2EB'];
+    
+    // Destruir gráficas existentes
+    Object.values(charts).forEach(chart => chart.destroy());
+    
+    // Mostrar/ocultar gráficas
+    ['barras', 'linea', 'pastel', 'gauss'].forEach(tipo => {
+      const elemento = document.getElementById(`box-${tipo}`);
+      if (elemento) {
+        elemento.style.display = seleccionadas.includes(tipo) ? 'block' : 'none';
+      }
+    });
+    
+    // Gráfico de Barras
+    if (seleccionadas.includes('barras')) {
+      charts.barras = new Chart(document.getElementById('graficaBarras'), {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Porcentaje (%)',
+            data: valores,
+            backgroundColor: colors,
+            borderColor: colors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              formatter: value => value + '%',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+    
+    // Gráfico de Línea (similar para otros tipos)
+    if (seleccionadas.includes('linea')) {
+      charts.linea = new Chart(document.getElementById('graficaLinea'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Porcentaje (%)',
+            data: valores,
+            borderColor: '#4BC0C0',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              formatter: value => value + '%',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+    
+    // Gráfico de Pastel
+    if (seleccionadas.includes('pastel')) {
+      charts.pastel = new Chart(document.getElementById('graficaPastel'), {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: valores,
+            backgroundColor: colors,
+            borderColor: '#fff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true },
+            datalabels: {
+              formatter: value => value + '%',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+    
+    // Gráfico de Gauss
+    if (seleccionadas.includes('gauss')) {
+      const calcularGauss = (data) => {
+        const mean = data.reduce((a, b) => a + b, 0) / data.length;
+        const stdDev = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length);
+        return data.map(x => Math.exp(-Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2))));
+      };
+      
+      charts.gauss = new Chart(document.getElementById('graficaGauss'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Distribución Gaussiana',
+            data: calcularGauss(valores),
+            borderColor: '#9966FF',
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            fill: true,
+            tension: 0.4
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+  }
+  
+  // 3. Manejo de filtros
+  document.getElementById('aplicarFiltros').addEventListener('click', function() {
+    const seleccionadas = [];
+    document.querySelectorAll('.grafica-check:checked').forEach(checkbox => {
+      seleccionadas.push(checkbox.value);
+    });
+    renderGraficas(seleccionadas);
+  });
+  
+  document.getElementById('resetFiltros').addEventListener('click', function() {
+    document.querySelectorAll('.grafica-check').forEach(checkbox => {
+      checkbox.checked = true;
+    });
+    renderGraficas(['barras', 'linea', 'pastel', 'gauss']);
+  });
+  
+  // 4. Exportar PDF
+  document.getElementById('btnDescargarPDF').addEventListener('click', async function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Título
+    doc.setFontSize(16);
+    doc.text("Reporte de Indicadores", 105, 15, { align: "center" });
+    
+    // Gráficas visibles
+    const graficas = ['box-barras', 'box-linea', 'box-pastel', 'box-gauss'];
+    let y = 25;
+    
+    for (const id of graficas) {
+      const elemento = document.getElementById(id);
+      if (elemento && elemento.style.display !== 'none') {
+        const canvas = elemento.querySelector('canvas');
+        if (canvas) {
+          const imgData = await html2canvas(canvas, { scale: 2 }).then(c => c.toDataURL('image/png'));
+          const width = 180;
+          const height = canvas.offsetHeight * (width / canvas.offsetWidth);
+          
+          if (y + height > doc.internal.pageSize.getHeight() - 10) {
+            doc.addPage();
+            y = 15;
+          }
+          
+          doc.addImage(imgData, 'PNG', 15, y, width, height);
+          y += height + 10;
+        }
+      }
+    }
+    
+    doc.save('reporte_indicadores.pdf');
+  });
+  
+  // Inicialización
+  renderGraficas(['barras', 'linea', 'pastel', 'gauss']);
+});
+</script>
 
 {% endblock %}

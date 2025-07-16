@@ -44,8 +44,11 @@ from api.Administrador.eficiencia3anios_views import eficiencia_3anios_view
 from api.Administrador.aprovechamiento_views import aprovechamiento_view
 from api.Administrador.aprovechamiento_tools import descargar_plantilla_aprovechamiento
 from api.Administrador.indicadores_generales_view import (
-    reprobacion_desercion_view, cargar_indicadores_generales, descargar_plantilla_indicador
+    reprobacion_desercion_view,
+    cargar_indicadores_generales,
+    descargar_plantilla_indicadores
 )
+
 from api.Administrador.eficiencia_terminal_view import eficiencia_terminal_view
 from api.Administrador.eficiencia_terminal_tools import descargar_plantilla_eficiencia
 from api.Administrador.Matricula_H_Nuevo_Ingreso_view import (
@@ -121,9 +124,9 @@ urlpatterns = [
     path('administrador/eficiencia-3anios/', eficiencia_3anios_view, name='eficiencia_3anios'),
     path('administrador/aprovechamiento/', aprovechamiento_view, name='aprovechamiento'),
     path('administrador/descargar-plantilla-aprovechamiento/', descargar_plantilla_aprovechamiento, name='descargar_plantilla_aprovechamiento'),
-    path('administrador/indicadores-generales/', reprobacion_desercion_view, name='indicadores_generales'),
-    path('administrador/indicadores-generales/cargar/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
-    path('administrador/indicadores-generales/plantilla/', descargar_plantilla_indicador, name='descargar_plantilla_indicador'),
+    path('reprobacion-desercion/', reprobacion_desercion_view, name='indicadores_generales'),
+    path('cargar-indicadores-generales/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
+    path('descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'), 
     path('eficiencia-terminal/', eficiencia_terminal_view, name='eficiencia_terminal'),
     path('descargar-plantilla-eficiencia/', descargar_plantilla_eficiencia, name='descargar_plantilla_eficiencia'),
     path('administrador/matricula-h-nuevo-ingreso/', matricula_h_nuevo_ingreso_view, name='matricula_h_nuevo_ingreso'),
