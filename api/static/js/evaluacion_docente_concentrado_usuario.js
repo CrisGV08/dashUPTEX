@@ -1,164 +1,235 @@
-document.addEventListener('DOMContentLoaded', function () {
-  if (!Array.isArray(datosEvaluacion) || datosEvaluacion.length === 0) return;
+document.addEventListener("DOMContentLoaded", function () {
+  if (!datosEvaluacion || datosEvaluacion.length === 0) return;
 
-  const coloresPorCiclo = {};
-  const paletaColores = [
-    '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
-    '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ab'
-  ];
+  const selectCiclos = document.getElementById("select-ciclos");
+  const charts = {};
 
-  const ciclosUnicos = [...new Set(datosEvaluacion.map(d => d.ciclo))];
-  ciclosUnicos.forEach((ciclo, index) => {
-    coloresPorCiclo[ciclo] = paletaColores[index % paletaColores.length];
+  // Inicializa Choices.js
+  const choices = new Choices(selectCiclos, {
+    removeItemButton: true,
+    placeholder: true,
+    placeholderValue: "Selecciona uno o más ciclos",
+    searchEnabled: false,
   });
 
-  const selectCiclos = document.getElementById('selectCiclos');
-  ciclosUnicos.forEach(ciclo => {
-    const option = document.createElement('option');
+  // Cargar ciclos disponibles
+  const ciclosUnicos = [...new Set(datosEvaluacion.map(d => d.ciclo))];
+  ciclosUnicos.sort().forEach(ciclo => {
+    const option = document.createElement("option");
     option.value = ciclo;
     option.textContent = ciclo;
     selectCiclos.appendChild(option);
   });
+  choices.setChoices([...selectCiclos.options], "value", "label", true);
+  choices.setChoiceByValue(ciclosUnicos); // Selecciona todos por defecto
 
-  const choicesCiclos = new Choices(selectCiclos, {
-    removeItemButton: true,
-    placeholderValue: 'Selecciona ciclos',
-    searchEnabled: false,
-    shouldSort: false
+  const filtrosGraficas = {
+    linea: document.getElementById("linea"),
+    barras: document.getElementById("barras"),
+    pastel: document.getElementById("pastel"),
+    gauss: document.getElementById("gauss"),
+  };
+
+  Object.values(filtrosGraficas).forEach(checkbox => {
+    checkbox.addEventListener("change", actualizarVisibilidadGraficas);
   });
 
-  function filtrarDatos() {
-    const seleccionados = choicesCiclos.getValue(true);
-    return datosEvaluacion.filter(d => seleccionados.length === 0 || seleccionados.includes(d.ciclo));
-  }
+  selectCiclos.addEventListener("change", () => {
+    renderGraficas();
+  });
 
-  function obtenerEtiquetasYValores(datos) {
-    return {
-      etiquetas: datos.map(d => d.ciclo),
-      valores: datos.map(d => d.promedio)
-    };
-  }
-
-  function renderizarGraficaLineal(datos) {
-    const ctx = document.getElementById('graficaLineal').getContext('2d');
-    return new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: datos.map(d => d.ciclo),
-        datasets: [{
-          label: 'Promedio',
-          data: datos.map(d => d.promedio),
-          borderColor: '#007bff',
-          backgroundColor: 'rgba(0, 123, 255, 0.1)',
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
+  function actualizarVisibilidadGraficas() {
+    Object.entries(filtrosGraficas).forEach(([tipo, checkbox]) => {
+      const canvasCiclo = document.getElementById(`grafica-${tipo}`);
+      const canvasTotal = document.getElementById(`grafica-${tipo}-total`);
+      if (canvasCiclo) canvasCiclo.parentElement.style.display = checkbox.checked ? "block" : "none";
+      if (canvasTotal) canvasTotal.parentElement.style.display = checkbox.checked ? "block" : "none";
     });
   }
 
-  function renderizarGraficaBarras(datos) {
-    const ctx = document.getElementById('graficaBarras').getContext('2d');
-    return new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: datos.map(d => d.ciclo),
-        datasets: [{
-          label: 'Promedio',
-          data: datos.map(d => d.promedio),
-          backgroundColor: datos.map(d => coloresPorCiclo[d.ciclo])
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
+  function renderGraficas() {
+    const seleccionados = Array.from(selectCiclos.selectedOptions).map(o => o.value);
+    const datosFiltrados = datosEvaluacion.filter(d => seleccionados.includes(d.ciclo));
 
-  function renderizarGraficaPastel(datos) {
-    const ctx = document.getElementById('graficaPastel').getContext('2d');
-    return new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: datos.map(d => d.ciclo),
-        datasets: [{
-          label: 'Promedio',
-          data: datos.map(d => d.promedio),
-          backgroundColor: datos.map(d => coloresPorCiclo[d.ciclo])
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'right' } }
-      }
-    });
-  }
+    const etiquetas = datosFiltrados.map(d => d.ciclo);
+    const datos = datosFiltrados.map(d => d.promedio);
 
-  function renderizarGraficaGauss(datos) {
-    const ctx = document.getElementById('graficaGauss').getContext('2d');
-    const media = datos.reduce((acc, val) => acc + val.promedio, 0) / datos.length;
-    const desviacion = Math.sqrt(datos.reduce((acc, val) => acc + Math.pow(val.promedio - media, 2), 0) / datos.length);
+    const promedioGeneral = datos.reduce((a, b) => a + b, 0) / (datos.length || 1);
+    const colores = etiquetas.map(() => generarColor());
 
-    const etiquetas = [];
-    const valores = [];
-    for (let x = media - 3 * desviacion; x <= media + 3 * desviacion; x += 0.1) {
-      etiquetas.push(x.toFixed(1));
-      const gauss = (1 / (desviacion * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desviacion, 2));
-      valores.push(gauss);
-    }
-
-    return new Chart(ctx, {
-      type: 'line',
+    // Configuraciones base
+    const configLineal = {
+      type: "line",
       data: {
         labels: etiquetas,
         datasets: [{
-          label: 'Distribución Normal',
-          data: valores,
-          borderColor: '#8e44ad',
-          fill: true,
-          backgroundColor: 'rgba(142, 68, 173, 0.2)',
-          tension: 0.4
+          label: "Promedio",
+          data: datos,
+          tension: 0.3,
         }]
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
+      options: opcionesBase()
+    };
+
+    const configBarras = {
+      type: "bar",
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: "Promedio",
+          data: datos,
+          backgroundColor: colores,
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configPastel = {
+      type: "pie",
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          data: datos,
+          backgroundColor: colores,
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configGauss = {
+      type: "line",
+      data: {
+        labels: generarEtiquetasGauss(promedioGeneral),
+        datasets: [{
+          label: "Campana de Gauss",
+          data: generarDatosGauss(promedioGeneral),
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0,
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configLinealTotal = {
+      type: "line",
+      data: {
+        labels: ["Promedio General"],
+        datasets: [{
+          label: "Promedio Total",
+          data: [promedioGeneral],
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configBarrasTotal = {
+      type: "bar",
+      data: {
+        labels: ["Promedio General"],
+        datasets: [{
+          label: "Promedio Total",
+          data: [promedioGeneral],
+          backgroundColor: generarColor(),
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configPastelTotal = {
+      type: "pie",
+      data: {
+        labels: ["Promedio General"],
+        datasets: [{
+          data: [promedioGeneral],
+          backgroundColor: [generarColor()],
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    const configGaussTotal = {
+      type: "line",
+      data: {
+        labels: generarEtiquetasGauss(promedioGeneral),
+        datasets: [{
+          label: "Campana de Gauss",
+          data: generarDatosGauss(promedioGeneral),
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0,
+        }]
+      },
+      options: opcionesBase()
+    };
+
+    // Renderizar todas
+    renderChart("grafica-linea", configLineal);
+    renderChart("grafica-barras", configBarras);
+    renderChart("grafica-pastel", configPastel);
+    renderChart("grafica-gauss", configGauss);
+    renderChart("grafica-linea-total", configLinealTotal);
+    renderChart("grafica-barras-total", configBarrasTotal);
+    renderChart("grafica-pastel-total", configPastelTotal);
+    renderChart("grafica-gauss-total", configGaussTotal);
+
+    actualizarVisibilidadGraficas();
+  }
+
+  function renderChart(id, config) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(canvas, config);
+  }
+
+  function generarColor() {
+    const r = Math.floor(Math.random() * 156) + 100;
+    const g = Math.floor(Math.random() * 156) + 100;
+    const b = Math.floor(Math.random() * 156) + 100;
+    return `rgba(${r},${g},${b},0.7)`;
+  }
+
+  function opcionesBase() {
+    return {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          formatter: Math.round,
+          font: { weight: 'bold' }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 10,
+          ticks: {
+            stepSize: 1
+          }
+        }
       }
+    };
+  }
+
+  function generarEtiquetasGauss(prom) {
+    const min = Math.max(0, prom - 3);
+    const max = Math.min(10, prom + 3);
+    const step = 0.1;
+    const etiquetas = [];
+    for (let x = min; x <= max; x += step) etiquetas.push(x.toFixed(1));
+    return etiquetas;
+  }
+
+  function generarDatosGauss(media) {
+    const sigma = 1;
+    return generarEtiquetasGauss(media).map(x => {
+      const val = (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * ((x - media) / sigma) ** 2);
+      return (val * 100).toFixed(2);
     });
   }
 
-  let charts = {};
-
-  function actualizarGraficas() {
-    const datosFiltrados = filtrarDatos();
-    if (charts.lineal) charts.lineal.destroy();
-    if (charts.barras) charts.barras.destroy();
-    if (charts.pastel) charts.pastel.destroy();
-    if (charts.gauss) charts.gauss.destroy();
-
-    if (document.querySelector('input[value="lineal"]').checked) {
-      charts.lineal = renderizarGraficaLineal(datosFiltrados);
-    }
-    if (document.querySelector('input[value="barras"]').checked) {
-      charts.barras = renderizarGraficaBarras(datosFiltrados);
-    }
-    if (document.querySelector('input[value="pastel"]').checked) {
-      charts.pastel = renderizarGraficaPastel(datosFiltrados);
-    }
-    if (document.querySelector('input[value="gauss"]').checked) {
-      charts.gauss = renderizarGraficaGauss(datosFiltrados);
-    }
-  }
-
-  actualizarGraficas();
-
-  document.querySelectorAll('.grafica-check').forEach(check => {
-    check.addEventListener('change', actualizarGraficas);
-  });
-
-  selectCiclos.addEventListener('change', actualizarGraficas);
+  renderGraficas();
 });

@@ -7,40 +7,40 @@
 <link rel="stylesheet" href="{% static 'css/evaluacion_docente_concentrado.css' %}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 
-<div class="container">
+<div class="admin-panel">
   <h2 class="titulo-principal">📘 Evaluación Docente Concentrado</h2>
 
   <!-- Filtros -->
-  <div class="filtros">
+  <div class="filtros ocultar-en-pdf">
     <h5>Filtros</h5>
     <div class="form-group">
-      <label for="selectCiclos">Seleccionar ciclos:</label>
-      <select id="selectCiclos" multiple></select>
+      <label for="select-ciclos">Seleccionar ciclos:</label>
+      <select id="select-ciclos" multiple></select>
     </div>
     <div class="form-group">
       <label>Seleccionar gráficas:</label><br>
       <div class="form-check">
-        <input class="form-check-input grafica-check" type="checkbox" value="lineal" checked>
-        <label class="form-check-label">📈 Línea</label>
+        <input class="form-check-input" type="checkbox" id="linea" checked>
+        <label class="form-check-label" for="linea">📈 Línea</label>
       </div>
       <div class="form-check">
-        <input class="form-check-input grafica-check" type="checkbox" value="barras" checked>
-        <label class="form-check-label">📊 Barras</label>
+        <input class="form-check-input" type="checkbox" id="barras" checked>
+        <label class="form-check-label" for="barras">📊 Barras</label>
       </div>
       <div class="form-check">
-        <input class="form-check-input grafica-check" type="checkbox" value="pastel" checked>
-        <label class="form-check-label">🥧 Pastel</label>
+        <input class="form-check-input" type="checkbox" id="pastel" checked>
+        <label class="form-check-label" for="pastel">🥧 Pastel</label>
       </div>
       <div class="form-check">
-        <input class="form-check-input grafica-check" type="checkbox" value="gauss" checked>
-        <label class="form-check-label">📉 Campana de Gauss</label>
+        <input class="form-check-input" type="checkbox" id="gauss" checked>
+        <label class="form-check-label" for="gauss">📉 Campana de Gauss</label>
       </div>
     </div>
   </div>
 
   <!-- Tabla -->
   <div class="tabla-contenedor">
-    <table class="table-evaluacion">
+    <table class="table">
       <thead>
         <tr>
           <th>Ciclo</th>
@@ -63,18 +63,37 @@
   </div>
 
   <!-- Gráficas -->
-  <div class="graficas-container d-flex flex-wrap justify-content-center">
-    <div class="grafica-box">
-      <canvas id="graficaLineal"></canvas>
+  <div class="fila-graficas">
+    <!-- Gráficas de Promedio Total -->
+    <div class="columna-total">
+      <div class="grafica-total-box" id="box-linea-total">
+        <canvas id="grafica-linea-total"></canvas>
+      </div>
+      <div class="grafica-total-box" id="box-barras-total">
+        <canvas id="grafica-barras-total"></canvas>
+      </div>
+      <div class="grafica-total-box" id="box-pastel-total">
+        <canvas id="grafica-pastel-total"></canvas>
+      </div>
+      <div class="grafica-total-box" id="box-gauss-total">
+        <canvas id="grafica-gauss-total"></canvas>
+      </div>
     </div>
-    <div class="grafica-box">
-      <canvas id="graficaBarras"></canvas>
-    </div>
-    <div class="grafica-box">
-      <canvas id="graficaPastel"></canvas>
-    </div>
-    <div class="grafica-box">
-      <canvas id="graficaGauss"></canvas>
+
+    <!-- Gráficas por Ciclo -->
+    <div class="columna-ciclo">
+      <div class="grafica-box" id="box-linea">
+        <canvas id="grafica-linea"></canvas>
+      </div>
+      <div class="grafica-box" id="box-barras">
+        <canvas id="grafica-barras"></canvas>
+      </div>
+      <div class="grafica-box" id="box-pastel">
+        <canvas id="grafica-pastel"></canvas>
+      </div>
+      <div class="grafica-box" id="box-gauss">
+        <canvas id="grafica-gauss"></canvas>
+      </div>
     </div>
   </div>
 </div>
@@ -82,6 +101,7 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script>
   const datosEvaluacion = [
     {% for d in datos %}
