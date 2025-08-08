@@ -2,6 +2,9 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth.views import LogoutView
+from api.login.login_views import login_view, logout_view
+
 
 # Vistas públicas (home)
 from api.home.home_views import (
@@ -26,7 +29,8 @@ from api.home.aprovechamiento_usuario_view import aprovechamiento_usuario_view
 
 
 # Login
-from api.login.login_views import login_view, logout_view
+from api.login.login_views import login_view
+
 
 # Administrador
 from api.Administrador.administrador_views import (
@@ -89,9 +93,12 @@ from api.Administrador.titulados_historicos_view import (
     descargar_plantilla_titulados_historicos
 )
 
+from api.login.login_views import login_view, logout_view
 
 
 urlpatterns = [
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+
     # Home públicas
     path('', home_view, name='index'),
     path('login/', login_view, name='login'),
@@ -101,6 +108,10 @@ urlpatterns = [
     path('reprobados/', home_reprobados, name='reprobados'),
     path('promedios/', home_promedios, name='promedios'),
     path('mapa/', home_mapa, name='mapa'),
+    path('logout/', logout_view, name='logout'),
+
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
 
     # Vistas usuario normal
     path('usuario/examen-admision/', examen_admision_usuario_view, name='examen_admision_usuario'),

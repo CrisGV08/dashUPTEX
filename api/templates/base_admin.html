@@ -114,7 +114,13 @@
                 <a href="#" data-menu="salir"><i class="fas fa-user-shield"></i> Salir</a>
                 <ul class="submenu">
                     <li class="menu-item">
-                        <a href="{% url 'login' %}" data-submenu="/login/"><i class="fas fa-stopwatch"></i> Logout</a>
+<form action="{% url 'logout' %}" method="post" style="margin: 0;">
+    {% csrf_token %}
+    <button type="submit" class="menu-link styled-button" style="background: none; border: none; color: white; text-align: left; width: 100%; padding: 10px;">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    </button>
+</form>
+
                     </li>
                 </ul>
             </li>

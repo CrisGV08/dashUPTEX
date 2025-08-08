@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -6,6 +8,10 @@ from api.models import (
     ProgramaEducativoAntiguo, ProgramaEducativoNuevo, NuevoIngreso
 )
 from django.db.models import Sum, Q
+
+@login_required(login_url='login')  # ✅ Aplica correctamente el decorador
+
+
 
 def examen_admision_view(request):
     mensaje = request.GET.get("mensaje")
