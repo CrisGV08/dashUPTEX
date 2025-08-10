@@ -5,94 +5,167 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/titulados_historicos.css' %}">
+
+<!-- Librerías para gráficas y exportación -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
 <div class="admin-panel">
   <h1 class="titulo">📘 Titulados Históricos</h1>
 
   {% if messages %}
     {% for message in messages %}
-      <div class="mensaje-exito">{{ message }}</div>
+      <div class="mensaje-exito">{{ message|safe }}</div>
     {% endfor %}
   {% endif %}
 
+  <!-- Subir / Descargar Excel -->
   <div class="form-box">
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" action="{% url 'titulados_historicos' %}">
       {% csrf_token %}
       <h3>📤 Subir Archivo Excel</h3>
-      <input type="file" name="archivo_excel" required>
-      <button type="submit" class="btn-admin">Cargar Datos</button>
+      <p class="text-muted" style="margin:4px 0 10px;">
+        Acepta formato estándar (<code>programa_tipo</code>, <code>programa_id</code>, …) o legado (<code>PROGRAMA EDUCATIVO</code>, …).
+      </p>
+      <input type="file" name="archivo_excel" accept=".xlsx" required>
+      <div style="margin-top:10px">
+        <button type="submit" class="btn-admin btn-icon">⤴ Cargar Datos</button>
+      </div>
     </form>
 
     <form method="GET" action="{% url 'descargar_plantilla_titulados_historicos' %}">
       <h3>📥 Descargar Plantilla</h3>
-      <button type="submit" class="btn-admin">Descargar Excel</button>
+      <p class="text-muted" style="margin:4px 0 10px;">Incluye hoja de instrucciones y catálogo de programas.</p>
+      <button type="submit" class="btn-admin btn-icon">⬇ Descargar Excel</button>
     </form>
   </div>
 
+  <!-- Tabla con sticky header -->
   <div class="contenedor-tabla">
     <h3 class="subtitulo">📋 Datos Cargados</h3>
-    <table class="tabla-admin">
-      <thead>
-        <tr>
-          <th>Programa</th>
-          <th>Año Ingreso</th>
-          <th>Año Egreso</th>
-          <th>Tit. Hombres</th>
-          <th>Tit. Mujeres</th>
-          <th>Reg. DGP H</th>
-          <th>Reg. DGP M</th>
-          <th>Total Titulados</th>
-          <th>Total DGP</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in datos %}
+    <div>
+      <table class="tabla-admin is-comfy">
+        <thead>
           <tr>
-            <td>
-              {% if d.programa_antiguo %}
-                {{ d.programa_antiguo.nombre }}
-              {% elif d.programa_nuevo %}
-                {{ d.programa_nuevo.nombre }}
-              {% else %}
-                No definido
-              {% endif %}
-            </td>
-            <td>{{ d.anio_ingreso }}</td>
-            <td>{{ d.anio_egreso }}</td>
-            <td>{{ d.titulados_hombres }}</td>
-            <td>{{ d.titulados_mujeres }}</td>
-            <td>{{ d.registrados_dgp_h }}</td>
-            <td>{{ d.registrados_dgp_m }}</td>
-            <td>{{ d.total_titulados }}</td>
-            <td>{{ d.total_dgp }}</td>
+            <th>Programa</th>
+            <th>Año Ingreso</th>
+            <th>Año Egreso</th>
+            <th>Tit. Hombres</th>
+            <th>Tit. Mujeres</th>
+            <th>Reg. DGP H</th>
+            <th>Reg. DGP M</th>
+            <th>Total Titulados</th>
+            <th>Total DGP</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for r in registros %}
+            <tr>
+              <td>
+                {% if r.programa_antiguo %}{{ r.programa_antiguo.nombre }}
+                {% elif r.programa_nuevo %}{{ r.programa_nuevo.nombre }}
+                {% else %}No definido{% endif %}
+              </td>
+              <td>{{ r.anio_ingreso }}</td>
+              <td>{{ r.anio_egreso }}</td>
+              <td>{{ r.titulados_hombres }}</td>
+              <td>{{ r.titulados_mujeres }}</td>
+              <td>{{ r.registrados_dgp_h }}</td>
+              <td>{{ r.registrados_dgp_m }}</td>
+              <td>{{ r.total_titulados }}</td>
+              <td>{{ r.total_dgp }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9">
+                <div class="empty">Sin datos para mostrar. Carga un archivo Excel o ajusta tus filtros.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 
+  <!-- Filtros (cliente, no recarga) -->
+  <div class="filtros" id="filtrosTH">
+    <div>
+      <label for="fltAnio"><strong>Años:</strong></label>
+      <select id="fltAnio" multiple></select>
+    </div>
+
+    <div>
+      <label for="fltPrograma"><strong>Programas:</strong></label>
+      <select id="fltPrograma" multiple style="min-width:220px"></select>
+    </div>
+
+    <div>
+      <label for="fltBuscar"><strong>Buscar:</strong></label>
+      <input id="fltBuscar" type="text" placeholder="Nombre de programa…">
+    </div>
+
+    <div>
+      <label><strong>Titulados (mín–máx):</strong></label>
+      <div style="display:flex; gap:8px;">
+        <input id="fltTitMin" type="number" placeholder="mín" style="width:100px">
+        <input id="fltTitMax" type="number" placeholder="máx" style="width:100px">
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button type="button" class="btn-admin" id="btnAplicar">Aplicar</button>
+      <button type="button" class="btn-admin" id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <!-- Exportación -->
   <div class="filtros">
-    <h3>🎛️ Filtros</h3>
-    <label><input type="checkbox" class="filtro-grafica" value="graficaLinea" checked> Línea</label>
-    <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
-    <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
-    <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
-    <button class="btn-exportar" onclick="exportarPDF()">📄 Exportar PDF</button>
+    <button class="btn-exportar btn-icon" id="btnDescargarPDF" type="button">📄 Exportar PDF</button>
   </div>
 
-  <div class="graficas" id="contenedorGraficas">
-    <canvas id="grafica-lineal"></canvas>
-    <canvas id="grafica-barras"></canvas>
-    <canvas id="grafica-pastel"></canvas>
-    <canvas id="grafica-gauss"></canvas>
+  <!-- Gráficas -->
+  <div class="graficas" id="seccionDescargable">
+    <div class="chart-card">
+      <div class="chart-card__title">📈 Titulados totales (línea)</div>
+      <canvas id="gLinea"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card__title">📊 Titulados H/M (apilado) + DGP (línea)</div>
+      <canvas id="gBarras"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card__title">🥧 Participación por programa (Top 10 + Otros)</div>
+      <canvas id="gPastel"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card__title">📉 Distribución tipo Gauss (titulados)</div>
+      <canvas id="gGauss"></canvas>
+    </div>
   </div>
 </div>
 
+<!-- Datos para JS (seguro con json_script) + fallback compat -->
+{{ datos_json|json_script:"datosTH" }}
+<script id="jsonDatos" type="application/json">{{ datos_json|safe }}</script>
+
+<!-- JS de página (con cache-busting por timestamp para evitar caché) -->
+<script src="{% static 'js/titulados_historicos.js' %}?v={{ now|date:'U' }}"></script>
+
+<!-- Exportación a PDF de la sección de gráficas -->
 <script>
-  const datosTitulados = {{ datos_json|safe }};
+  document.getElementById('btnDescargarPDF')?.addEventListener('click', async () => {
+    const cont = document.getElementById('seccionDescargable');
+    await html2pdf().set({
+      margin: [10,10,10,10],
+      filename: 'titulados_historicos.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(cont).save();
+  });
 </script>
-<script src="{% static 'js/titulados_historicos.js' %}"></script>
 {% endblock %}

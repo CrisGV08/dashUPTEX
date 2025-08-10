@@ -5,109 +5,145 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/tasa_titulacion.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
 <h2 class="titulo-principal">📈 Tasa de Titulación</h2>
 
+{% if messages %}
+  <div class="mensajes">
+    {% for message in messages %}
+      <div class="mensaje">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 <!-- Filtros visuales -->
 <div class="filtros">
-    <label><strong>Ciclos:</strong></label>
+  <div class="filtro">
+    <label for="filtro_anio"><strong>Ciclos:</strong></label>
     <select id="filtro_anio" multiple>
-        {% for anio in anios %}
-            <option value="{{ anio }}">{{ anio }}</option>
-        {% endfor %}
+      {% for anio in anios %}
+        <option value="{{ anio }}">{{ anio }}</option>
+      {% endfor %}
     </select>
+  </div>
 
-    <label><strong>Programas:</strong></label>
+  <div class="filtro">
+    <label for="filtro_programa"><strong>Programas:</strong></label>
     <select id="filtro_programa" multiple>
-        {% for programa in programas_antiguos %}
-            <option value="{{ programa.nombre }}">{{ programa.nombre }}</option>
-        {% endfor %}
-        {% for programa in programas_nuevos %}
-            <option value="{{ programa.nombre }}">{{ programa.nombre }}</option>
-        {% endfor %}
+      {% for programa in programas_antiguos %}
+        <option value="{{ programa.nombre }}">{{ programa.nombre }}</option>
+      {% endfor %}
+      {% for programa in programas_nuevos %}
+        <option value="{{ programa.nombre }}">{{ programa.nombre }}</option>
+      {% endfor %}
     </select>
+  </div>
 
-    <label><strong>Gráficas:</strong></label>
+  <div class="filtro">
+    <label for="filtro_grafica"><strong>Gráficas:</strong></label>
     <select id="filtro_grafica" multiple>
-        <option value="linea">Línea</option>
-        <option value="barras">Barras</option>
-        <option value="pastel">Pastel</option>
-        <option value="gauss">Campana de Gauss</option>
+      <option value="linea" selected>Línea</option>
+      <option value="barras" selected>Barras</option>
+      <option value="pastel" selected>Pastel</option>
+      <option value="gauss" selected>Campana de Gauss</option>
     </select>
+  </div>
 
-    <button class="btn-guardar" onclick="descargarPDF()">📄 Descargar PDF</button>
+  <div class="acciones-filtros">
+    <button id="aplicarFiltros" class="btn-guardar" type="button">Aplicar filtros</button>
+    <button id="resetFiltros" class="btn-guardar btn-secundario" type="button">Restablecer</button>
+    <button id="btnDescargarPDF" class="btn-guardar" type="button">📄 Descargar PDF</button>
+  </div>
 </div>
 
-<!-- Formulario para subir archivo Excel -->
-<form method="post" enctype="multipart/form-data" action="{% url 'subir_excel_tasa_titulacion' %}" style="margin-bottom: 20px;">
-    {% csrf_token %}
-    <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-        <input type="file" name="archivo_excel" accept=".xlsx, .xls" required>
-        <button type="submit" class="btn-guardar">📤 Subir Excel</button>
-        <a href="{% url 'descargar_plantilla_tasa_titulacion' %}" class="btn-guardar">📥 Descargar Plantilla</a>
-    </div>
+<!-- Carga/descarga de Excel -->
+<form method="post" enctype="multipart/form-data" action="{% url 'subir_excel_tasa_titulacion' %}" class="form-excel">
+  {% csrf_token %}
+  <input type="file" name="archivo_excel" accept=".xlsx" required>
+  <button type="submit" class="btn-guardar">📤 Subir Excel</button>
+  <a href="{% url 'descargar_plantilla_tasa_titulacion' %}" class="btn-guardar">📥 Descargar Plantilla</a>
 </form>
 
-<!-- Tabla editable -->
-<form method="post">
+<!-- Contenido exportable (tabla + gráficas) -->
+<div id="seccionDescargable">
+  <!-- Tabla editable -->
+  <form method="post" class="form-tabla">
     {% csrf_token %}
     <div class="table-responsive">
-        <table class="tabla-titulacion">
-            <thead>
-                <tr>
-                    <th>Programa</th>
-                    <th>Año Ingreso</th>
-                    <th>Matrícula</th>
-                    <th>Egresados</th>
-                    <th>Titulados</th>
-                    <th>Eficiencia Terminal (%)</th>
-                    <th>Tasa Titulación (%)</th>
-                    <th>Guardar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for registro in registros %}
-                <tr>
-                    <td>
-                        {% if registro.programa_antiguo %}
-                            {{ registro.programa_antiguo.nombre }}
-                        {% elif registro.programa_nuevo %}
-                            {{ registro.programa_nuevo.nombre }}
-                        {% else %}
-                            Sin programa
-                        {% endif %}
-                    </td>
-                    <td>{{ registro.anio_ingreso }}</td>
-                    <td><input type="number" name="matricula_{{ registro.id }}" value="{{ registro.matricula_ingreso }}" min="0" step="1"></td>
-                    <td><input type="number" name="egresados_{{ registro.id }}" value="{{ registro.egresados }}" min="0" step="1"></td>
-                    <td><input type="number" name="titulados_{{ registro.id }}" value="{{ registro.titulados }}" min="0" step="1"></td>
-                    <td>{{ registro.eficiencia_terminal_porcentaje }}%</td>
-                    <td>{{ registro.tasa_titulacion }}%</td>
-                    <td><button type="submit" name="guardar" value="{{ registro.id }}" class="btn-guardar">Guardar</button></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="8">No hay registros disponibles.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="tabla-titulacion">
+        <thead>
+          <tr>
+            <th>Programa</th>
+            <th>Año Ingreso</th>
+            <th>Matrícula</th>
+            <th>Egresados</th>
+            <th>Titulados</th>
+            <th>Eficiencia Terminal (%)</th>
+            <th>Tasa Titulación (%)</th>
+            <th>Guardar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for registro in registros %}
+          <tr>
+            <td>
+              {% if registro.programa_antiguo %}
+                {{ registro.programa_antiguo.nombre }}
+              {% elif registro.programa_nuevo %}
+                {{ registro.programa_nuevo.nombre }}
+              {% else %}
+                Sin programa
+              {% endif %}
+            </td>
+            <td>{{ registro.anio_ingreso }}</td>
+            <td>
+              <input type="number" min="0" step="1"
+                     name="matricula_{{ registro.id }}"
+                     value="{{ registro.matricula_ingreso }}">
+            </td>
+            <td>
+              <input type="number" min="0" step="1"
+                     name="egresados_{{ registro.id }}"
+                     value="{{ registro.egresados }}">
+            </td>
+            <td>
+              <input type="number" min="0" step="1"
+                     name="titulados_{{ registro.id }}"
+                     value="{{ registro.titulados }}">
+            </td>
+            <td><span class="num">{{ registro.eficiencia_terminal_porcentaje }}</span>%</td>
+            <td><span class="num">{{ registro.tasa_titulacion }}</span>%</td>
+            <td>
+              <button type="submit" name="guardar" value="{{ registro.id }}" class="btn-guardar">Guardar</button>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="vacio">No hay registros disponibles.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-</form>
+  </form>
 
-<!-- Gráficas -->
-<div class="contenedor-graficas">
+  <!-- Gráficas -->
+  <div class="contenedor-graficas">
     <div class="grafica"><canvas id="graficaLinea"></canvas></div>
     <div class="grafica"><canvas id="graficaBarras"></canvas></div>
     <div class="grafica"><canvas id="graficaPastel"></canvas></div>
     <div class="grafica"><canvas id="graficaGauss"></canvas></div>
+  </div>
 </div>
 
 <!-- Datos para JS -->
 <script type="application/json" id="jsonDatos">
-    {{ datos_json|safe }}
+  {{ datos_json|safe }}
 </script>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
 <script src="{% static 'js/tasa_de_titulacion.js' %}"></script>
 {% endblock %}
