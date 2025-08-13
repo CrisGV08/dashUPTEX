@@ -1,194 +1,172 @@
 /* =========================
-   📄 titulados_historicos.css
+   📄 titulados_historicos.css (ajustado para gráficas)
    ========================= */
-
-/* --- Encabezado --- */
-.titulo-vista {
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-    margin: 20px 0;
-    color: #2c3e50;
+:root{
+  --bg:#f8f9fb;
+  --card:#ffffff;
+  --text:#2c3e50;
+  --muted:#6b7280;
+  --brand:#2e86de;
+  --brand-2:#1e6bb8;
+  --ok:#28a745;
+  --ok-2:#1f8a38;
+  --accent:#e8f3ff;
+  --border:#e1e5ea;
+  --shadow:0 2px 8px rgba(0,0,0,.07);
 }
 
-/* --- Mensajes --- */
-.mensaje-exito {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 8px 12px;
-    border-radius: 6px;
-    margin: 10px auto;
-    text-align: center;
-    max-width: 500px;
-    font-weight: bold;
-    border: 1px solid #c3e6cb;
-}
-
-.empty {
-    text-align: center;
-    color: #888;
-    font-style: italic;
-    margin: 20px 0;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans";
+  color:var(--text);
+  background:var(--bg);
 }
 
 /* --- Contenedor principal --- */
-.admin-panel {
-    padding: 15px;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    max-width: 1200px;
-    margin: auto;
+.admin-panel{
+  max-width:1200px;
+  margin:auto;
+  padding:24px 16px 40px;
 }
 
-/* --- Filtros --- */
-.filtros {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: flex-end;
-    justify-content: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: #f7f9fb;
-    border: 1px solid #e1e5ea;
-    border-radius: 8px;
+/* --- Título / mensajes --- */
+.titulo{
+  margin:0 0 18px;
+  text-align:center;
+  font-size:clamp(1.4rem,2.2vw,2rem);
+  font-weight:800;
+  letter-spacing:.2px;
 }
 
-.filtro-item {
-    display: flex;
-    flex-direction: column;
-    min-width: 180px;
+.mensaje-exito{
+  background:#d4edda;
+  color:#155724;
+  padding:10px 14px;
+  border:1px solid #c3e6cb;
+  border-radius:10px;
+  text-align:center;
+  max-width:720px;
+  margin:12px auto 18px;
+  box-shadow:0 1px 0 rgba(0,0,0,.03);
 }
 
-.filtro-item label {
-    font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 4px;
-    color: #2c3e50;
+.empty{ color:var(--muted); font-style:italic; padding:10px 0 }
+
+/* --- Cards de acciones (subir/descargar) --- */
+.form-box{
+  display:flex; flex-wrap:wrap; gap:16px; margin:18px 0 22px
+}
+.form-box form{
+  flex:1 1 340px; background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:16px; box-shadow:var(--shadow)
+}
+.form-box h3{ margin:0 0 8px; font-size:1.02rem }
+.text-muted{ color:var(--muted); font-size:.92rem }
+
+/* --- Botones --- */
+.btn-admin,.btn-exportar{
+  appearance:none; border:0; border-radius:10px; padding:10px 16px;
+  font-weight:700; cursor:pointer;
+  transition:background .2s ease, transform .04s ease, box-shadow .2s ease;
+  box-shadow:0 1px 0 rgba(0,0,0,.05)
+}
+.btn-admin{ background:var(--brand); color:#fff }
+.btn-admin:hover{ background:var(--brand-2) }
+.btn-exportar{ background:var(--ok); color:#fff }
+.btn-exportar:hover{ background:var(--ok-2) }
+.btn-icon{ display:inline-flex; align-items:center; gap:8px }
+.btn-admin:active,.btn-exportar:active{ transform:translateY(1px) }
+
+/* --- Tabla con sticky header y scroll suave --- */
+.contenedor-tabla{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; box-shadow:var(--shadow); padding:12px
+}
+.subtitulo{ margin:6px 0 10px; font-size:1rem; font-weight:700 }
+
+.contenedor-tabla > div{
+  overflow:auto; max-height:60vh; scroll-behavior:smooth
 }
 
-.filtro-item select,
-.filtro-item input {
-    padding: 6px 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 14px;
+.tabla-admin{
+  width:100%; border-collapse:separate; border-spacing:0;
+  min-width:860px; font-size:.95rem
+}
+.tabla-admin thead th{
+  position:sticky; top:0; z-index:1;
+  background:var(--accent); color:#0b3d4a; font-weight:800;
+  border-bottom:2px solid #cfe8ff
+}
+.tabla-admin th,.tabla-admin td{
+  padding:10px 8px; text-align:center; border-bottom:1px solid #eef2f6; white-space:nowrap
+}
+.tabla-admin tbody tr:hover{ background:#f9fcff }
+
+/* --- Barra de filtros --- */
+.filtros{
+  display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end; justify-content:center;
+  margin:18px 0; padding:12px; background:#f7f9fb; border:1px solid var(--border); border-radius:12px
+}
+.filtros label{ font-weight:700; margin:0 6px 4px 0; display:inline-block }
+.filtros select,
+.filtros input[type="text"],
+.filtros input[type="number"]{
+  background:#fff; border:1px solid var(--border); border-radius:10px;
+  padding:8px 10px; min-width:160px; outline:0;
+  transition:border .15s ease, box-shadow .15s ease; font-size:.95rem
+}
+.filtros select[multiple]{ min-width:220px; min-height:44px }
+.filtros select:focus,.filtros input:focus{
+  border-color:#8cc5ff; box-shadow:0 0 0 3px rgba(46,134,222,.16)
 }
 
-/* --- Botones filtros --- */
-.botones-filtros {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+/* --- Gráficas (tarjetas) --- */
+.graficas{
+  display:grid; grid-template-columns:repeat(2, minmax(320px,1fr));
+  gap:18px; margin-top:22px
+}
+@media (max-width: 920px){
+  .graficas{ grid-template-columns:1fr }
 }
 
-.btn-admin {
-    background-color: #2e86de;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    transition: background 0.2s ease-in-out;
+.chart-card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; box-shadow:var(--shadow);
+  padding:12px; display:flex; flex-direction:column; gap:10px
+}
+.chart-card__title{
+  font-weight:800; color:#0b3d4a; font-size:.98rem;
+  padding:4px 6px 8px; border-bottom:1px dashed #e6eef7
 }
 
-.btn-admin:hover {
-    background-color: #1e6bb8;
+/* NUEVO: contenedor de canvas con altura controlada */
+.chart-area{
+  position:relative;
+  height:clamp(260px, 42vh, 420px);   /* cómodo y responsivo */
+  min-height:260px;
+  width:100%;
 }
 
-.btn-danger {
-    background-color: #e74c3c;
+/* Hacer que el canvas ocupe todo el alto del contenedor y no se infle */
+.chart-card canvas{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;   /* antes: auto -> causaba canvases gigantes */
+  max-height:100%;
+  outline:0;
 }
 
-.btn-danger:hover {
-    background-color: #c0392b;
-}
+/* --- Exportación --- */
+.btn-exportar{ display:inline-flex; align-items:center; gap:8px }
 
-/* --- Tabla de datos --- */
-.tabla-titulados {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 14px;
-}
+/* --- Paginación simple (opcional) --- */
+.paginacion .btn-admin{ padding:8px 12px }
 
-.tabla-titulados th,
-.tabla-titulados td {
-    border: 1px solid #ccc;
-    padding: 6px 8px;
-    text-align: center;
-}
-
-.tabla-titulados th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-.tabla-titulados tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-.tabla-titulados input {
-    width: 80px;
-    padding: 4px;
-    text-align: center;
-}
-
-/* --- Contenedor de gráficas --- */
-.contenedor-graficas {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-    margin-top: 25px;
-}
-
-.grafica-card {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e1e5ea;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    min-height: 320px;
-}
-
-.grafica-card h4 {
-    text-align: center;
-    margin-bottom: 10px;
-    color: #34495e;
-    font-size: 16px;
-}
-
-/* --- Botón Exportar PDF --- */
-.contenedor-pdf {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.btn-pdf {
-    background-color: #27ae60;
-    color: white;
-    padding: 10px 18px;
-    border-radius: 6px;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.btn-pdf:hover {
-    background-color: #1e8449;
-}
-
-/* --- Responsive --- */
-@media (max-width: 992px) {
-    .contenedor-graficas {
-        grid-template-columns: 1fr;
-    }
-    .filtros {
-        flex-direction: column;
-        align-items: stretch;
-    }
+/* --- Modo impresión: PDF limpio --- */
+@media print{
+  body{ background:#fff }
+  .form-box,.filtros,.btn-admin,.btn-exportar{ display:none !important }
+  .contenedor-tabla,.chart-card{ box-shadow:none; border:1px solid #bbb }
 }

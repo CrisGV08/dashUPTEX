@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="{% static 'css/titulados_historicos.css' %}">
 
 <!-- Librerías para gráficas y exportación -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- UMD evita problemas de nombre global -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
@@ -73,8 +74,8 @@
               <td>{{ r.titulados_mujeres }}</td>
               <td>{{ r.registrados_dgp_h }}</td>
               <td>{{ r.registrados_dgp_m }}</td>
-              <td>{{ r.total_titulados }}</td>
-              <td>{{ r.total_dgp }}</td>
+              <td>{{ r.titulados_hombres|add:r.titulados_mujeres }}</td>
+              <td>{{ r.registrados_dgp_h|add:r.registrados_dgp_m }}</td>
             </tr>
           {% empty %}
             <tr>
@@ -86,64 +87,64 @@
         </tbody>
       </table>
     </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="paginacion" style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
+        {% if page_obj.has_previous %}
+          <a class="btn-admin" href="?page={{ page_obj.previous_page_number }}">← Anterior</a>
+        {% endif %}
+        <span class="text-muted" style="align-self:center;">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn-admin" href="?page={{ page_obj.next_page_number }}">Siguiente →</a>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 
   <!-- Filtros (cliente, no recarga) -->
   <div class="filtros" id="filtrosTH">
-    <div>
-      <label for="fltAnio"><strong>Años:</strong></label>
-      <select id="fltAnio" multiple></select>
-    </div>
-
-    <div>
-      <label for="fltPrograma"><strong>Programas:</strong></label>
-      <select id="fltPrograma" multiple style="min-width:220px"></select>
-    </div>
-
-    <div>
-      <label for="fltBuscar"><strong>Buscar:</strong></label>
-      <input id="fltBuscar" type="text" placeholder="Nombre de programa…">
-    </div>
-
-    <div>
-      <label><strong>Titulados (mín–máx):</strong></label>
-      <div style="display:flex; gap:8px;">
-        <input id="fltTitMin" type="number" placeholder="mín" style="width:100px">
-        <input id="fltTitMax" type="number" placeholder="máx" style="width:100px">
-      </div>
-    </div>
-
-    <div style="display:flex; gap:10px;">
-      <button type="button" class="btn-admin" id="btnAplicar">Aplicar</button>
-      <button type="button" class="btn-admin" id="btnReset">Reset</button>
-    </div>
+  <div>
+    <label for="fltAnio"><strong>Años:</strong></label>
+    <select id="fltAnio" multiple></select>
   </div>
+
+  <div>
+    <label for="fltPrograma"><strong>Programas:</strong></label>
+    <select id="fltPrograma" multiple style="min-width:220px"></select>
+  </div>
+
+  <div style="display:flex; gap:10px;">
+    <button type="button" class="btn-admin" id="btnAplicar">Aplicar</button>
+    <button type="button" class="btn-admin" id="btnReset">Reset</button>
+  </div>
+</div>
+
 
   <!-- Exportación -->
   <div class="filtros">
     <button class="btn-exportar btn-icon" id="btnDescargarPDF" type="button">📄 Exportar PDF</button>
   </div>
 
-  <!-- Gráficas -->
+  <!-- Gráficas (ahora cada canvas dentro de .chart-area) -->
   <div class="graficas" id="seccionDescargable">
     <div class="chart-card">
       <div class="chart-card__title">📈 Titulados totales (línea)</div>
-      <canvas id="gLinea"></canvas>
+      <div class="chart-area"><canvas id="gLinea"></canvas></div>
     </div>
 
     <div class="chart-card">
       <div class="chart-card__title">📊 Titulados H/M (apilado) + DGP (línea)</div>
-      <canvas id="gBarras"></canvas>
+      <div class="chart-area"><canvas id="gBarras"></canvas></div>
     </div>
 
     <div class="chart-card">
       <div class="chart-card__title">🥧 Participación por programa (Top 10 + Otros)</div>
-      <canvas id="gPastel"></canvas>
+      <div class="chart-area"><canvas id="gPastel"></canvas></div>
     </div>
 
     <div class="chart-card">
       <div class="chart-card__title">📉 Distribución tipo Gauss (titulados)</div>
-      <canvas id="gGauss"></canvas>
+      <div class="chart-area"><canvas id="gGauss"></canvas></div>
     </div>
   </div>
 </div>
@@ -152,8 +153,8 @@
 {{ datos_json|json_script:"datosTH" }}
 <script id="jsonDatos" type="application/json">{{ datos_json|safe }}</script>
 
-<!-- JS de página (con cache-busting por timestamp para evitar caché) -->
-<script src="{% static 'js/titulados_historicos.js' %}?v={{ now|date:'U' }}"></script>
+<!-- JS de página (cache-busting real) -->
+<script src="{% static 'js/titulados_historicos.js' %}?v={% now 'U' %}"></script>
 
 <!-- Exportación a PDF de la sección de gráficas -->
 <script>

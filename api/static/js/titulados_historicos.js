@@ -1,6 +1,13 @@
-// static/js/titulados_historicos.js (versión robusta)
+// static/js/titulados_historicos.js (solo filtros: Años + Programas)
 document.addEventListener("DOMContentLoaded", () => {
-  // 1) Obtener datos de json_script o fallback
+  // --- 0) Chequeo básico de Chart.js ---
+  if (typeof window.Chart === "undefined") {
+    console.error("[TH] Chart.js no está cargado. Revisa el <script src='https://cdn.jsdelivr.net/npm/chart.js'> en la plantilla.");
+    return;
+  }
+  if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
+
+  // --- 1) Obtener datos de json_script o fallback ---
   let raw = [];
   try {
     const safe = document.getElementById("datosTH");
@@ -11,41 +18,53 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   } catch (e) {
     console.error("[TH] Error parseando JSON:", e);
+    raw = [];
   }
   console.log("[TH] Registros crudos:", raw.length);
 
-  // 2) Normalizar
+  // --- 2) Normalizar estructura a un arreglo base uniforme ---
   const base = (raw || [])
     .map(d => ({
       programa: d.programa ?? d.nombre_programa ?? "SIN PROGRAMA",
-      anio: Number(d.anio_ingreso ?? d.anio) || 0,
-      egreso: Number(d.anio_egreso ?? d.egreso) || 0,
-      th: Number(d.titulados_h ?? d.titulados_hombres) || 0,
-      tm: Number(d.titulados_m ?? d.titulados_mujeres) || 0,
-      dgpH: Number(d.dgp_h ?? d.registrados_dgp_h) || 0,
-      dgpM: Number(d.dgp_m ?? d.registrados_dgp_m) || 0
+      anio:     Number(d.anio_ingreso ?? d.anio) || 0,
+      egreso:   Number(d.anio_egreso   ?? d.egreso) || 0,
+      th:       Number(d.titulados_h   ?? d.titulados_hombres) || 0,
+      tm:       Number(d.titulados_m   ?? d.titulados_mujeres) || 0,
+      dgpH:     Number(d.dgp_h         ?? d.registrados_dgp_h) || 0,
+      dgpM:     Number(d.dgp_m         ?? d.registrados_dgp_m) || 0
     }))
     .map(d => ({ ...d, totTit: d.th + d.tm, totDgp: d.dgpH + d.dgpM }))
     .sort((a,b) => a.anio - b.anio || a.programa.localeCompare(b.programa));
 
+  // Contenedor y canvases
+  const contGraficas = document.getElementById("seccionDescargable");
+  const cLinea  = document.getElementById("gLinea");
+  const cBarras = document.getElementById("gBarras");
+  const cPastel = document.getElementById("gPastel");
+  const cGauss  = document.getElementById("gGauss");
+
+  // Alturas explícitas para evitar que Chart.js tome 0
+  [cLinea, cBarras, cPastel, cGauss].forEach(cv => {
+    if (cv) {
+      cv.style.minHeight = "360px";
+      cv.height = 360; // tamaño explícito
+    }
+  });
+
+  // Si no hay datos, muestra aviso y termina
   if (!base.length) {
-    console.warn("[TH] No hay datos para graficar.");
-    const cont = document.getElementById("seccionDescargable");
-    if (cont) {
+    if (contGraficas) {
       const msg = document.createElement("div");
       msg.className = "empty";
       msg.textContent = "No hay datos para graficar. Carga un Excel o ajusta los filtros.";
-      cont.prepend(msg);
+      contGraficas.prepend(msg);
     }
     return;
   }
 
-  // 3) Filtros
-  const $anio   = document.getElementById("fltAnio");
-  const $prog   = document.getElementById("fltPrograma");
-  const $buscar = document.getElementById("fltBuscar");
-  const $titMin = document.getElementById("fltTitMin");
-  const $titMax = document.getElementById("fltTitMax");
+  // --- 3) Filtros (solo Años y Programas) ---
+  const $anio = document.getElementById("fltAnio");
+  const $prog = document.getElementById("fltPrograma");
 
   const anios = [...new Set(base.map(d => d.anio))].sort((a,b)=>a-b);
   const progs = [...new Set(base.map(d => d.programa))].sort((a,b)=>a.localeCompare(b));
@@ -53,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function fillMulti(sel, arr){
     if (!sel) return;
     sel.innerHTML = "";
-    arr.forEach(v => sel.add(new Option(String(v), String(v), false, true)));
+    arr.forEach(v => sel.add(new Option(String(v), String(v), false, true))); // selecciona todo por defecto
   }
   fillMulti($anio, anios);
   fillMulti($prog, progs);
@@ -63,33 +82,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function filtrar() {
     const sAnios = selected($anio);
     const sProgs = selected($prog);
-    const q = ($buscar?.value || "").toLowerCase().trim();
-    const min = $titMin?.value ? Number($titMin.value) : null;
-    const max = $titMax?.value ? Number($titMax.value) : null;
 
     const out = base.filter(d => {
       const aOK = !sAnios.length || sAnios.includes(String(d.anio));
       const pOK = !sProgs.length || sProgs.includes(d.programa);
-      const qOK = !q || d.programa.toLowerCase().includes(q);
-      const rOK = (min === null || d.totTit >= min) && (max === null || d.totTit <= max);
-      return aOK && pOK && qOK && rOK;
-    });
-    console.log("[TH] Filtrados:", out.length);
+      return aOK && pOK;
+    }).sort((a,b) => a.anio - b.anio || a.programa.localeCompare(b.programa));
     return out;
   }
 
-  // 4) Canvases + tamaños explícitos (evita tamaño 0)
-  const cLinea  = document.getElementById("gLinea");
-  const cBarras = document.getElementById("gBarras");
-  const cPastel = document.getElementById("gPastel");
-  const cGauss  = document.getElementById("gGauss");
-  [cLinea,cBarras,cPastel,cGauss].forEach(cv => {
-    if (cv) {
-      cv.style.minHeight = "360px";
-      cv.height = 360; // tamaño explícito para Chart.js
-    }
-  });
-
+  // --- 4) Utilidades de gráficas ---
   let chL=null, chB=null, chP=null, chG=null;
   const fmt = n => new Intl.NumberFormat().format(Number(n)||0);
 
@@ -121,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const min = Math.max(0, mean-3*std), max=mean+3*std, steps=60;
     const X = Array.from({length:steps},(_,i)=> min + i*(max-min)/(steps-1));
     const Y = X.map(x => (1/(std*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-mean)/std)**2));
-    const mY = Math.max(...Y)||1;
+    const mY = Math.max(...Y)||1; // normaliza a 0–100
     return { x:X.map(v=>v.toFixed(1)), y:Y.map(y=> y/mY*100) };
   }
 
@@ -129,14 +131,40 @@ document.addEventListener("DOMContentLoaded", () => {
     responsive:true,
     maintainAspectRatio:false,
     animation:false,
+    interaction:{ mode:"nearest", intersect:false },
     scales:{ y:{ beginAtZero:true, ticks:{ callback:v => fmt(v) } } },
-    plugins:{ legend:{ display:true }, tooltip:{ enabled:true } }
+    plugins:{
+      legend:{ display:true },
+      tooltip:{ enabled:true }
+    }
   };
+
+  // --- 5) Render principal ---
+  const emptyNoteId = "th-empty-note";
+  function showEmptyNote(){
+    if (!contGraficas) return;
+    if (!document.getElementById(emptyNoteId)) {
+      const msg = document.createElement("div");
+      msg.id = emptyNoteId;
+      msg.className = "empty";
+      msg.style.marginTop = "8px";
+      msg.textContent = "Sin resultados con los filtros actuales.";
+      contGraficas.prepend(msg);
+    }
+  }
+  function hideEmptyNote(){
+    const n = document.getElementById(emptyNoteId);
+    if (n) n.remove();
+  }
 
   function render(){
     destroyAll();
     const arr = filtrar();
-    if (!arr.length) return;
+    if (!arr.length) {
+      showEmptyNote();
+      return;
+    }
+    hideEmptyNote();
 
     const labels = arr.map(d => `${d.programa} (${d.anio}-${d.egreso})`);
     const titH   = arr.map(d => d.th);
@@ -144,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const totTit = arr.map(d => d.totTit);
     const totDgp = arr.map(d => d.totDgp);
 
-    // Línea
+    // Línea (titulados totales)
     if (cLinea) {
       chL = new Chart(cLinea.getContext("2d"), {
         type:"line",
@@ -187,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Pastel
+    // Pastel (Top 10 + Otros)
     if (cPastel) {
       const top = topNConOtros(labels, totTit, 10);
       chP = new Chart(cPastel.getContext("2d"), {
@@ -209,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Gauss
+    // Gauss (densidad normalizada de titulados)
     if (cGauss) {
       const {x,y} = curvaGauss(totTit);
       chG = new Chart(cGauss.getContext("2d"), {
@@ -220,26 +248,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Eventos
+  // --- 6) Eventos ---
   document.getElementById("filtrosTH")?.addEventListener("change", render);
   document.getElementById("btnAplicar")?.addEventListener("click", render);
   document.getElementById("btnReset")?.addEventListener("click", () => {
+    // restaurar selects (seleccionar todo)
     fillMulti($anio, anios);
     fillMulti($prog, progs);
-    if ($buscar) $buscar.value = "";
-    if ($titMin) $titMin.value = "";
-    if ($titMax) $titMax.value = "";
     render();
   });
 
-  // Primer render
+  window.addEventListener("resize", () => {
+    // throttling simple
+    clearTimeout(window.__thR__);
+    window.__thR__ = setTimeout(render, 120);
+  });
+
+  // --- 7) Primer render ---
   render();
 });
 
-// Exportar PDF manual
+// Exportación PDF manual (opcional)
 function exportarPDF(){
   const cont = document.getElementById("seccionDescargable");
-  if (!cont) return;
+  if (!cont || typeof html2pdf === "undefined") return;
   html2pdf().set({
     margin: 0.5,
     filename: "titulados_historicos.pdf",
