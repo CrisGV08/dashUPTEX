@@ -1,129 +1,225 @@
 {% extends 'base_admin.html' %}
 {% load static %}
 
-
 {% block title %}Aprovechamiento Académico{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/aprovechamiento.css' %}">
 
-<h1 class="text-center mt-4 mb-4">📘 Aprovechamiento Académico Histórico</h1>
+<!-- 🔵 Barra superior fija de acciones -->
+<div class="topbar-actions shadow-sm">
+  <div class="container-fluid d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <h1 class="h3 m-0 d-flex align-items-center gap-2">
+      <span class="emoji">📘</span> Aprovechamiento Académico Histórico
+    </h1>
 
-<!-- Mensajes flash -->
-{% if mensaje %}
-<div class="alert alert-success text-center">{{ mensaje|safe }}</div>
-{% endif %}
-
-<!-- Contenedor principal -->
-<div class="container-fluid">
-
-  <!-- Botones -->
-  <div class="row mb-3">
-    <div class="col-md-6">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
       <a href="{% url 'descargar_plantilla_aprovechamiento' %}" class="btn btn-primary">
-        <i class="fas fa-download"></i> Descargar plantilla
+        <i class="fas fa-download me-1"></i> Descargar plantilla
       </a>
+
       <form method="POST" action="{% url 'cargar_aprovechamiento' %}" enctype="multipart/form-data" class="d-inline">
         {% csrf_token %}
         <input type="file" name="archivo_csv" class="d-none" id="fileInput" accept=".csv" required>
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
-          <i class="fas fa-upload"></i> Subir CSV
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-upload me-1"></i> Subir CSV
         </button>
-        <button type="submit" class="btn btn-success ml-2 d-none" id="submitBtn">Procesar</button>
+        <button type="submit" class="btn btn-success d-none" id="submitBtn">
+          <i class="fas fa-play me-1"></i> Procesar
+        </button>
+      </form>
+
+      <button id="btnDescargarPDF" class="btn btn-danger">
+        <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Mensajes -->
+{% if mensaje %}
+  <div class="container-fluid mt-3">
+    <div class="alert alert-success text-center">{{ mensaje|safe }}</div>
+  </div>
+{% endif %}
+
+<!-- 📦 Contenido -->
+<div class="container-fluid page-content">
+
+  <!-- 🔎 Filtros -->
+  <div class="card card-panel mb-4">
+    <div class="card-body">
+      <form method="GET" id="filter-form">
+        <div class="row g-3 align-items-end">
+
+          <!-- Ciclo (chips) -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block mb-1">
+              <i class="far fa-calendar me-1"></i> Ciclo
+            </label>
+
+            <!-- lo que lee tu backend -->
+            <input type="hidden" name="filtro_anio" id="filtroAnioHidden"
+                   value="{{ request.GET.filtro_anio|default:'Todos' }}">
+
+            <div class="btn-check-group cycle-scroll mb-2" id="ciclosChips">
+              <!-- Todos -->
+              <input type="radio" name="anioChip" id="anio-Todos" value="Todos"
+                     {% if request.GET.filtro_anio == 'Todos' or not request.GET.filtro_anio %}checked{% endif %}>
+              <label class="btn btn-light btn-sm" for="anio-Todos">Todos</label>
+
+              <!-- Años -->
+              {% for anio in anios %}
+                <input type="radio" name="anioChip" id="anio-{{ anio }}" value="{{ anio }}"
+                       {% if anio == request.GET.filtro_anio %}checked{% endif %}>
+                <label class="btn btn-light btn-sm" for="anio-{{ anio }}">{{ anio }}</label>
+              {% endfor %}
+            </div>
+
+            <!-- Botones de acción (únicos) -->
+            <div class="filter-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="aplicarFiltros">
+                <i class="fas fa-filter"></i><span>Aplicar filtros</span>
+              </button>
+              <!-- Reset sin JS: vuelve a la ruta sin querystring -->
+              <a class="btn btn-outline-secondary btn-sm" id="resetFiltrosLink" href="{{ request.path }}">
+                <i class="fas fa-sync-alt"></i><span>Reset</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Tipo de gráficas -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block">
+              <i class="fas fa-chart-bar me-1"></i> Gráficas
+            </label>
+            <div class="btn-check-group">
+              <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+              <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+              <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+              <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+              <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
+            </div>
+          </div>
+
+          <!-- Programas -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold">
+              <i class="fas fa-layer-group me-1"></i> Programas Educativos
+            </label>
+
+            <div class="programas-wrapper">
+              <div class="programas-scroll">
+                <!-- Nuevos -->
+                <div class="programas-col">
+                  <div class="section-title">Nuevos</div>
+                  {% for programa in programas_nuevos %}
+                    <div class="form-check">
+                      <input class="form-check-input programa-checkbox" type="checkbox"
+                             name="programas[]"
+                             id="prog-nue-{{ programa.id }}"
+                             value="{{ programa.id }}"
+                             {% if programa.id|stringformat:"s" in filtros_aplicados.programas %}checked{% endif %}>
+                      <label class="form-check-label" for="prog-nue-{{ programa.id }}">{{ programa.nombre }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Antiguos -->
+                <div class="programas-col">
+                  <div class="section-title">Antiguos</div>
+                  {% for programa in programas_antiguos %}
+                    <div class="form-check">
+                      <input class="form-check-input programa-checkbox" type="checkbox"
+                             name="programas[]"
+                             id="prog-ant-{{ programa.id }}"
+                             value="{{ programa.id }}"
+                             {% if programa.id|stringformat:"s" in filtros_aplicados.programas %}checked{% endif %}>
+                      <label class="form-check-label" for="prog-ant-{{ programa.id }}">{{ programa.nombre }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="select-all-prog">
+                  <i class="fas fa-check-circle me-1"></i><span>Seleccionar todos</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-all-prog">
+                  <i class="fas fa-times-circle me-1"></i><span>Limpiar</span>
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i class="fas fa-filter me-1"></i><span>Aplicar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-body">
-      <div class="row">
-        <div class="col-md-6">
-          <form method="GET" class="form-inline">
-            <label class="mr-2"><strong>Ciclo:</strong></label>
-            <select id="filtroAnio" name="filtro_anio" class="form-control">
-              <option value="Todos">Todos</option>
-              {% for anio in anios %}
-                <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
-              {% endfor %}
-            </select>
-          </form>
-        </div>
-        <div class="col-md-6 text-right">
-          <label class="mr-2"><strong>Gráficas:</strong></label>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
-            <label class="form-check-label" for="checkBarras">Barras</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
-            <label class="form-check-label" for="checkLinea">Línea</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
-            <label class="form-check-label" for="checkPastel">Pastel</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
-            <label class="form-check-label" for="checkGauss">Gauss</label>
-          </div>
-          <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
-          <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
-        </div>
+  <!-- 📈 Gráficas -->
+  <div class="row g-3">
+    <div class="col-lg-6 grafica-box" id="box-barras">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📊 Gráfico de Barras</h6></div>
+        <div class="card-body p-3"><canvas id="graficaBarras" height="250"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 grafica-box" id="box-linea">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📈 Gráfico de Línea</h6></div>
+        <div class="card-body p-3"><canvas id="graficaLinea" height="250"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 grafica-box" id="box-pastel">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">🥧 Gráfico de Pastel</h6></div>
+        <div class="card-body p-3"><canvas id="graficaPastel" height="250"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 grafica-box" id="box-gauss">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📉 Campana de Gauss</h6></div>
+        <div class="card-body p-3"><canvas id="graficaGauss" height="250"></canvas></div>
       </div>
     </div>
   </div>
 
-  <!-- Gráficas -->
-  <div class="row">
-    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
-      <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📊 Gráfico de Barras</h5></div>
-        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
-      </div>
+  <!-- 📋 Tabla -->
+  <div class="card mt-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h6 class="m-0">📋 Detalle por Programa y Ciclo</h6>
+      <span class="badge bg-light text-dark">Total: {{ detalle_ciclos|length }}</span>
     </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
-      <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📈 Gráfico de Línea</h5></div>
-        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
-      <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">🥧 Gráfico de Pastel</h5></div>
-        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
-      <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📉 Campana de Gauss</h5></div>
-        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabla -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="m-0">📋 Detalle por Programa y Ciclo</h5>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered text-center">
-          <thead class="thead-light">
+    <div class="card-body p-0">
+      <div class="table-responsive table-wrapper">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark sticky-top">
             <tr>
-              <th>Ciclo</th>
+              <th style="width: 15%">Ciclo</th>
               <th>Programa</th>
-              <th>Promedio</th>
+              <th style="width: 12%" class="text-center">Promedio</th>
             </tr>
           </thead>
           <tbody>
             {% for fila in detalle_ciclos %}
-            <tr>
-              <td>{{ fila.ciclo }}</td>
-              <td>{{ fila.programa }}</td>
-              <td>{{ fila.promedio }}</td>
-            </tr>
+              <tr>
+                <td class="text-nowrap">{{ fila.ciclo }}</td>
+                <td>{{ fila.programa }}</td>
+                <td class="text-center fw-semibold">{{ fila.promedio }}</td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
@@ -131,13 +227,7 @@
     </div>
   </div>
 
-  <!-- Botón PDF -->
-  <div class="text-center mb-5">
-    <button id="btnDescargarPDF" class="btn btn-danger">
-      <i class="fas fa-file-pdf"></i> Descargar PDF
-    </button>
-  </div>
-</div>
+</div> <!-- /page-content -->
 
 <!-- Datos para JS -->
 <script id="datosGraficas" type="application/json">
@@ -153,4 +243,31 @@
 <!-- JS personalizado -->
 <script src="{% static 'js/aprovechamiento.js' %}"></script>
 
+<script>
+  // Mostrar botón "Procesar" al elegir archivo
+  document.getElementById('fileInput')?.addEventListener('change', function () {
+    if (this.files.length > 0) document.getElementById('submitBtn').classList.remove('d-none');
+  });
+
+  // Select/Limpiar programas
+  (function(){
+    const selectAllBtn = document.getElementById('select-all-prog');
+    const clearAllBtn = document.getElementById('clear-all-prog');
+    const checkboxes = document.querySelectorAll('.programa-checkbox');
+    selectAllBtn?.addEventListener('click', () => checkboxes.forEach(c => c.checked = true));
+    clearAllBtn?.addEventListener('click', () => checkboxes.forEach(c => c.checked = false));
+  })();
+
+  // ✅ Garantiza que el chip de ciclo se envía correctamente
+  (function(){
+    const form = document.getElementById('filter-form');
+    const anioHidden = document.getElementById('filtroAnioHidden');
+
+    // Antes de enviar, copia el chip seleccionado al hidden
+    form?.addEventListener('submit', () => {
+      const sel = document.querySelector('input[name="anioChip"]:checked');
+      if (sel) anioHidden.value = sel.value;
+    });
+  })();
+</script>
 {% endblock %}

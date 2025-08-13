@@ -1,106 +1,135 @@
-body {
-  background-color: #f9fbfd;
-  font-family: 'Segoe UI', sans-serif;
+/* ====== Barra superior de acciones ====== */
+.topbar-actions{
+  position: sticky; top: 0; z-index: 1040;
+  background: #ffffff; padding: .75rem 0;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.topbar-actions .emoji{font-size: 1.25rem;}
+.page-content{padding-top: 1rem;}
+
+/* ====== Panel / Tarjetas ====== */
+.card-panel{
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 10px rgba(20,20,20,.03);
+  border-radius: 14px;
+}
+.card-header{ background: #f8f9fb; }
+
+/* ====== Botones + check group ====== */
+.btn-check-group{
+  display: inline-flex; gap: .4rem; flex-wrap: wrap;
+}
+.btn-check-group .form-check-input{
+  position: absolute; opacity: 0; pointer-events: none;
+}
+.btn-check-group .btn{
+  border-radius: 999px; padding: .35rem .8rem;
+  border: 1px solid #e4e7ec; background: #fff;
+}
+.btn-check-group .form-check-input:checked + .btn{
+  background: #0d6efd; color: #fff; border-color: #0d6efd;
 }
 
-h1 {
-  text-align: center;
-  margin-top: 30px;
-  font-weight: bold;
-  font-size: 30px;
-  color: #2c3e50;
+/* ====== Programas: contenedor con scroll y dos columnas ====== */
+.programas-wrapper{
+  background: #fafbfc; border: 1px solid #eef0f4; border-radius: 12px;
+  padding: .75rem;
+}
+.programas-scroll{
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  max-height: 220px; overflow: auto; padding-right: .25rem;
+}
+.programas-col .section-title{
+  font-size: .85rem; font-weight: 700; color: #6b7280; margin-bottom: .4rem;
+}
+.programas-col .form-check{ margin-bottom: .25rem; }
+
+/* ====== Gráficas ====== */
+.chart-card{
+  border: 1px solid #eef0f4;
+  box-shadow: 0 6px 14px rgba(0,0,0,.04);
+  border-radius: 14px;
+}
+.grafica-box canvas{
+  /* hace que el canvas no "brinque" al cargar */
+  display: block; width: 100%;
 }
 
-.container-fluid {
-  padding: 0 30px;
-}
+/* ====== Tabla ====== */
+.table-wrapper{ max-height: 55vh; overflow: auto; }
+.table thead th{ position: sticky; top: 0; z-index: 1; }
+.table thead{ background: #0f172a; color: #fff; }
+.table tbody tr:nth-child(even){ background: #fafafa; }
+.table td, .table th{ padding: .65rem .8rem; }
+.table-hover tbody tr:hover{ background: #f2f6ff; }
 
-.card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  margin-bottom: 30px;
-}
+/* ====== Utilidades ====== */
+.fw-semibold{font-weight: 600;}
+.gap-2{gap: .5rem;}
 
-.card-header {
-  background-color: #ffffff;
-  font-weight: 600;
-  text-align: center;
-  font-size: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-  padding: 12px;
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.card-body canvas {
-  display: block;
-  margin: auto;
-  height: 270px !important;
-  max-width: 100%;
-}
-
-.table {
-  font-size: 0.9rem;
-  background-color: white;
-  text-align: center;
-}
-
-.table th {
-  background-color: #e0f3ff;
-  color: #333;
-  font-weight: bold;
-}
-
-.table td, .table th {
-  padding: 10px;
-}
-
-.form-inline {
+/* ===== Botones: ícono alineado + espacios consistentes ===== */
+.actions-wrap, .filter-actions {
   display: flex;
-  align-items: center;
-  gap: 15px;
   flex-wrap: wrap;
+  gap: .75rem;                 /* espacio uniforme entre botones */
 }
 
 .btn {
-  font-weight: 600;
-  border-radius: 6px;
-  padding: 6px 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-  transition: 0.2s ease;
+  display: inline-flex;        /* alinea ícono y texto */
+  align-items: center;
+  gap: .5rem;                  /* espacio icono-texto */
+  padding: .55rem .9rem;
+  border-radius: .6rem;
 }
 
-.btn:hover {
-  transform: scale(1.02);
+.btn i, .btn .fa, .btn .fas, .btn .far {
+  font-size: 1rem;             /* tamaño de icono consistente */
+  line-height: 1;
+  transform: translateY(-.5px);/* micro-ajuste vertical */
 }
 
-.text-center {
-  text-align: center;
+/* Hover/active sutil para todas */
+.btn:hover { filter: brightness(0.98); }
+.btn:active { transform: translateY(1px); }
+
+/* Botones principales con leve sombra */
+.btn-primary, .btn-success, .btn-danger {
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
 }
 
-.alert {
-  max-width: 600px;
-  margin: auto;
+/* Outline más visible */
+.btn-outline-secondary {
+  border: 1px solid #dfe3e8;
+  background: #fff;
+}
+.btn-outline-secondary:hover {
+  background: #f6f7fb;
 }
 
-@media (max-width: 768px) {
-  .form-inline {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+/* Chips de gráficas: espaciado más cómodo */
+.btn-check-group { gap: .5rem; }
+.btn-check-group .btn { padding: .4rem .75rem; }
 
-  .form-inline > * {
-    margin-bottom: 10px;
-  }
+/* Margen micro entre controles de archivo y Procesar */
+#fileInput + .btn, #submitBtn { margin-left: .5rem; }
 
-  .btn {
-    width: 100%;
-  }
+/* Separación visual suave bajo la barra superior */
+.topbar-actions { padding: .85rem 0; }
 
-  .card-body canvas {
-    width: 100% !important;
-  }
+/* Chips compatibles para radio/checkbox dentro del grupo */
+.btn-check-group input[type="radio"],
+.btn-check-group input[type="checkbox"],
+.btn-check-group .form-check-input{
+  position: absolute; opacity: 0; pointer-events: none;
 }
+
+/* Scroll horizontal si hay muchos años */
+.cycle-scroll{
+  display: flex; gap: .5rem; flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* Opcional: si prefieres scroll horizontal sin salto de línea, usa esto:
+.cycle-scroll{ flex-wrap: nowrap; overflow:auto; padding-bottom:.25rem; }
+.cycle-scroll .btn{ white-space: nowrap; }
+*/

@@ -4,13 +4,11 @@ import pandas as pd
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib import messages
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from api.models import (
     CicloEscolar, Periodo, CicloPeriodo,
     AprovechamientoAcademico, ProgramaEducativoAntiguo, ProgramaEducativoNuevo
 )
-
-# 📥 Descargar plantilla
 
 def descargar_plantilla_aprovechamiento(request):
     response = HttpResponse(content_type='text/csv')
@@ -27,8 +25,6 @@ def descargar_plantilla_aprovechamiento(request):
             writer.writerow([nombre, prog.nombre, ''])
 
     return response
-
-# 📤 Subida de CSV
 
 def cargar_aprovechamiento(request):
     if request.method == 'POST':
@@ -83,45 +79,66 @@ def cargar_aprovechamiento(request):
 
     return redirect('aprovechamiento')
 
-# 🖥️ Vista principal
-
 def aprovechamiento_view(request):
     mensaje = request.GET.get("mensaje")
 
+    # Obtener todos los programas educativos
+    programas_antiguos = ProgramaEducativoAntiguo.objects.all()
+    programas_nuevos = ProgramaEducativoNuevo.objects.all()
+    
+    # Filtro de ciclos
     ciclos_periodos = CicloPeriodo.objects.select_related('ciclo', 'periodo')
     opciones_ciclo = sorted(
         [f"{cp.ciclo.anio} - {cp.periodo.clave}" for cp in ciclos_periodos],
         reverse=True
     )
-
-    filtro = request.GET.get("filtro_anio")
-    ciclos_objetivos = []
-
-    if filtro and filtro != "Todos":
-        try:
-            anio_str, periodo_clave = filtro.split(" - ")
-            ciclo = CicloPeriodo.objects.get(ciclo__anio=anio_str, periodo__clave=periodo_clave)
-            ciclos_objetivos.append(ciclo)
-        except CicloPeriodo.DoesNotExist:
-            pass
-    else:
-        ciclos_objetivos = list(CicloPeriodo.objects.all())
-
-    datos_graficas = {
-        'programas': [],
-        'promedios': []
-    }
-    detalle_ciclos = []
-
+    
+    # Procesar filtros
+    filtro_ciclo = request.GET.get("filtro_anio", "Todos")
+    filtro_programas = request.GET.getlist("programas[]")
+    
+    # Construir queryset filtrado
     registros = AprovechamientoAcademico.objects.select_related(
         'ciclo_periodo__ciclo', 'ciclo_periodo__periodo',
         'programa_antiguo', 'programa_nuevo'
-    ).filter(ciclo_periodo__in=ciclos_objetivos)
-
+    )
+    
+    # Aplicar filtro de ciclo
+    if filtro_ciclo and filtro_ciclo != "Todos":
+        try:
+            anio_str, periodo_clave = filtro_ciclo.split(" - ")
+            ciclo = CicloPeriodo.objects.get(ciclo__anio=anio_str, periodo__clave=periodo_clave)
+            registros = registros.filter(ciclo_periodo=ciclo)
+        except (ValueError, CicloPeriodo.DoesNotExist):
+            pass
+    
+    # Aplicar filtro de programas
+    if filtro_programas:
+        q_antiguos = Q(programa_antiguo__id__in=filtro_programas)
+        q_nuevos = Q(programa_nuevo__id__in=filtro_programas)
+        registros = registros.filter(q_antiguos | q_nuevos)
+    
+    # Preparar datos para gráficos
+    datos_graficas = {
+        'programas': [],
+        'promedios': [],
+        'tipos': []  # Para distinguir antiguo/nuevo en gráficos
+    }
+    
+    detalle_ciclos = []
+    
     for r in registros:
-        nombre_prog = r.programa_antiguo.nombre if r.programa_antiguo else r.programa_nuevo.nombre
+        if r.programa_antiguo:
+            nombre_prog = f"{r.programa_antiguo.nombre} (Antiguo)"
+            tipo = "antiguo"
+        else:
+            nombre_prog = f"{r.programa_nuevo.nombre} (Nuevo)"
+            tipo = "nuevo"
+            
         datos_graficas['programas'].append(nombre_prog)
         datos_graficas['promedios'].append(float(r.promedio))
+        datos_graficas['tipos'].append(tipo)
+        
         detalle_ciclos.append({
             'ciclo': str(r.ciclo_periodo),
             'programa': nombre_prog,
@@ -131,6 +148,12 @@ def aprovechamiento_view(request):
     return render(request, 'aprovechamiento.html', {
         'mensaje': mensaje,
         'anios': opciones_ciclo,
+        'programas_antiguos': programas_antiguos,
+        'programas_nuevos': programas_nuevos,
         'datos_graficas': json.dumps(datos_graficas),
-        'detalle_ciclos': detalle_ciclos
+        'detalle_ciclos': detalle_ciclos,
+        'filtros_aplicados': {
+            'ciclo': filtro_ciclo,
+            'programas': filtro_programas
+        }
     })
