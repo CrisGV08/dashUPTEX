@@ -1,50 +1,70 @@
+# api/home/views.py  (o donde tengas tus vistas)
 import json
 from django.shortcuts import render
-from api.models import AprovechamientoAcademico, CicloPeriodo
+from api.models import (
+    CicloPeriodo,
+    AprovechamientoAcademico,
+    ProgramaEducativoAntiguo,
+    ProgramaEducativoNuevo,
+)
 
 def aprovechamiento_usuario_view(request):
-    ciclos_periodos = CicloPeriodo.objects.select_related('ciclo', 'periodo')
-    opciones_ciclo = sorted(
-        [f"{cp.ciclo.anio} - {cp.periodo.clave}" for cp in ciclos_periodos],
+    """
+    Vista de usuario (solo consulta):
+    - Envía ciclos en formato 'Año - Periodo' (p. ej. '2025 - E-A')
+    - Envía Programas Educativos (Nuevos y Antiguos) para que el template los pinte
+    - Envía el dataset plano para filtrado en el cliente
+    """
+
+    # === Ciclos: 'Año - Periodo' únicos y ordenados (año desc, periodo E-A > M-A > S-D) ===
+    order_map = {'E-A': 3, 'M-A': 2, 'S-D': 1}
+    ciclos_qs = (CicloPeriodo.objects
+                 .select_related('ciclo', 'periodo')
+                 .values('ciclo__anio', 'periodo__clave'))
+
+    ciclos_unicos = {
+        f"{c['ciclo__anio']} - {c['periodo__clave']}"
+        for c in ciclos_qs
+    }
+    anios = sorted(
+        ciclos_unicos,
+        key=lambda s: (
+            int(s.split(' - ')[0]),                      # año
+            order_map.get(s.split(' - ')[1], 0)          # orden de periodo
+        ),
         reverse=True
     )
 
-    filtro = request.GET.get("filtro_anio")
-    ciclos_objetivos = []
+    # === Programas educativos (para mostrar los checkboxes) ===
+    programas_antiguos = ProgramaEducativoAntiguo.objects.all().order_by('nombre')
+    programas_nuevos = ProgramaEducativoNuevo.objects.all().order_by('nombre')
 
-    if filtro and filtro != "Todos":
-        try:
-            anio_str, periodo_clave = filtro.split(" - ")
-            ciclo = CicloPeriodo.objects.get(ciclo__anio=anio_str, periodo__clave=periodo_clave)
-            ciclos_objetivos.append(ciclo)
-        except CicloPeriodo.DoesNotExist:
-            pass
-    else:
-        ciclos_objetivos = list(CicloPeriodo.objects.all())
+    # === Registros completos (sin filtrar en backend) ===
+    registros = (AprovechamientoAcademico.objects
+                 .select_related('ciclo_periodo__ciclo', 'ciclo_periodo__periodo',
+                                 'programa_antiguo', 'programa_nuevo'))
 
-    datos_graficas = {
-        'programas': [],
-        'promedios': []
-    }
-    detalle_ciclos = []
-
-    registros = AprovechamientoAcademico.objects.select_related(
-        'ciclo_periodo__ciclo', 'ciclo_periodo__periodo',
-        'programa_antiguo', 'programa_nuevo'
-    ).filter(ciclo_periodo__in=ciclos_objetivos)
-
+    detalle = []
     for r in registros:
-        nombre_prog = r.programa_antiguo.nombre if r.programa_antiguo else r.programa_nuevo.nombre
-        datos_graficas['programas'].append(nombre_prog)
-        datos_graficas['promedios'].append(float(r.promedio))
-        detalle_ciclos.append({
-            'ciclo': str(r.ciclo_periodo),
-            'programa': nombre_prog,
-            'promedio': r.promedio
+        if r.programa_antiguo_id:
+            programa_id = f"A-{r.programa_antiguo_id}"
+            programa_nombre = f"{r.programa_antiguo.nombre} (Antiguo)"
+        else:
+            programa_id = f"N-{r.programa_nuevo_id}"
+            programa_nombre = f"{r.programa_nuevo.nombre} (Nuevo)"
+
+        detalle.append({
+            "ciclo": str(r.ciclo_periodo),      # ej. "2025 - E-A"
+            "programa_id": programa_id,         # ej. "A-12" o "N-5"
+            "programa": programa_nombre,
+            "promedio": float(r.promedio),
         })
 
-    return render(request, 'aprovechamiento_usuario.html', {
-        'anios': opciones_ciclo,
-        'datos_graficas': json.dumps(datos_graficas),
-        'detalle_ciclos': detalle_ciclos
-    })
+    ctx = {
+        "anios": anios,                                   # ahora sí: "Año - Periodo"
+        "programas_antiguos": programas_antiguos,         # se pintan en el template
+        "programas_nuevos": programas_nuevos,             # se pintan en el template
+        "detalle_ciclos": detalle,
+        "datos_graficas": json.dumps(detalle),            # lo usa el JS para filtrar
+    }
+    return render(request, "aprovechamiento_usuario.html", ctx)

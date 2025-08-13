@@ -8,85 +8,143 @@
 
 <h1 class="text-center mt-4 mb-4">📘 Aprovechamiento Académico Histórico</h1>
 
-<!-- Contenedor principal -->
 <div class="container-fluid">
 
-  <!-- Filtros -->
+  <!-- 🔎 Filtros -->
   <div class="card mb-4">
     <div class="card-body">
-      <div class="row">
-        <div class="col-md-6">
-          <form method="GET" class="form-inline">
-            <label class="mr-2"><strong>Ciclo:</strong></label>
-            <select id="filtroAnio" name="filtro_anio" class="form-control">
+      <form id="filter-form" onsubmit="return false;">
+        <div class="row g-3 align-items-end">
+
+          <!-- Ciclo -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block mb-1">
+              <i class="far fa-calendar me-1"></i> Ciclo
+            </label>
+            <select id="filtroAnio" class="form-control">
               <option value="Todos">Todos</option>
-              {% for anio in anios %}
-                <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+              {% for c in anios %}
+                <!-- c DEBE venir en formato 'YYYY - CLAVE' (p. ej. 2025 - E-A) -->
+                <option value="{{ c }}">{{ c }}</option>
               {% endfor %}
             </select>
-          </form>
-        </div>
-        <div class="col-md-6 text-right">
-          <label class="mr-2"><strong>Gráficas:</strong></label>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
-            <label class="form-check-label" for="checkBarras">Barras</label>
           </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
-            <label class="form-check-label" for="checkLinea">Línea</label>
+
+          <!-- Tipo de gráficas -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block mb-1">
+              <i class="fas fa-chart-bar me-1"></i> Gráficas
+            </label>
+            <div class="btn-check-group">
+              <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+              <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+              <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+              <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
+
+              <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+              <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
+            </div>
+
+            <div class="mt-2 d-flex gap-2">
+              <button id="aplicarFiltros" type="button" class="btn btn-primary btn-sm">
+                <i class="fas fa-filter"></i> Aplicar
+              </button>
+              <button id="resetFiltros" type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-sync-alt"></i> Reset
+              </button>
+            </div>
           </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
-            <label class="form-check-label" for="checkPastel">Pastel</label>
+
+          <!-- Programas Educativos -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block mb-1">
+              <i class="fas fa-layer-group me-1"></i> Programas Educativos
+            </label>
+
+            <div class="programas-wrapper">
+              <div class="programas-scroll">
+                <!-- Nuevos -->
+                <div class="programas-col">
+                  <div class="section-title">Nuevos</div>
+                  {% for p in programas_nuevos %}
+                    <div class="form-check">
+                      <input class="form-check-input programa-checkbox" type="checkbox"
+                             id="prog-n-{{ p.id }}" value="N-{{ p.id }}" checked>
+                      <label class="form-check-label" for="prog-n-{{ p.id }}">{{ p.nombre }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Antiguos -->
+                <div class="programas-col">
+                  <div class="section-title">Antiguos</div>
+                  {% for p in programas_antiguos %}
+                    <div class="form-check">
+                      <input class="form-check-input programa-checkbox" type="checkbox"
+                             id="prog-a-{{ p.id }}" value="A-{{ p.id }}" checked>
+                      <label class="form-check-label" for="prog-a-{{ p.id }}">{{ p.nombre }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="select-all-prog">
+                  <i class="fas fa-check-circle me-1"></i> Seleccionar todos
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-all-prog">
+                  <i class="fas fa-times-circle me-1"></i> Limpiar
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
-            <label class="form-check-label" for="checkGauss">Gauss</label>
-          </div>
-          <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
-          <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
-        </div>
-      </div>
+          <!-- /Programas -->
+
+        </div> <!-- /row -->
+      </form>
     </div>
   </div>
 
-  <!-- Gráficas -->
-  <div class="row">
-    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
+  <!-- 📈 Gráficas -->
+  <div class="row g-3">
+    <div class="col-lg-6 grafica-box" id="box-barras">
       <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📊 Gráfico de Barras</h5></div>
+        <div class="card-header"><h6 class="m-0">📊 Gráfico de Barras</h6></div>
         <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
       </div>
     </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
+    <div class="col-lg-6 grafica-box" id="box-linea">
       <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📈 Gráfico de Línea</h5></div>
+        <div class="card-header"><h6 class="m-0">📈 Gráfico de Línea</h6></div>
         <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
       </div>
     </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
+    <div class="col-lg-6 grafica-box" id="box-pastel">
       <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">🥧 Gráfico de Pastel</h5></div>
+        <div class="card-header"><h6 class="m-0">🥧 Gráfico de Pastel</h6></div>
         <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
       </div>
     </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
+    <div class="col-lg-6 grafica-box" id="box-gauss">
       <div class="card h-100">
-        <div class="card-header"><h5 class="m-0">📉 Campana de Gauss</h5></div>
+        <div class="card-header"><h6 class="m-0">📉 Campana de Gauss</h6></div>
         <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
       </div>
     </div>
   </div>
 
-  <!-- Tabla -->
-  <div class="card mb-4">
+  <!-- 📋 Tabla -->
+  <div class="card mt-4">
     <div class="card-header">
-      <h5 class="m-0">📋 Detalle por Programa y Ciclo</h5>
+      <h6 class="m-0">📋 Detalle por Programa y Ciclo</h6>
     </div>
     <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered text-center">
+        <table class="table table-bordered text-center" id="tablaDetalle">
           <thead class="thead-light">
             <tr>
               <th>Ciclo</th>
@@ -109,7 +167,7 @@
   </div>
 </div>
 
-<!-- Datos para JS -->
+<!-- 🔢 Datos para JS (array de objetos con ids de programa) -->
 <script id="datosGraficas" type="application/json">
   {{ datos_graficas|safe }}
 </script>
@@ -117,9 +175,7 @@
 <!-- Librerías -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- JS personalizado -->
-<script src="{% static 'js/aprovechamiento.js' %}"></script>
+<!-- JS de usuario -->
+<script src="{% static 'js/aprovechamiento_usuario.js' %}"></script>
 {% endblock %}
