@@ -140,4 +140,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Expirar sesión al cerrar el navegador
 
-SESSION_COOKIE_AGE = 60  # 30 minutos (1800 segundos)
+SESSION_COOKIE_AGE = 1800  # 30 minutos (1800 segundos)
