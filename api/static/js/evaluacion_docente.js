@@ -22,7 +22,7 @@ const mostrarEtiquetas = {
         });
     }
 };
-
+ 
 // Gráficos principales
 function crearGraficos(etiquetas, valores) {
     // Línea

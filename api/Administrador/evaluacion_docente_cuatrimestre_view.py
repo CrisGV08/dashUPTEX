@@ -1,14 +1,23 @@
 from django.shortcuts import render, redirect
-from api.models import EvaluacionDocenteCuatrimestre, CicloPeriodo
 from django.contrib import messages
+from api.models import EvaluacionDocenteCuatrimestre, CicloPeriodo
 import json
 
-
-from django.db.models import OuterRef, Subquery
-
 def evaluacion_docente_cuatrimestre_view(request):
-    periodos = CicloPeriodo.objects.all()
+    # Obtener todos los ciclos y años disponibles
+    periodos_all = CicloPeriodo.objects.select_related('ciclo', 'periodo').all()
+    anios_disponibles = sorted(set(p.ciclo.anio for p in periodos_all))
 
+    # Obtener año seleccionado desde GET
+    anio_seleccionado = request.GET.get("anio")
+
+    if anio_seleccionado:
+        periodos = CicloPeriodo.objects.select_related('ciclo', 'periodo') \
+                    .filter(ciclo__anio=anio_seleccionado).order_by('id')[:3]
+    else:
+        periodos = periodos_all.order_by('id')
+
+    # Guardar datos si se mandan por POST
     if request.method == 'POST':
         if 'guardar_tabla' in request.POST:
             ciclo_ids = request.POST.getlist('ciclo_ids')
@@ -45,7 +54,7 @@ def evaluacion_docente_cuatrimestre_view(request):
 
             return redirect('evaluacion_docente_cuatrimestre')
 
-    # Mostrar todos los ciclos, incluso si aún no tienen promedio registrado
+    # Construir los datos para tabla y gráficas
     datos = []
     for ciclo in periodos:
         evaluacion = EvaluacionDocenteCuatrimestre.objects.filter(ciclo_periodo=ciclo).first()
@@ -58,9 +67,12 @@ def evaluacion_docente_cuatrimestre_view(request):
     promedios = [d['promedio_general'] or 0 for d in datos]
 
     context = {
-        'periodos': periodos,
+        'periodos': periodos_all,
+        'anios': anios_disponibles,
+        'anio_seleccionado': anio_seleccionado,
         'datos': datos,
         'etiquetas': json.dumps(etiquetas),
         'promedios': json.dumps(promedios),
     }
+
     return render(request, 'Evaluacion_docente_cuatrimestre.html', context)

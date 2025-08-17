@@ -15,7 +15,7 @@
         <div class="mensaje-exito">{{ message }}</div>
       {% endfor %}
     {% endif %}
-
+ 
     <div class="form-box">
         <form method="GET" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
             <h3>📥 Descargar Plantilla</h3>
@@ -31,6 +31,42 @@
             <button type="submit" class="btn-admin">Subir</button>
         </form>
     </div>
+
+<form method="get" class="mb-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+  <div>
+    <label for="filtroAnio" class="fw-bold">Año de Ingreso:</label>
+    <select name="anio" id="filtroAnio" class="form-select">
+      <option value="">Todos</option>
+      {% for a in anios %}
+        <option value="{{ a }}" {% if a|stringformat:"s" == anio_seleccionado %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div>
+    <label for="filtroCarrera" class="fw-bold">Carreras:</label>
+    <select name="carrera" id="filtroCarrera" class="form-select" multiple>
+      {% for clave, nombre in carreras_disponibles %}
+        <option value="{{ clave }}" {% if clave in carreras_seleccionadas %}selected{% endif %}>
+          {{ nombre }} ({{ clave }})
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="d-flex align-items-end">
+    <button type="submit" class="btn btn-primary">🔎 Aplicar Filtros</button>
+  </div>
+</form>
+
+<!-- Activar Choices -->
+<script>
+  new Choices("#filtroAnio", { shouldSort: false });
+  new Choices("#filtroCarrera", { removeItemButton: true, shouldSort: false });
+</script>
+
+
+
     <h2 class="titulo-tabla">📑 Generaciones Registradas</h2>
     <div class="tabla-box">
         <table class="crud-table">

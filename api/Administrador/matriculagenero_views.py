@@ -25,18 +25,25 @@ def matriculagenero(request):
             mensaje = "✅ Datos guardados correctamente"
         return redirect("matricula_por_genero")
 
-    # Obtener todos los ciclos/periodos ordenados
-    ciclos = CicloPeriodo.objects.select_related("ciclo", "periodo").order_by("ciclo__anio", "periodo__clave")
+    # 🧠 Filtro de año
+    anio_seleccionado = request.GET.get('anio')
+
+    if anio_seleccionado:
+        ciclos = CicloPeriodo.objects.select_related("ciclo", "periodo") \
+            .filter(ciclo__anio=anio_seleccionado).order_by("periodo__clave")
+    else:
+        ciclos = CicloPeriodo.objects.select_related("ciclo", "periodo") \
+            .order_by("ciclo__anio", "periodo__clave")
+
+    # Obtener años únicos para el selector
+    todos_ciclos = CicloPeriodo.objects.select_related("ciclo").all()
+    anios_disponibles = sorted(set(cp.ciclo.anio for cp in todos_ciclos))
 
     # Obtener registros existentes
     datos = {mg.ciclo_periodo_id: mg for mg in MatriculaPorGenero.objects.all()}
 
-    # Preparar datos para las gráficas
-    labels = []
-    hombres = []
-    mujeres = []
-    totales = []
-
+    # Preparar datos para gráficas
+    labels, hombres, mujeres, totales = [], [], [], []
     total_global_hombres = 0
     total_global_mujeres = 0
 
@@ -45,17 +52,12 @@ def matriculagenero(request):
         labels.append(etiqueta)
 
         registro = datos.get(cp.id)
-        if registro:
-            h = registro.hombres
-            m = registro.mujeres
-        else:
-            h = 0
-            m = 0
+        h = registro.hombres if registro else 0
+        m = registro.mujeres if registro else 0
 
         hombres.append(h)
         mujeres.append(m)
         totales.append(h + m)
-
         total_global_hombres += h
         total_global_mujeres += m
 
@@ -72,5 +74,7 @@ def matriculagenero(request):
         "ciclos": ciclos,
         "datos": datos,
         "mensaje": mensaje,
-        "datos_grafica_json": datos_grafica_json
+        "datos_grafica_json": datos_grafica_json,
+        "anios": anios_disponibles,
+        "anio_seleccionado": anio_seleccionado
     })

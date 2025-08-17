@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
             container.style.display = chk.checked ? "block" : "none";
         });
     });
-
+ 
     document.getElementById("filtro-ciclos").addEventListener("change", actualizarGraficas);
     document.getElementById("filtro-carreras").addEventListener("change", actualizarGraficas);
 
