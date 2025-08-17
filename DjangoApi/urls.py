@@ -92,7 +92,7 @@ from api.Administrador.titulados_historicos_view import (
     titulados_historicos_view,
     descargar_plantilla_titulados_historicos
 )
-
+from api.Administrador.titulados_tsu_inge_view import titulados_tsu_inge_view
 from api.login.login_views import login_view, logout_view
 
 
@@ -182,7 +182,7 @@ urlpatterns = [
     path('administrador/titulados-historicos/', titulados_historicos_view, name='titulados_historicos'),
     path('administrador/titulados-historicos/descargar-plantilla/', descargar_plantilla_titulados_historicos, name='descargar_plantilla_titulados_historicos'),
     
-    
+    path('administrador/titulados-tsu-ingenieria/', titulados_tsu_inge_view, name='titulados_tsu_inge'),
     ]
 
 

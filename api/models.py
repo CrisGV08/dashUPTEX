@@ -264,8 +264,16 @@ class GeneracionCarrera(models.Model):
 
 
 class TituladosHistoricos(models.Model):
+    SEMESTRE_CHOICES = (
+        (5, "TSU"),
+        (10, "Ingeniería"),
+    )
+
     anio_ingreso = models.IntegerField()
     anio_egreso = models.IntegerField()
+
+    # ← NUEVO
+    semestre = models.IntegerField(choices=SEMESTRE_CHOICES, default=5)
 
     programa_antiguo = models.ForeignKey('ProgramaEducativoAntiguo', on_delete=models.CASCADE, null=True, blank=True)
     programa_nuevo = models.ForeignKey('ProgramaEducativoNuevo', on_delete=models.CASCADE, null=True, blank=True)
@@ -287,6 +295,7 @@ class TituladosHistoricos(models.Model):
     def __str__(self):
         prog = self.programa_antiguo or self.programa_nuevo
         return f"{prog} - Ingreso {self.anio_ingreso} / Egreso {self.anio_egreso}"
+
 
 
 

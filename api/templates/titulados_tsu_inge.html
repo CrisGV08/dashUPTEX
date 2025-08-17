@@ -1,0 +1,183 @@
+{% extends 'base_admin.html' %}
+{% load static %}
+
+{% block title %}Titulados por TSU e Ingeniería{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/titulados_historicos.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
+
+<!-- Librerías -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<style>
+  /* Marca del botón activo TSU/ING */
+  .btn-admin.btn-active{
+    box-shadow: 0 0 0 3px rgba(46,134,222,.25) inset;
+    filter: brightness(0.96);
+  }
+
+  /* === Fix de altura estable para las gráficas ===
+     - Usamos un contenedor con altura fija.
+     - El canvas ocupa todo el contenedor sin crecer al re-render. */
+  .chart-box{
+    position: relative;
+    width: 100%;
+    height: 360px;            /* altura estándar de desktop */
+  }
+  .chart-card{ min-height: 0 } /* la altura la controla .chart-box */
+  .chart-card__title{ margin-bottom: 4px }
+
+  /* El canvas NO debe tener height:auto; evitamos que flex lo estire */
+  .chart-box canvas{
+    display: block;
+    width: 100% !important;
+    height: 100% !important;  /* ocupa la altura del wrapper */
+    max-height: 100% !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* Ajuste en móviles */
+  @media (max-width: 640px){
+    .chart-box{ height: 300px }
+  }
+</style>
+
+<div class="admin-panel">
+  <h1 class="titulo">📘 Titulados por TSU e Ingeniería</h1>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mensaje-exito">{{ message|safe }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Toggle nivel (TSU / ING) -->
+  <div class="filtros" style="justify-content:center; gap:10px">
+    <form method="get" action="" style="display:flex; gap:8px; align-items:center;">
+      <input type="hidden" name="nivel" value="TSU">
+      <button class="btn-admin {% if nivel == 'TSU' %}btn-active{% endif %}" type="submit">TSU</button>
+    </form>
+    <form method="get" action="" style="display:flex; gap:8px; align-items:center;">
+      <input type="hidden" name="nivel" value="ING">
+      <button class="btn-admin {% if nivel == 'ING' %}btn-active{% endif %}" type="submit">Ingeniería</button>
+    </form>
+  </div>
+
+  <!-- Filtros (solo años y programas) -->
+  <div class="filtros" id="filtrosTI" aria-label="Filtros de búsqueda">
+    <div>
+      <label for="fltAnio"><strong>Años (ingreso):</strong></label>
+      <select id="fltAnio" multiple>
+        {% for a in anios %}
+          <option value="{{ a }}" selected>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="fltPrograma"><strong>Programas:</strong></label>
+      <select id="fltPrograma" multiple style="min-width:260px">
+        {% for p in programas_disponibles %}
+          <option value="{{ p }}" selected>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button type="button" class="btn-admin" id="btnAplicar">Aplicar</button>
+      <button type="button" class="btn-admin" id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <!-- Gráficas -->
+  <div class="graficas" id="seccionDescargable">
+    <div class="chart-card" data-chart="bar">
+      <div class="chart-card__title">📊 Titulados por año (Barras)</div>
+      <div class="chart-box"><canvas id="chBar" aria-label="Barras titulados por año"></canvas></div>
+    </div>
+
+    <div class="chart-card" data-chart="line">
+      <div class="chart-card__title">📈 Titulados por año (Línea)</div>
+      <div class="chart-box"><canvas id="chLine" aria-label="Línea titulados por año"></canvas></div>
+    </div>
+
+    <div class="chart-card" data-chart="pie">
+      <div class="chart-card__title">🥧 Total Titulados vs DGP</div>
+      <div class="chart-box"><canvas id="chPie" aria-label="Pastel titulados vs DGP"></canvas></div>
+    </div>
+
+    <div class="chart-card" data-chart="gauss">
+      <div class="chart-card__title">📉 Curva Gauss (sobre totales por año)</div>
+      <div class="chart-box"><canvas id="chGauss" aria-label="Curva de distribución"></canvas></div>
+      <small class="text-muted">Se calcula con media y desviación de titulados por año.</small>
+    </div>
+  </div>
+
+  <!-- Tabla (paginada) -->
+  <div class="contenedor-tabla" style="margin-top:18px">
+    <h3 class="subtitulo">📋 Registros ({{ nivel }})</h3>
+    <div>
+      <table class="tabla-admin is-comfy">
+        <thead>
+          <tr>
+            <th>Programa</th>
+            <th>Ingreso</th>
+            <th>Egreso</th>
+            <th>Tit. H</th>
+            <th>Tit. M</th>
+            <th>DGP H</th>
+            <th>DGP M</th>
+            <th>Total Tit</th>
+            <th>Total DGP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in registros %}
+            {% with th=r.titulados_hombres|default_if_none:0 tm=r.titulados_mujeres|default_if_none:0 dh=r.registrados_dgp_h|default_if_none:0 dm=r.registrados_dgp_m|default_if_none:0 %}
+            <tr>
+              <td>
+                {% if r.programa_antiguo %}{{ r.programa_antiguo.nombre }}
+                {% elif r.programa_nuevo %}{{ r.programa_nuevo.nombre }}
+                {% else %}SIN PROGRAMA{% endif %}
+              </td>
+              <td>{{ r.anio_ingreso }}</td>
+              <td>{{ r.anio_egreso }}</td>
+              <td>{{ th }}</td>
+              <td>{{ tm }}</td>
+              <td>{{ dh }}</td>
+              <td>{{ dm }}</td>
+              <td>{{ th|add:tm }}</td>
+              <td>{{ dh|add:dm }}</td>
+            </tr>
+            {% endwith %}
+          {% empty %}
+            <tr>
+              <td colspan="9"><div class="empty">Sin datos.</div></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="paginacion" style="display:flex; gap:8px; justify-content:center; margin-top:12px;">
+        {% if page_obj.has_previous %}
+          <a class="btn-admin" href="?page={{ page_obj.previous_page_number }}&nivel={{ nivel }}">← Anterior</a>
+        {% endif %}
+        <span class="text-muted" style="align-self:center;">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn-admin" href="?page={{ page_obj.next_page_number }}&nivel={{ nivel }}">Siguiente →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Datos para JS (gráficas) -->
+{{ datos_json|json_script:"datosTI" }}
+<script> window.__NIVEL_TI__ = "{{ nivel }}"; </script>
+
+<!-- JS de página -->
+<script src="{% static 'js/titulados_tsu_inge.js' %}?v={{ now|date:'U' }}"></script>
+{% endblock %}
