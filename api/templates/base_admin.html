@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
@@ -7,13 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{% static 'imagenes/uptex.png' %}">
     <title>Dashboard Universidad</title>
+
+    <!-- CSS global -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link rel="stylesheet" href="{% static 'css/style_buttoms.css' %}">
-    <script defer src="{% static 'js/script.js' %}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<!-- Choices.js -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- Choices.js (global) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+    <!-- JS global -->
+    <script defer src="{% static 'js/script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <!-- jQuery (global, para DataTables u otros plugins) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <style>
         .sidebar {
@@ -26,6 +33,9 @@
             padding-left: 30px;
         }
     </style>
+
+    <!-- 👇 Bloque opcional por-vista (CSS, libs adicionales) -->
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
@@ -33,15 +43,16 @@
     <div class="sidebar-logo" style="text-align: center; margin-bottom: 20px;">
         <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;">
     </div> 
-   <div style="font-weight: bold; color: white; margin-top: 5px; font-size: 13px; background-color: #007bff; border-radius: 10px; padding: 3px 10px; display: inline-block;">
+    <div style="font-weight: bold; color: white; margin-top: 5px; font-size: 13px; background-color: #007bff; border-radius: 10px; padding: 3px 10px; display: inline-block;">
         MODO ADMINISTRADOR
-        </div>
+    </div>
+
     <div class="menu-container">
         <ul class="menu">
             <li class="menu-item">
                 <a href="{% url 'examen_admision' %}" data-menu="/examen_admision/"><i class="fas fa-file-signature"></i> Examen Admisión y Crear Ciclo Nuevo</a>
             </li>
- 
+
             <li class="menu-item">
                 <a href="#" data-menu="matricula"><i class="fas fa-user-shield"></i> Matricula</a>
                 <ul class="submenu">
@@ -55,7 +66,7 @@
                         <a href="{% url 'matricula_por_genero' %}" data-submenu="/matricula_por_genero/"><i class="fas fa-file-signature"></i> Matricula Por Genero</a>
                     </li>
                     <li class="menu-item">
-                     <a href="{% url 'matricula_por_anio' %}" data-submenu="/matricula_por_anio/"><i class="fas fa-chart-bar"></i> Matrícula Anual</a> 
+                        <a href="{% url 'matricula_por_anio' %}" data-submenu="/matricula_por_anio/"><i class="fas fa-chart-bar"></i> Matrícula Anual</a> 
                     </li>
                     <li class="menu-item">
                         <a href="{% url 'matricula_por_cuatrimestre' %}" data-submenu="/matricula_por_cuatrimestre/"><i class="fas fa-layer-group"></i> Matricula por cuatrimestre</a>
@@ -86,31 +97,28 @@
             </li>
 
             <li class="menu-item">
-    <a href="{% url 'evaluacion_docente_concentrado' %}" data-menu="/evaluacion_docente_concentrado/">
-        <i class="fas fa-chart-line"></i> Evaluación Docente Concentrado
-    </a>
-</li>
+                <a href="{% url 'evaluacion_docente_concentrado' %}" data-menu="/evaluacion_docente_concentrado/">
+                    <i class="fas fa-chart-line"></i> Evaluación Docente Concentrado
+                </a>
+            </li>
 
-
-<li class="menu-item"> 
-    <a href="{% url 'tasa_de_titulacion' %}" data-menu="/tasa-de-titulacion/">
-        <i class="fas fa-graduation-cap"></i> Tasa de Titulación
-    </a>
-</li>
-
+            <li class="menu-item"> 
+                <a href="{% url 'tasa_de_titulacion' %}" data-menu="/tasa-de-titulacion/">
+                    <i class="fas fa-graduation-cap"></i> Tasa de Titulación
+                </a>
+            </li>
 
             <li class="menu-item">
-    <a href="{% url 'titulados_historicos' %}" data-menu="/titulados_historicos/">
-        <i class="fas fa-certificate"></i> Titulados Históricos
-    </a>
-</li>
+                <a href="{% url 'titulados_historicos' %}" data-menu="/titulados_historicos/">
+                    <i class="fas fa-certificate"></i> Titulados Históricos
+                </a>
+            </li>
 
-<li class="menu-item">
-  <a href="{% url 'titulados_tsu_inge' %}" data-menu="/titulados-tsu-ingenieria/">
-    <i class="fas fa-certificate"></i> Titulados por TSU e Ingeniería
-  </a>
-</li>
-
+            <li class="menu-item">
+                <a href="{% url 'titulados_tsu_inge' %}" data-menu="/titulados-tsu-ingenieria/">
+                    <i class="fas fa-certificate"></i> Titulados por TSU e Ingeniería
+                </a>
+            </li>
 
             <li class="menu-item">
                 <a href="{% url 'subir_carreras' %}" data-menu="/subir_carreras/"><i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas</a>
@@ -120,13 +128,12 @@
                 <a href="#" data-menu="salir"><i class="fas fa-user-shield"></i> Salir</a>
                 <ul class="submenu">
                     <li class="menu-item">
-<form action="{% url 'logout' %}" method="post" style="margin: 0;">
-    {% csrf_token %}
-    <button type="submit" class="menu-link styled-button" style="background: none; border: none; color: white; text-align: left; width: 100%; padding: 10px;">
-        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-    </button>
-</form>
-
+                        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="menu-link styled-button" style="background: none; border: none; color: white; text-align: left; width: 100%; padding: 10px;">
+                                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </li>
@@ -140,5 +147,8 @@
     <p>¿Qué desea actualizar?</p>
     {% endblock %}
 </div>
+
+<!-- 👇 Bloque opcional por-vista (scripts JS adicionales) -->
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>

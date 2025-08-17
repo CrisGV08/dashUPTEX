@@ -3,15 +3,38 @@
 
 {% block title %}Titulados Histórico Actual{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/titulados_historico_actual.css' %}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
 
+<!-- DataTables (Bootstrap 5 + Responsive) -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css"/>
+
+<style>
+  @media print { .no-print { display:none !important; } }
+
+  /* Ajustes visuales de tabla */
+  #tablaGeneraciones { width: 100% !important; }
+  #tablaGeneraciones thead th { text-align: center; white-space: nowrap; }
+  #tablaGeneraciones td.num { text-align: right; }
+  /* Compactar controles */
+  .dataTables_wrapper .dataTables_filter input {
+    width: 220px; padding: .35rem .6rem; border-radius: .5rem;
+  }
+  .dataTables_wrapper .dataTables_length select {
+    padding: .25rem .4rem; border-radius: .4rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
 <div class="admin-panel">
   <h1 class="titulo">📘 Titulados Histórico Actual</h1>
-<div class="text-center my-4">
-  <button id="btnDescargarPDF" class="btn btn-danger">📄 Descargar PDF</button>
-</div>
+
+  <div class="text-center my-4 no-print">
+    <button id="btnDescargarPDF" class="btn btn-danger">📄 Descargar PDF</button>
+  </div>
 
   {% if messages %}
     {% for message in messages %}
@@ -19,14 +42,14 @@
     {% endfor %}
   {% endif %}
 
-  <div class="form-box">
+  <div class="form-box no-print">
     <form method="GET" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
       <h3>📥 Descargar Plantilla</h3>
       <button type="submit" class="btn-admin">Descargar Excel</button>
     </form>
   </div>
 
-  <div class="form-box">
+  <div class="form-box no-print">
     <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
       <h3>📤 Subir Archivo Excel</h3>
@@ -36,7 +59,7 @@
   </div>
 
   <!-- Filtros -->
-  <form method="get" class="mb-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+  <form method="get" class="mb-4 d-flex flex-wrap justify-content-center align-items-center gap-3 no-print">
     <div>
       <label for="filtroAnio" class="fw-bold">Año de Ingreso:</label>
       <select name="anio" id="filtroAnio" class="form-select">
@@ -63,19 +86,19 @@
     </div>
   </form>
 
-  <!-- Activar Choices -->
   <script>
     new Choices("#filtroAnio", { shouldSort: false });
     new Choices("#filtroCarrera", { removeItemButton: true, shouldSort: false });
   </script>
 
   {% if generaciones %}
-  <!-- 🔽 Agrupamos lo exportable en PDF -->
+  <!-- 🔽 Contenido exportable a PDF -->
   <div id="contenedorPDF">
-    <h2 class="titulo-tabla">📑 Generaciones Registradas</h2>
+    <h2 class="titulo-tabla text-center">📑 Generaciones Registradas</h2>
+
     <div class="tabla-box">
-      <table class="crud-table">
-        <thead>
+      <table id="tablaGeneraciones" class="table table-striped table-hover table-bordered table-sm align-middle nowrap" style="width:100%">
+        <thead class="table-primary">
           <tr>
             <th>Programa</th>
             <th>Ingreso</th>
@@ -97,11 +120,11 @@
             </td>
             <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
             <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
-            <td>{{ gen.total_ingreso }}</td>
-            <td>{{ gen.total_egresados }}</td>
-            <td>{{ gen.total_titulados }}</td>
-            <td>{{ gen.total_dgp }}</td>
-            <td>{{ gen.tasa_titulacion }}</td>
+            <td class="num">{{ gen.total_ingreso }}</td>
+            <td class="num">{{ gen.total_egresados }}</td>
+            <td class="num">{{ gen.total_titulados }}</td>
+            <td class="num">{{ gen.total_dgp }}</td>
+            <td class="num">{{ gen.tasa_titulacion }}</td>
           </tr>
           {% empty %}
           <tr><td colspan="8">No hay registros.</td></tr>
@@ -114,14 +137,14 @@
     <div class="graficas-box">
       <h2>📈 Gráficas de Tasa de Titulación</h2>
 
-      <div class="filtros-graficas">
+      <div class="filtros-graficas no-print">
         <label><input type="checkbox" class="filtro-grafica" value="graficaLineal" checked> Línea</label>
         <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
         <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
         <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
       </div>
 
-      <div class="filtros-carreras">
+      <div class="filtros-carreras no-print">
         <label for="selectCarreras"><strong>Filtrar por Carrera:</strong></label>
         <select id="selectCarreras" class="choices-multiple" multiple>
           {% for gen in generaciones %}
@@ -146,8 +169,6 @@
       </div>
     </div>
   </div>
-
- 
   {% endif %}
 </div>
 
@@ -155,41 +176,65 @@
 <script>
   const datosGeneraciones = {{ generaciones_json|safe }};
 </script>
+{% endblock %}
 
-<!-- Librerías externas -->
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+{% block extra_scripts %}
+<!-- Chart.js y html2pdf -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-<!-- JS personalizado -->
-<script src="{% static 'js/titulados_historico_actual.js' %}"></script>
+<!-- DataTables (Bootstrap 5 + Responsive) -->
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
-<!-- PDF export logic -->
 <script>
-  document.getElementById('btnDescargarPDF')?.addEventListener('click', async () => {
-    const canvases = document.querySelectorAll('canvas');
-    const visibilidadOriginal = [];
+  document.addEventListener('DOMContentLoaded', function () {
+    // Formateador de números (miles y 2 decimales)
+    const nf = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
 
-    canvases.forEach(c => {
-      visibilidadOriginal.push(c.style.display);
-      c.style.display = 'block';
+    $('#tablaGeneraciones').DataTable({
+      responsive: true,
+      autoWidth: false,
+      pageLength: 5,
+      lengthMenu: [[5,10,25,50,-1],[5,10,25,50,'Todos']],
+      order: [[1,'asc']], // por Ingreso
+      columnDefs: [
+        { targets: [3,4,5,6,7], className: 'num',
+          render: function (data, type) {
+            if (type === 'display' || type === 'filter') {
+              const val = parseFloat(String(data).replace(',', '.'));
+              return isNaN(val) ? data : nf.format(val);
+            }
+            return data;
+          }
+        },
+        { targets: '_all', className: 'dt-head-center' }
+      ],
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
+        searchPlaceholder: 'Buscar en la tabla...'
+      },
+      // l = length, f = filter, r = processing, t = table, i = info, p = pagination
+      dom: '<"d-flex justify-content-between align-items-center mb-2"lfr>t<"d-flex justify-content-between align-items-center mt-2"ip>'
     });
 
-    await new Promise(r => setTimeout(r, 500));
-
-    const element = document.getElementById('contenedorPDF');
-    const opt = {
-      margin: 0.5,
-      filename: 'titulados_historico_actual.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 3, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-    };
-
-    html2pdf().set(opt).from(element).save();
-
-    canvases.forEach((c, i) => c.style.display = visibilidadOriginal[i]);
+    // Exportar PDF
+    document.getElementById('btnDescargarPDF')?.addEventListener('click', () => {
+      const element = document.getElementById('contenedorPDF');
+      const opt = {
+        margin: 0.5,
+        filename: 'titulados_historico_actual.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 3, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    });
   });
 </script>
 
-{% endblock content %}
+<!-- JS personalizado -->
+<script src="{% static 'js/titulados_historico_actual.js' %}"></script>
+{% endblock %}
