@@ -1,6 +1,6 @@
 // static/js/titulados_historicos.js (solo filtros: Años + Programas)
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 0) Chequeo básico de Chart.js ---
+  // --- 0) Chequeo básico de Chart.js --- 
   if (typeof window.Chart === "undefined") {
     console.error("[TH] Chart.js no está cargado. Revisa el <script src='https://cdn.jsdelivr.net/npm/chart.js'> en la plantilla.");
     return;

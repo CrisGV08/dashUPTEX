@@ -8,143 +8,157 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
 <div class="admin-panel">
-    <h1 class="titulo">📘 Titulados Histórico Actual</h1>
+  <h1 class="titulo">📘 Titulados Histórico Actual</h1>
+<div class="text-center my-4">
+  <button id="btnDescargarPDF" class="btn btn-danger">📄 Descargar PDF</button>
+</div>
 
-    {% if messages %}
-      {% for message in messages %}
-        <div class="mensaje-exito">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
- 
-    <div class="form-box">
-        <form method="GET" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
-            <h3>📥 Descargar Plantilla</h3>
-            <button type="submit" class="btn-admin">Descargar Excel</button>
-        </form>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mensaje-exito">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="form-box">
+    <form method="GET" action="{% url 'descargar_plantilla_titulados_historico_actual' %}">
+      <h3>📥 Descargar Plantilla</h3>
+      <button type="submit" class="btn-admin">Descargar Excel</button>
+    </form>
+  </div>
+
+  <div class="form-box">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <h3>📤 Subir Archivo Excel</h3>
+      <input type="file" name="archivo_excel" required>
+      <button type="submit" class="btn-admin">Subir</button>
+    </form>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="mb-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+    <div>
+      <label for="filtroAnio" class="fw-bold">Año de Ingreso:</label>
+      <select name="anio" id="filtroAnio" class="form-select">
+        <option value="">Todos</option>
+        {% for a in anios %}
+          <option value="{{ a }}" {% if a|stringformat:"s" == anio_seleccionado %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
     </div>
 
-    <div class="form-box">
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <h3>📤 Subir Archivo Excel</h3>
-            <input type="file" name="archivo_excel" required>
-            <button type="submit" class="btn-admin">Subir</button>
-        </form>
+    <div>
+      <label for="filtroCarrera" class="fw-bold">Carreras:</label>
+      <select name="carrera" id="filtroCarrera" class="form-select" multiple>
+        {% for clave, nombre in carreras_disponibles %}
+          <option value="{{ clave }}" {% if clave in carreras_seleccionadas %}selected{% endif %}>
+            {{ nombre }} ({{ clave }})
+          </option>
+        {% endfor %}
+      </select>
     </div>
 
-<form method="get" class="mb-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
-  <div>
-    <label for="filtroAnio" class="fw-bold">Año de Ingreso:</label>
-    <select name="anio" id="filtroAnio" class="form-select">
-      <option value="">Todos</option>
-      {% for a in anios %}
-        <option value="{{ a }}" {% if a|stringformat:"s" == anio_seleccionado %}selected{% endif %}>{{ a }}</option>
-      {% endfor %}
-    </select>
-  </div>
+    <div class="d-flex align-items-end">
+      <button type="submit" class="btn btn-primary">🔎 Aplicar Filtros</button>
+    </div>
+  </form>
 
-  <div>
-    <label for="filtroCarrera" class="fw-bold">Carreras:</label>
-    <select name="carrera" id="filtroCarrera" class="form-select" multiple>
-      {% for clave, nombre in carreras_disponibles %}
-        <option value="{{ clave }}" {% if clave in carreras_seleccionadas %}selected{% endif %}>
-          {{ nombre }} ({{ clave }})
-        </option>
-      {% endfor %}
-    </select>
-  </div>
+  <!-- Activar Choices -->
+  <script>
+    new Choices("#filtroAnio", { shouldSort: false });
+    new Choices("#filtroCarrera", { removeItemButton: true, shouldSort: false });
+  </script>
 
-  <div class="d-flex align-items-end">
-    <button type="submit" class="btn btn-primary">🔎 Aplicar Filtros</button>
-  </div>
-</form>
-
-<!-- Activar Choices -->
-<script>
-  new Choices("#filtroAnio", { shouldSort: false });
-  new Choices("#filtroCarrera", { removeItemButton: true, shouldSort: false });
-</script>
-
-
-
+  {% if generaciones %}
+  <!-- 🔽 Agrupamos lo exportable en PDF -->
+  <div id="contenedorPDF">
     <h2 class="titulo-tabla">📑 Generaciones Registradas</h2>
     <div class="tabla-box">
-        <table class="crud-table">
-            <thead>
-                <tr>
-                    <th>Programa</th>
-                    <th>Ingreso</th>
-                    <th>Egreso</th>
-                    <th>Ingreso Total</th>
-                    <th>Egresados</th>
-                    <th>Titulados</th>
-                    <th>Registrados DGP</th>
-                    <th>Tasa de Titulación (%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for gen in generaciones %}
-                <tr>
-                    <td>
-                        {% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}
-                        {% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}
-                        {% else %}Sin programa{% endif %}
-                    </td>
-                    <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
-                    <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
-                    <td>{{ gen.total_ingreso }}</td>
-                    <td>{{ gen.total_egresados }}</td>
-                    <td>{{ gen.total_titulados }}</td>
-                    <td>{{ gen.total_dgp }}</td>
-                    <td>{{ gen.tasa_titulacion }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="8">No hay registros.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+      <table class="crud-table">
+        <thead>
+          <tr>
+            <th>Programa</th>
+            <th>Ingreso</th>
+            <th>Egreso</th>
+            <th>Ingreso Total</th>
+            <th>Egresados</th>
+            <th>Titulados</th>
+            <th>Registrados DGP</th>
+            <th>Tasa de Titulación (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for gen in generaciones %}
+          <tr>
+            <td>
+              {% if gen.programa_antiguo %}{{ gen.programa_antiguo.nombre }}
+              {% elif gen.programa_nuevo %}{{ gen.programa_nuevo.nombre }}
+              {% else %}Sin programa{% endif %}
+            </td>
+            <td>{{ gen.fecha_ingreso|date:"M-Y" }}</td>
+            <td>{{ gen.fecha_egreso|date:"M-Y" }}</td>
+            <td>{{ gen.total_ingreso }}</td>
+            <td>{{ gen.total_egresados }}</td>
+            <td>{{ gen.total_titulados }}</td>
+            <td>{{ gen.total_dgp }}</td>
+            <td>{{ gen.tasa_titulacion }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8">No hay registros.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
 
-    {% if generaciones %}
+    <!-- Gráficas -->
     <div class="graficas-box">
-        <h2>📈 Gráficas de Tasa de Titulación</h2>
+      <h2>📈 Gráficas de Tasa de Titulación</h2>
 
-        <div class="filtros-graficas">
-            <label><input type="checkbox" class="filtro-grafica" value="graficaLineal" checked> Línea</label>
-            <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
-            <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
-            <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
-        </div>
+      <div class="filtros-graficas">
+        <label><input type="checkbox" class="filtro-grafica" value="graficaLineal" checked> Línea</label>
+        <label><input type="checkbox" class="filtro-grafica" value="graficaBarras" checked> Barras</label>
+        <label><input type="checkbox" class="filtro-grafica" value="graficaPastel" checked> Pastel</label>
+        <label><input type="checkbox" class="filtro-grafica" value="graficaGauss" checked> Gaussiana</label>
+      </div>
 
-        <div class="filtros-carreras">
-            <label for="selectCarreras"><strong>Filtrar por Carrera:</strong></label>
-            <select id="selectCarreras" class="choices-multiple" multiple>
-                {% for gen in generaciones %}
-                    {% if gen.programa_antiguo %}
-                        <option value="{{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
-                            {{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
-                        </option>
-                    {% elif gen.programa_nuevo %}
-                        <option value="{{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
-                            {{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
-                        </option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
+      <div class="filtros-carreras">
+        <label for="selectCarreras"><strong>Filtrar por Carrera:</strong></label>
+        <select id="selectCarreras" class="choices-multiple" multiple>
+          {% for gen in generaciones %}
+            {% if gen.programa_antiguo %}
+              <option value="{{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                {{ gen.programa_antiguo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+              </option>
+            {% elif gen.programa_nuevo %}
+              <option value="{{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})">
+                {{ gen.programa_nuevo.nombre }} ({{ gen.fecha_ingreso|date:'Y' }})
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
 
-        <div class="graficas-container">
-            <canvas id="graficaLineal" class="grafica"></canvas>
-            <canvas id="graficaBarras" class="grafica"></canvas>
-            <canvas id="graficaPastel" class="grafica"></canvas>
-            <canvas id="graficaGauss" class="grafica"></canvas>
-        </div>
+      <div class="graficas-container">
+        <canvas id="graficaLineal" class="grafica"></canvas>
+        <canvas id="graficaBarras" class="grafica"></canvas>
+        <canvas id="graficaPastel" class="grafica"></canvas>
+        <canvas id="graficaGauss" class="grafica"></canvas>
+      </div>
+    </div>
+  </div>
 
- 
-    {% endif %}
+  <!-- 🔘 Botón PDF -->
+  <div style="text-align: center; margin-top: 30px;">
+    <button id="btnDescargarPDF" class="btn btn-danger">
+      📄 Descargar Tabla + Gráficas en PDF
+    </button>
+  </div>
+  {% endif %}
 </div>
+
+<!-- Datos para JS -->
 <script>
-    const datosGeneraciones = {{ generaciones_json|safe }};
+  const datosGeneraciones = {{ generaciones_json|safe }};
 </script>
 
 <!-- Librerías externas -->
@@ -155,20 +169,32 @@
 <!-- JS personalizado -->
 <script src="{% static 'js/titulados_historico_actual.js' %}"></script>
 
+<!-- PDF export logic -->
 <script>
-    // Activar Choices.js
-    const selectCarreras = document.getElementById('selectCarreras');
-    if (selectCarreras) {
-        new Choices(selectCarreras, {
-            removeItemButton: true,
-            shouldSort: false,
-            placeholderValue: 'Seleccione una o más carreras'
-        });
-    }
+  document.getElementById('btnDescargarPDF')?.addEventListener('click', async () => {
+    const canvases = document.querySelectorAll('canvas');
+    const visibilidadOriginal = [];
 
+    canvases.forEach(c => {
+      visibilidadOriginal.push(c.style.display);
+      c.style.display = 'block';
+    });
 
+    await new Promise(r => setTimeout(r, 500));
+
+    const element = document.getElementById('contenedorPDF');
+    const opt = {
+      margin: 0.5,
+      filename: 'titulados_historico_actual.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 3, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+
+    canvases.forEach((c, i) => c.style.display = visibilidadOriginal[i]);
+  });
 </script>
 
 {% endblock content %}
-
-
