@@ -171,3 +171,38 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+
+
+document.getElementById('btnDescargarPDF').addEventListener('click', async () => {
+    const element = document.getElementById('contenedorPDF');
+    if (!element) {
+        alert("❌ No se encontró el contenedor PDF");
+        return;
+    }
+
+    const canvases = element.querySelectorAll('canvas');
+    const originalStyles = [];
+
+    canvases.forEach(canvas => {
+        originalStyles.push(canvas.style.display);
+        canvas.style.display = 'block';  // Mostrar todos
+    });
+
+    // Espera a que se dibujen bien
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const opt = {
+        margin: 0.5,
+        filename: 'titulados_historico_actual.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 3, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Restaurar estilos después de exportar
+        canvases.forEach((canvas, i) => {
+            canvas.style.display = originalStyles[i];
+        });
+    });
+});

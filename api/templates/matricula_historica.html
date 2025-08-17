@@ -9,6 +9,17 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
 <h2 class="text-center">📊 Matrícula Histórica</h2>
+ 
+<form method="get" class="mb-4 text-center">
+    <label for="anio" class="fw-bold">🔎 Filtrar por Año:</label>
+    <select name="anio" id="anio" class="form-select d-inline-block w-auto ms-2" onchange="this.form.submit()">
+        <option value="">📅 Todos</option>
+        {% for a in anios %}
+            <option value="{{ a }}" {% if anio_seleccionado == a|stringformat:"s" %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+    </select>
+</form>
+
 
 <!-- Formulario -->
 <form method="post">

@@ -18,6 +18,17 @@
 <div class="mt-4 text-center">
     <button id="btnDescargarPDF" class="btn-descargar">🧾 Descargar PDF con Gráficas</button>
 </div>
+<form method="get" class="mb-4">
+  <label for="anio">🔎 Filtrar por Año:</label>
+  <select name="anio" id="anio" class="form-select" onchange="this.form.submit()">
+      <option value="">-- Mostrar Todos --</option>
+      {% for a in anios %}
+          <option value="{{ a }}" {% if anio_seleccionado == a|stringformat:"s" %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+  </select>
+</form>
+
+
 
 <!-- Tabla editable con formulario -->
 <form method="POST" id="tabla-form">
