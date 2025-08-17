@@ -33,22 +33,25 @@ def titulados_tsu_inge_view(request):
       - buscar=...   (opcional, por NOMBRE icontains)
     """
     nivel = (request.GET.get("nivel") or "TSU").upper()
-    nivel = "TSU" if nivel == "TSU" else "ING"  # normaliza a TSU/ING
+    nivel = "TSU" if nivel == "TSU" else "ING"
 
     # -------- base: queryset ordenado --------
     qs = (
         TituladosHistoricos.objects
         .select_related("programa_antiguo", "programa_nuevo")
-        .order_by("anio_ingreso", "anio_egreso", "programa_antiguo__id", "programa_nuevo__id")
+        .order_by(
+            "anio_ingreso", "anio_egreso",
+            "programa_antiguo__id", "programa_nuevo__id"
+        )
     )
 
     # -------- filtro por nivel --------
-    # Opción A: si existiera un campo 'semestre' en el modelo
     if _has_field(TituladosHistoricos, "semestre"):
+        # Si tu modelo ya tiene el campo, úsalo directamente
         semestre_objetivo = 5 if nivel == "TSU" else 10
         qs = qs.filter(semestre=semestre_objetivo)
     else:
-        # Opción B (robusta): usar catálogo ProgramaEducativo (id -> tipo)
+        # Fallback robusto con el catálogo ProgramaEducativo
         tec_ids = set(
             ProgramaEducativo.objects
             .filter(tipo__iexact="TECNICO")
@@ -62,13 +65,16 @@ def titulados_tsu_inge_view(request):
 
         if tec_ids or ing_ids:
             qs = qs.annotate(
-                prog_id=Coalesce(F("programa_antiguo__id"), F("programa_nuevo__id"))
+                prog_id=Coalesce(
+                    F("programa_antiguo__id"),
+                    F("programa_nuevo__id"),
+                )
             )
             if nivel == "TSU" and tec_ids:
                 qs = qs.filter(prog_id__in=tec_ids)
             elif nivel == "ING" and ing_ids:
                 qs = qs.filter(prog_id__in=ing_ids)
-        # Si el catálogo está vacío, no se filtra por nivel para evitar pantalla en blanco.
+        # Si no hay catálogo, no filtramos por nivel para no vaciar la página.
 
     # -------- filtros UI (años / programas / búsqueda) --------
     anios = request.GET.getlist("anio")
@@ -91,31 +97,32 @@ def titulados_tsu_inge_view(request):
             Q(programa_nuevo__nombre__icontains=buscar)
         )
 
+    # -------- anotación común (reutilizable) --------
+    qs_named = qs.annotate(
+        programa_nombre=Coalesce(
+            F("programa_antiguo__nombre"),
+            F("programa_nuevo__nombre"),
+            V("SIN PROGRAMA"),
+        )
+    )
+
     # -------- paginación --------
     try:
         per_page = max(1, min(500, int(request.GET.get("per_page", 50))))
     except Exception:
         per_page = 50
     page_number = request.GET.get("page", 1)
-    paginator = Paginator(qs, per_page)
+    paginator = Paginator(qs_named, per_page)
     registros_page = paginator.get_page(page_number)
 
-    # -------- catálogos (sobre el conjunto ya filtrado por nivel/filtros) --------
+    # -------- catálogos (ya con nivel/filtros aplicados) --------
     cat_anios = (
         qs.values_list("anio_ingreso", flat=True)
           .distinct().order_by("anio_ingreso")
     )
     cat_programas = (
-        qs.annotate(
-            programa_nombre=Coalesce(
-                F("programa_antiguo__nombre"),
-                F("programa_nuevo__nombre"),
-                V("SIN PROGRAMA"),
-            )
-        )
-        .values_list("programa_nombre", flat=True)
-        .distinct()
-        .order_by("programa_nombre")
+        qs_named.values_list("programa_nombre", flat=True)
+                .distinct().order_by("programa_nombre")
     )
 
     # (opcionales) catálogos globales
@@ -124,12 +131,7 @@ def titulados_tsu_inge_view(request):
 
     # -------- datos para gráficas --------
     datos_qs = (
-        qs.annotate(
-            programa_nombre=Coalesce(
-                F("programa_antiguo__nombre"),
-                F("programa_nuevo__nombre"),
-                V("SIN PROGRAMA"),
-            ),
+        qs_named.annotate(
             total_tit=Coalesce(F("titulados_hombres"), V(0)) + Coalesce(F("titulados_mujeres"), V(0)),
             total_dgp_calc=Coalesce(F("registrados_dgp_h"), V(0)) + Coalesce(F("registrados_dgp_m"), V(0)),
         )
@@ -157,7 +159,7 @@ def titulados_tsu_inge_view(request):
     ]
 
     return render(request, "titulados_tsu_inge.html", {
-        "nivel": nivel,                         # 'TSU' o 'ING' para el toggle
+        "nivel": nivel,                         # 'TSU' o 'ING' (toggle)
         "registros": registros_page,            # tabla/paginación
         "paginator": paginator,
         "page_obj": registros_page,

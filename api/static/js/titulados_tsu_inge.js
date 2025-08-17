@@ -34,9 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const cPie  = document.getElementById("chPie");
   const cGauss= document.getElementById("chGauss");
 
-  // ✨ Importante: NO setear height/width del canvas por JS.
-  // La altura la da .chart-box (CSS). Chart.js se adapta al contenedor.
-
   if (!base.length) {
     if (cont) {
       const n = document.createElement("div");
@@ -108,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const commonXY = (xLabel,yLabel,showValues=true)=>({
     responsive:true,
-    maintainAspectRatio:false,      // <- clave para respetar la altura del contenedor
+    maintainAspectRatio:false,
     animation:false,
     plugins:{
       legend:{ position:"bottom" },
@@ -131,7 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!c) return;
         const canvas = c.canvas;
         c.destroy();
-        // limpia medidas residuales colocadas por Chart.js
         canvas.removeAttribute("width");
         canvas.removeAttribute("height");
         canvas.style.removeProperty("width");
@@ -220,11 +216,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // --- 5) Resize robusto (evita “estiramientos”) ---
+  // --- 5) Resize robusto ---
   const ro = new ResizeObserver(() => {
     [chB,chL,chP,chG].forEach(ch => ch && ch.resize());
   });
-  // Observa los wrappers .chart-box (padres directos de cada canvas)
   [cBar,cLine,cPie,cGauss].forEach(cv => cv?.parentElement && ro.observe(cv.parentElement));
 
   // --- 6) Eventos ---
@@ -249,4 +244,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- 7) Primer render ---
   render();
+
+  // --- 8) Exportar PDF (con carga dinámica del CDN) ---
+  (function () {
+    const BTN_ID   = "btnDescargarPDF";
+    const TARGETID = "seccionDescargable";
+    const CDN_URL  = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    const btn = document.getElementById(BTN_ID);
+    if (!btn) return;
+
+    function ensureHtml2Pdf() {
+      return new Promise((resolve, reject) => {
+        if (typeof window.html2pdf !== "undefined") return resolve();
+        const s = document.createElement("script");
+        s.src = CDN_URL;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("No se pudo cargar html2pdf"));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function exportar() {
+      const nodo = document.getElementById(TARGETID);
+      if (!nodo) return;
+
+      // Bloquea botón para evitar dobles clics
+      const prevText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = "Generando PDF...";
+
+      // Asegura layout final de charts
+      if (window.Chart) {
+        nodo.querySelectorAll("canvas").forEach(cv => {
+          const inst = Chart.getChart(cv);
+          if (inst) inst.resize();
+        });
+      }
+
+      const prevBg = nodo.style.backgroundColor;
+      nodo.style.backgroundColor = "#ffffff";
+      await new Promise(r => requestAnimationFrame(r)); // espera un frame
+
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `titulados_${(window.__NIVEL_TI__ || 'tsu_ing')}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      };
+
+      try {
+        await ensureHtml2Pdf();
+        await window.html2pdf().set(opt).from(nodo).save();
+      } catch (e) {
+        console.error("[TI] Error al generar PDF:", e);
+        alert("No se pudo generar el PDF. Revisa la consola para más detalles.");
+      } finally {
+        nodo.style.backgroundColor = prevBg;
+        btn.disabled = false;
+        btn.textContent = prevText;
+      }
+    }
+
+    btn.addEventListener("click", exportar);
+  })();
+
 });
