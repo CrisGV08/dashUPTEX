@@ -56,47 +56,17 @@ class ProgramaEducativoNuevo(models.Model):
 
 
 
-
-from django.db import models
-from django.db.models import Q
-
 class ProgramaEducativo(models.Model):
-    TIPO_CHOICES = (('TECNICO', 'Técnico'), ('INGENIERO', 'Ingeniero'))
+    TIPO_CHOICES = (
+        ('TECNICO', 'Técnico'),
+        ('INGENIERO', 'Ingeniero'),
+    )
 
-    id = models.CharField(max_length=10, primary_key=True)
+    id = models.CharField(max_length=10, primary_key=True)  # p.ej. 'ISC', 'TSUA'
     tipo = models.CharField(max_length=12, choices=TIPO_CHOICES)
 
-    # Una de estas dos se llena; la otra queda en blanco (NULL)
-    antiguo = models.OneToOneField(
-        'ProgramaEducativoAntiguo',
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='programa_unificado'
-    )
-    nuevo = models.OneToOneField(
-        'ProgramaEducativoNuevo',
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='programa_unificado'
-    )
-
-    class Meta:
-        constraints = [
-            # EXACTAMENTE una referencia debe estar presente (XOR)
-            models.CheckConstraint(
-                name='pe_exatamente_una_referencia',
-                check=(
-                    (Q(antiguo__isnull=False) & Q(nuevo__isnull=True)) |
-                    (Q(antiguo__isnull=True) & Q(nuevo__isnull=False))
-                ),
-            ),
-        ]
-
     def __str__(self):
-        origen = 'ANTIGUO' if self.antiguo_id else 'NUEVO'
-        return f"{self.id} - {self.tipo} - {origen}"
-
-
+        return f"{self.id} - {self.tipo}"
 
 
 class NuevoIngreso(models.Model):
