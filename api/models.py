@@ -11,7 +11,7 @@ class Usuarios(models.Model):
         verbose_name = "Administrador"
         verbose_name_plural = "Administradores"
 
-
+#hola#
 class CicloEscolar(models.Model):
     anio = models.IntegerField(primary_key=True)
 
