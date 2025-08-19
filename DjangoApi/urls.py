@@ -92,7 +92,7 @@ from api.Administrador.titulados_historicos_view import (
     titulados_historicos_view,
     descargar_plantilla_titulados_historicos
 )
-from api.Administrador.titulados_tsu_inge_view import titulados_tsu_inge_view
+from api.Administrador import titulados_tsu_inge_view as tti
 from api.login.login_views import login_view, logout_view
 
 
@@ -182,7 +182,17 @@ urlpatterns = [
     path('administrador/titulados-historicos/', titulados_historicos_view, name='titulados_historicos'),
     path('administrador/titulados-historicos/descargar-plantilla/', descargar_plantilla_titulados_historicos, name='descargar_plantilla_titulados_historicos'),
     
-    path('administrador/titulados-tsu-ingenieria/', titulados_tsu_inge_view, name='titulados_tsu_inge'),
+    # Página
+    path('administrador/titulados-tsu-ingenieria/', tti.titulados_tsu_inge_view, name='titulados_tsu_inge'),
+
+    # Descargas separadas
+    path('administrador/titulados-tsu/descargar-plantilla/', tti.descargar_plantilla_titulados_tsu, name='descargar_plantilla_titulados_tsu'),
+    path('administrador/titulados-ing/descargar-plantilla/', tti.descargar_plantilla_titulados_ing, name='descargar_plantilla_titulados_ing'),
+
+    # Cargas separadas
+    path('administrador/titulados-tsu/subir-excel/', tti.subir_titulados_tsu_excel, name='subir_titulados_tsu_excel'),
+    path('administrador/titulados-ing/subir-excel/', tti.subir_titulados_ing_excel, name='subir_titulados_ing_excel'),
+
     ]
 
 
