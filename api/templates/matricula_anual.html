@@ -11,15 +11,20 @@
   <h2 class="titulo-vista">📗 Matrícula Anual</h2>
 
   <!-- 🎯 Filtros -->
-  <div class="filtros">
+  <form method="get" class="filtros">
     <div class="form-group">
       <label for="filtroAnio">Año:</label>
-      <select id="filtroAnio"></select>
+      <select name="anio" id="filtroAnio">
+        <option value="Todos">Todos</option>
+        {% for anio in anios_lista %}
+          <option value="{{ anio }}">{{ anio }}</option>
+        {% endfor %}
+      </select>
     </div>
 
     <div class="form-group">
       <label for="filtroCuatrimestre">Cuatrimestre:</label>
-      <select id="filtroCuatrimestre">
+      <select name="cuatrimestre" id="filtroCuatrimestre">
         <option value="Todos">Todos</option>
         <option value="Enero - Abril">Enero - Abril</option>
         <option value="Mayo - Agosto">Mayo - Agosto</option>
@@ -29,9 +34,10 @@
 
     <div class="form-group">
       <label for="filtroPrograma">Tipo de Programa:</label>
-      <select id="filtroPrograma">
-        <option value="antiguo">Antiguo</option>
-        <option value="nuevo">Nuevo</option>
+      <select name="tipo_programa" id="filtroPrograma">
+        <option value="todos" {% if tipo_programa == "todos" %}selected{% endif %}>Todos</option>
+        <option value="antiguo" {% if tipo_programa == "antiguo" %}selected{% endif %}>Antiguo</option>
+        <option value="nuevo" {% if tipo_programa == "nuevo" %}selected{% endif %}>Nuevo</option>
       </select>
     </div>
 
@@ -40,10 +46,11 @@
       <select id="filtroCarreras" multiple></select>
     </div>
 
-    <button id="btnDescargarPDF" class="btn-pdf">📥 Descargar PDF</button>
-  </div>
+    <button type="submit" class="btn-admin">Aplicar filtros</button>
+    <button id="btnDescargarPDF" type="button" class="btn-pdf">📥 Descargar PDF</button>
+  </form>
 
-  <!-- 📊 Tabla por año -->
+  <!-- 📊 Tabla -->
   <div class="tabla-container">
     <h4>📊 Detalle por Año</h4>
     <table class="tabla-matricula">
@@ -78,7 +85,6 @@
        data-nuevos='{{ data_nuevos_json|safe }}'
        data-carreras-antiguos='{{ programas_antiguos_lista|safe }}'
        data-carreras-nuevos='{{ programas_nuevos_lista|safe }}'>
-
     <canvas id="graficaBarras"></canvas>
     <canvas id="graficaLinea"></canvas>
     <canvas id="graficaPastel"></canvas>

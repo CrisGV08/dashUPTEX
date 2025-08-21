@@ -10,7 +10,17 @@
 <div class="admin-panel">
   <h2 class="titulo-principal">📘 Evaluación Docente Concentrado</h2>
 
-  <!-- Filtros -->
+  <!-- Filtro por Año construido en el front (igual que examen admisión) -->
+  <form method="get" id="formAnio"
+        data-anios='{{ anios_validos_json|safe }}'
+        data-actual='{{ anio_sel }}'
+        class="mb-3 d-flex align-items-center gap-2 ocultar-en-pdf">
+    <label class="form-label mb-0" for="anioSel">Año:</label>
+    <select id="anioSel" name="anio" class="form-select" style="max-width: 160px;"></select>
+    <button class="btn btn-primary">Aplicar</button>
+  </form>
+
+  <!-- Filtros de gráficas -->
   <div class="filtros ocultar-en-pdf">
     <h5>Filtros</h5>
     <div class="form-group">
@@ -43,7 +53,7 @@
     <table class="table">
       <thead>
         <tr>
-          <th>Ciclo</th>
+          <th>Año</th>
           <th>Promedio</th>
         </tr>
       </thead>
@@ -102,6 +112,8 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<!-- Datos para JS principal (solo el año filtrado) -->
 <script>
   const datosEvaluacion = [
     {% for d in datos %}
@@ -109,6 +121,38 @@
     {% endfor %}
   ];
 </script>
-<script src="{% static 'js/evaluacion_docente_concentrado_usuario.js' %}"></script>
 
+<!-- Construcción dinámica del select de Años -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formAnio');
+    const sel  = document.getElementById('anioSel');
+    if (!form || !sel) return;
+
+    let anios = [];
+    try { anios = JSON.parse(form.dataset.anios || '[]'); } catch (_) { anios = []; }
+
+    if (!Array.isArray(anios) || anios.length === 0) {
+      const de = Array.isArray(window.datosEvaluacion) ? window.datosEvaluacion : [];
+      const candidatos = de.map(d => String(d.ciclo)).filter(Boolean);
+      anios = [...new Set(candidatos)].sort((a,b)=>(+a)-(+b));
+    }
+
+    if (anios.length === 0) { anios = [String(form.dataset.actual || '2025')]; }
+
+    const actual = String(form.dataset.actual || '');
+    sel.innerHTML = '';
+    anios.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      if (a === actual) opt.selected = true;
+      sel.appendChild(opt);
+    });
+
+    sel.addEventListener('change', () => form.submit());
+  });
+</script>
+
+<script src="{% static 'js/evaluacion_docente_concentrado_usuario.js' %}"></script>
 {% endblock %}

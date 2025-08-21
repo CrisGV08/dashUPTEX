@@ -11,8 +11,10 @@ from django.db.models import Sum, F
 
 from api.models import (
     CicloEscolar, Periodo, CicloPeriodo,
-    ProgramaEducativoAntiguo, MatriculaPorCuatrimestre
+    ProgramaEducativoAntiguo, ProgramaEducativoNuevo,  # ← AÑADIDO
+    MatriculaPorCuatrimestre
 )
+
 
 def importar_matricula_cuatrimestres(request):
     if 'usuario_id' not in request.session:
@@ -75,22 +77,37 @@ def importar_matricula_cuatrimestres(request):
     print(f"✅ {registros} registros cargados en MatriculaPorCuatrimestre.")
     return redirect("matricula_por_cuatrimestre")
 
+
 def matricula_por_cuatrimestre_view(request):
     ciclos = CicloPeriodo.objects.select_related('ciclo', 'periodo').order_by('ciclo__anio', 'periodo__clave')
-    programas = ProgramaEducativoAntiguo.objects.all().order_by('nombre')
+
+    # nuevo filtro tipo_programa
+    tipo_programa = request.GET.get('tipo_programa', 'antiguo')  # default: antiguo
+    if tipo_programa == 'nuevo':
+        programas = ProgramaEducativoNuevo.objects.all().order_by('nombre')
+    else:
+        programas = ProgramaEducativoAntiguo.objects.all().order_by('nombre')
 
     filtro_ciclo = request.GET.get('ciclo')
     filtro_programa = request.GET.get('programa')
 
     registros = MatriculaPorCuatrimestre.objects.select_related('ciclo_periodo', 'programa_antiguo')
+
     if filtro_ciclo and filtro_ciclo != "Todos":
         registros = registros.filter(ciclo_periodo__id=filtro_ciclo)
+
     if filtro_programa and filtro_programa != "Todos":
-        registros = registros.filter(programa_antiguo__id=filtro_programa)
+        if tipo_programa == 'nuevo':
+            registros = registros.filter(programa_nuevo__id=filtro_programa)
+        else:  # antiguo
+            registros = registros.filter(programa_antiguo__id=filtro_programa)
 
     tabla = [
         {
-            'programa': r.programa_antiguo.nombre if r.programa_antiguo else '',
+            'programa': (
+                r.programa_antiguo.nombre if r.programa_antiguo else
+                (r.programa_nuevo.nombre if hasattr(r, 'programa_nuevo') and r.programa_nuevo else '')
+            ),
             'periodo': f"{r.ciclo_periodo.periodo.nombre} {r.ciclo_periodo.ciclo.anio}",
             'cantidad': r.cantidad
         }
@@ -112,9 +129,11 @@ def matricula_por_cuatrimestre_view(request):
         'programas': programas,
         'filtro_ciclo': filtro_ciclo,
         'filtro_programa': filtro_programa,
+        'tipo_programa': tipo_programa,
         'tabla': tabla,
         'datos_grafica': json.dumps(datos_grafica)
     })
+
 
 def descargar_plantilla_matricula_cuatrimestre(request):
     ciclo_periodo = CicloPeriodo.objects.order_by('-id').first()
@@ -129,6 +148,7 @@ def descargar_plantilla_matricula_cuatrimestre(request):
         writer.writerow([ciclo_periodo.id if ciclo_periodo else '', programa.id, 0])
 
     return response
+
 
 def subir_csv_matricula_cuatrimestre(request):
     if request.method == 'POST' and request.FILES.get('archivo_csv'):
