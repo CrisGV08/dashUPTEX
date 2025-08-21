@@ -37,11 +37,14 @@
 </div>
 
 <!-- ✅ Mensajes -->
-{% if mensaje %}
+{% if messages %}
   <div class="container-fluid mt-3">
-    <div class="alert alert-success text-center">{{ mensaje|safe }}</div>
+    {% for m in messages %}
+      <div class="alert alert-{{ m.tags }} text-center">{{ m }}</div>
+    {% endfor %}
   </div>
 {% endif %}
+
 
 <!-- 📦 Contenido -->
 <div class="container-fluid page-content">
@@ -52,61 +55,77 @@
       <form method="GET" id="filter-form">
         <div class="row g-3 align-items-end">
 
-          <!-- Ciclo (chips) -->
-          <div class="col-lg-4">
-            <label class="form-label fw-semibold d-block mb-1">
-              <i class="far fa-calendar me-1"></i> Ciclo
-            </label>
+<!-- Ciclo (chips multi-select) -->
+<div class="col-lg-4">
+  <label class="form-label fw-semibold d-block mb-1">
+    <i class="far fa-calendar me-1"></i> Ciclo
+  </label>
 
-            <!-- lo que lee tu backend -->
-            <input type="hidden" name="filtro_anio" id="filtroAnioHidden"
-                   value="{{ request.GET.filtro_anio|default:'Todos' }}">
+  <div class="btn-check-group cycle-scroll mb-2" id="ciclosChips">
+    <!-- Todos -->
+    <input type="checkbox" class="form-check-input ciclo-chip"
+           id="ciclo-Todos" value="Todos" name="ciclos[]"
+           {% if 'Todos' in filtros_aplicados.ciclos or not filtros_aplicados.ciclos %}checked{% endif %}>
+    <label class="btn btn-light btn-sm" for="ciclo-Todos">Todos</label>
 
-            <div class="btn-check-group cycle-scroll mb-2" id="ciclosChips">
-              <!-- Todos -->
-              <input type="radio" name="anioChip" id="anio-Todos" value="Todos"
-                     {% if request.GET.filtro_anio == 'Todos' or not request.GET.filtro_anio %}checked{% endif %}>
-              <label class="btn btn-light btn-sm" for="anio-Todos">Todos</label>
+    <!-- Ciclos disponibles (ej. '2025 - E-A') -->
+    {% for ciclo_txt in anios %}
+      <input type="checkbox" class="form-check-input ciclo-chip"
+             id="ciclo-{{ forloop.counter }}" value="{{ ciclo_txt }}" name="ciclos[]"
+             {% if ciclo_txt in filtros_aplicados.ciclos %}checked{% endif %}>
+      <label class="btn btn-light btn-sm" for="ciclo-{{ forloop.counter }}">{{ ciclo_txt }}</label>
+    {% endfor %}
+  </div>
 
-              <!-- Años -->
-              {% for anio in anios %}
-                <input type="radio" name="anioChip" id="anio-{{ anio }}" value="{{ anio }}"
-                       {% if anio == request.GET.filtro_anio %}checked{% endif %}>
-                <label class="btn btn-light btn-sm" for="anio-{{ anio }}">{{ anio }}</label>
-              {% endfor %}
-            </div>
+  <!-- Botones de acción -->
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-select-all">
+      Seleccionar todos
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-clear">
+      Limpiar
+    </button>
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="fas fa-filter"></i><span>Aplicar</span>
+    </button>
+  </div>
+</div>
 
-            <!-- Botones de acción (únicos) -->
-            <div class="filter-actions">
-              <button type="submit" class="btn btn-primary btn-sm" id="aplicarFiltros">
-                <i class="fas fa-filter"></i><span>Aplicar filtros</span>
-              </button>
-              <!-- Reset sin JS: vuelve a la ruta sin querystring -->
-              <a class="btn btn-outline-secondary btn-sm" id="resetFiltrosLink" href="{{ request.path }}">
-                <i class="fas fa-sync-alt"></i><span>Reset</span>
-              </a>
-            </div>
-          </div>
 
           <!-- Tipo de gráficas -->
-          <div class="col-lg-4">
-            <label class="form-label fw-semibold d-block">
-              <i class="fas fa-chart-bar me-1"></i> Gráficas
-            </label>
-            <div class="btn-check-group">
-              <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
-              <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
+  <div class="col-lg-4">
+    <label class="form-label fw-semibold d-block">
+      <i class="fas fa-chart-bar me-1"></i> Gráficas
+    </label>
 
-              <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
-              <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
+    <div class="btn-check-group">
+      <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+      <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
 
-              <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
-              <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
+      <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+      <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
 
-              <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
-              <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
-            </div>
-          </div>
+      <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+      <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
+
+      <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+      <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
+    </div>
+
+  <!-- 🔹 Botonera para aplicar el filtro de gráficas -->
+  <div class="d-flex gap-2 mt-2">
+    <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-all">
+      Seleccionar todas
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-none">
+      Limpiar
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" id="aplicarGraficas">
+      <i class="fas fa-filter me-1"></i> Aplicar gráficas
+    </button>
+  </div>
+</div>
+
 
           <!-- Programas -->
           <div class="col-lg-4">
