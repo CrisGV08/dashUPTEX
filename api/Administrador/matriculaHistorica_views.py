@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from collections import defaultdict
+from django.db import transaction
 from api.models import CicloPeriodo, ProgramaEducativoAntiguo, ProgramaEducativoNuevo, MatriculaHistorica
 import json
 
@@ -18,6 +20,40 @@ def matricula_historica(request):
     programas_antiguos = list(ProgramaEducativoAntiguo.objects.all())
     programas_nuevos = list(ProgramaEducativoNuevo.objects.all())
 
+    # === GUARDAR DATOS SI HAY POST ===
+    if request.method == "POST":
+        try:
+            with transaction.atomic():
+                for ciclo in ciclos:
+                    for programa in programas_antiguos:
+                        input_name = f"celda_antiguo_{programa.id}_{ciclo.id}"
+                        valor = request.POST.get(input_name)
+                        if valor is not None:
+                            cantidad = int(valor) if valor.strip() != "" else 0
+                            MatriculaHistorica.objects.update_or_create(
+                                ciclo_periodo=ciclo,
+                                programa_antiguo=programa,
+                                defaults={"cantidad": cantidad}
+                            )
+
+                    for programa in programas_nuevos:
+                        input_name = f"celda_nuevo_{programa.id}_{ciclo.id}"
+                        valor = request.POST.get(input_name)
+                        if valor is not None:
+                            cantidad = int(valor) if valor.strip() != "" else 0
+                            MatriculaHistorica.objects.update_or_create(
+                                ciclo_periodo=ciclo,
+                                programa_nuevo=programa,
+                                defaults={"cantidad": cantidad}
+                            )
+
+            messages.success(request, "✅ Los datos fueron guardados exitosamente.")
+            return redirect('matricula_historica')  # Asegúrate que esta sea la URL correcta
+
+        except Exception as e:
+            messages.error(request, f"❌ Error al guardar los datos: {e}")
+
+    # === CARGAR DATOS PARA VISUALIZACIÓN ===
     registros = MatriculaHistorica.objects.all()
     datos = defaultdict(dict)
     totales_por_ciclo = defaultdict(int)
@@ -41,7 +77,6 @@ def matricula_historica(request):
         for cp in ciclos
     }
 
-    # Obtener años únicos disponibles
     todos_ciclos = CicloPeriodo.objects.select_related("ciclo").all()
     anios_disponibles = sorted(set(cp.ciclo.anio for cp in todos_ciclos))
 
