@@ -11,7 +11,7 @@
   <h2 class="titulo-vista">📘 Matrícula por Cuatrimestre</h2>
 
   <!-- Filtros -->
-  <form method="get" class="filtros">
+  <form method="get" class="filtros" id="formFiltros">
     <div class="filtro-item">
       <label for="filtroCiclo">Ciclo:</label>
       <select name="ciclo" id="filtroCiclo">
@@ -21,6 +21,15 @@
             {{ c.ciclo.anio }} - {{ c.periodo.clave }}
           </option>
         {% endfor %}
+      </select>
+    </div>
+
+    <!-- NUEVO: Tipo de Programa -->
+    <div class="filtro-item">
+      <label for="filtroTipoPrograma">Tipo de Programa:</label>
+      <select name="tipo_programa" id="filtroTipoPrograma">
+        <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguo</option>
+        <option value="nuevo"   {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevo</option>
       </select>
     </div>
 
@@ -74,4 +83,53 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{% static 'js/matricula_por_cuatrimestre.js' %}"></script>
+
+<!-- JS: repoblar “Programa” al cambiar “Tipo de Programa”, sin recargar -->
+<script>
+  // IMPORTANTÍSIMO:
+  // En la view, envía:
+  // 'cat_antiguos': json.dumps(list(ProgramaEducativoAntiguo.objects.values('id','nombre').order_by('nombre')))
+  // 'cat_nuevos':   json.dumps(list(ProgramaEducativoNuevo.objects.values('id','nombre').order_by('nombre')))
+  // y también 'tipo_programa' actual.
+
+  // Leemos catálogos serializados desde contexto
+  const CAT_ANT = {{ cat_antiguos|safe|default:"[]" }};
+  const CAT_NVO = {{ cat_nuevos|safe|default:"[]" }};
+
+  const selTipo = document.getElementById('filtroTipoPrograma');
+  const selProg = document.getElementById('filtroPrograma');
+
+  function repoblarProgramas(tipo, keepValue=false){
+    const prev = keepValue ? selProg.value : 'Todos';
+    const fuente = (tipo === 'nuevo') ? CAT_NVO : CAT_ANT;
+
+    // Limpiar y agregar "Todos"
+    selProg.innerHTML = '';
+    const optAll = document.createElement('option');
+    optAll.value = 'Todos';
+    optAll.textContent = 'Todos';
+    selProg.appendChild(optAll);
+
+    // Opciones según tipo
+    (fuente || []).forEach(p => {
+      const o = document.createElement('option');
+      o.value = String(p.id);
+      o.textContent = p.nombre;
+      selProg.appendChild(o);
+    });
+
+    // Restaurar selección si sigue existiendo; si no, "Todos"
+    selProg.value = prev && [...selProg.options].some(o => o.value === prev) ? prev : 'Todos';
+  }
+
+  // Al cargar: asegura coherencia del combo con el tipo actual
+  repoblarProgramas(selTipo?.value || 'antiguo', true);
+
+  // Cambiar al vuelo sin recargar
+  selTipo?.addEventListener('change', function(){
+    repoblarProgramas(this.value);
+    // Si quieres que se comporte EXACTAMENTE como en admin (recargar al cambiar):
+    // document.getElementById('formFiltros').submit();
+  });
+</script>
 {% endblock %}
