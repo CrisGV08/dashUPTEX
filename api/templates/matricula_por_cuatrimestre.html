@@ -2,41 +2,12 @@
 {% load static %}
 
 {% block content %}
-<style>
-  /* —— Layout general ——————————————————— */
-  .mc-wrap {padding: 12px 0 28px}
-  .mc-title {font-weight: 800; letter-spacing:.2px}
-  .mc-card {border:1px solid #e7eef7; border-radius:14px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.04)}
-  .mc-card__body {padding:14px}
-  .mc-card__header {padding:12px 14px; border-bottom:1px dashed #e7eef7; font-weight:700}
+<link rel="stylesheet" href="{% static 'css/matricula_por_cuatrimestre.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
 
-  /* —— Filtros ——————————————————— */
-  .mc-filters {position: sticky; top: 0; z-index: 2; background: #f7fbff; border: 1px solid #e7eef7; border-radius:14px; padding: 14px; margin-bottom: 16px}
-  .mc-filters .form-label {font-weight:600}
+<div class="admin-panel" id="pdfArea">
+  <h2 class="titulo-vista">📘 Matrícula por Cuatrimestre</h2>
 
-  /* —— Gráficas ——————————————————— */
-  .mc-charts {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(2, minmax(320px,1fr));
-    margin-bottom: 16px;
-  }
-  @media (max-width: 920px){ .mc-charts{ grid-template-columns: 1fr } }
-  .mc-chart {min-height: 340px; display:flex; flex-direction:column}
-  .mc-chart canvas {width:100% !important; height:280px !important; max-height:280px !important}
-
-  /* —— Tabla ——————————————————— */
-  .mc-table .table thead th{ position: sticky; top: 0; background:#f8fbff; z-index:1 }
-  .mc-legend {font-size:.9rem; color:#6b7280}
-
-  /* —— Botonera archivos ——————————————————— */
-  .mc-files {display:flex; gap: 12px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom: 16px}
-  .mc-files form {display:flex; gap:12px; align-items:center}
-</style>
-
-<div class="container mc-wrap">
-  <h2 class="mc-title mb-3">📘 Matrícula por Cuatrimestre</h2>
-
-  <!-- ——— Mensajes de Django (si los usas) ——— -->
   {% if messages %}
     <div class="mb-3">
       {% for message in messages %}
@@ -45,206 +16,155 @@
     </div>
   {% endif %}
 
-  <!-- ——— Filtros ——— -->
-  <form method="get" class="mc-filters">
-    <div class="row g-3 align-items-end">
-      <!-- Ciclo -->
-      <div class="col-12 col-md-4">
-        <label for="ciclo" class="form-label">Ciclo</label>
-        <select name="ciclo" id="ciclo" class="form-select">
-          <option value="Todos">Todos</option>
-          {% for c in ciclos %}
-            <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
-              {{ c.periodo.nombre }} {{ c.ciclo.anio }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
+  <!-- Filtros -->
+  <form method="get" class="filtros no-print">
+    <div class="filtro-item">
+      <label for="ciclo">Ciclo</label>
+      <select name="ciclo" id="ciclo" class="choices-select">
+        <option value="Todos">Todos</option>
+        {% for c in ciclos %}
+          <option value="{{ c.id }}" {% if filtro_ciclo == c.id|stringformat:"s" %}selected{% endif %}>
+            {{ c.periodo.nombre }} {{ c.ciclo.anio }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <!-- Tipo de Programa -->
-      <div class="col-12 col-md-4">
-        <label for="tipo_programa" class="form-label">Tipo de Programa</label>
-        <select name="tipo_programa" id="tipo_programa" class="form-select">
-          <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguo</option>
-          <option value="nuevo" {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevo</option>
-        </select>
-      </div>
+    <div class="filtro-item">
+      <label for="tipo_programa">Tipo de Programa</label>
+      <select name="tipo_programa" id="tipo_programa" class="choices-select">
+        <option value="antiguo" {% if tipo_programa == 'antiguo' %}selected{% endif %}>Antiguo</option>
+        <option value="nuevo" {% if tipo_programa == 'nuevo' %}selected{% endif %}>Nuevo</option>
+      </select>
+    </div>
 
-      <!-- Programa -->
-      <div class="col-12 col-md-4">
-        <label for="programa" class="form-label">Programa</label>
-        <select name="programa" id="programa" class="form-select">
-          <option value="Todos">Todos</option>
-          {% for p in programas %}
-            <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>
-              {{ p.nombre }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="filtro-item">
+      <label for="programa">Programa</label>
+      <select name="programa" id="programa" class="choices-select">
+        <option value="Todos">Todos</option>
+        {% for p in programas %}
+          <option value="{{ p.id }}" {% if filtro_programa == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-      <!-- Botones de filtros -->
-      <div class="col-12 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-        <a href="?" class="btn btn-outline-secondary">Limpiar</a>
-      </div>
+    <div class="filtro-actions">
+      <button type="submit" class="btn-admin">Aplicar filtros</button>
+      <a href="?" class="btn-outline">Limpiar</a>
+    </div>
+  </form>
 
-<!-- ——— Tabla ——— -->
-  <section class="mc-card mc-table">
-    <div class="mc-card__header">Resultados en tabla</div>
-    <div class="mc-card__body">
-      <table class="table table-sm table-striped align-middle">
-        <thead>
+  <!-- Acciones -->
+  <div class="acciones no-print">
+    <button type="button" id="btnDescargarPDF" class="btn-admin">
+      ⬇️ Descargar PDF
+    </button>
+
+    <div class="acciones__right">
+      <a href="{% url 'descargar_plantilla_matricula_cuatrimestre' %}" class="btn-success">
+        ⬇️ Plantilla CSV
+      </a>
+      <form action="{% url 'subir_csv_matricula_cuatrimestre' %}" method="post" enctype="multipart/form-data" class="upload-inline">
+        {% csrf_token %}
+        <input type="file" name="archivo_csv" class="file-input" required>
+        <button type="submit" class="btn-warning">Subir CSV</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="contenedor-tabla">
+    <table class="crud-table">
+      <thead>
+        <tr>
+          <th>Programa</th>
+          <th>Periodo</th>
+          <th class="text-end">Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in tabla %}
           <tr>
-            <th>Programa  </th>
-            <th>Periodo  </th>
-            <th class="text-end">Cantidad  </th>
+            <td class="text-left">{{ fila.programa }}</td>
+            <td><span class="badge">{{ fila.periodo }}</span></td>
+            <td class="text-end">{{ fila.cantidad }}</td>
           </tr>
-        </thead>
-        <tbody>
-          {% for fila in tabla %}
-            <tr>
-              <td>{{ fila.programa }}</td>
-              <td>{{ fila.periodo }}</td>
-              <td class="text-end">{{ fila.cantidad }}</td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="3" class="text-center text-muted">No hay registros disponibles</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        {% empty %}
+          <tr><td colspan="3" class="text-center text-muted">No hay registros disponibles</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+      <tr>
+        <td colspan="2" class="text-right"><strong>Total</strong></td>
+        <td class="text-end">{{ total_general }}</td>
+      </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Checks de gráficas (mostrar/ocultar) -->
+  <div class="graf-controls no-print">
+    <label><input type="checkbox" class="mc-chk" value="barras" checked> Barras</label>
+    <label><input type="checkbox" class="mc-chk" value="linea" checked> Línea</label>
+    <label><input type="checkbox" class="mc-chk" value="pastel" checked> Pastel</label>
+    <label><input type="checkbox" class="mc-chk" value="gauss" checked> Gauss</label>
+    <span class="nota">* Solo muestran/ocultan; los datos ya vienen filtrados.</span>
+  </div>
+
+  <!-- Contenedor para pasar datos al JS externo -->
+  <div id="contenedorGraficas" data-grafica-json='{{ datos_grafica|escapejs }}'></div>
+
+  <!-- Gráficas -->
+  <section class="graficas">
+    <div class="grafica-card" id="box-barras">
+      <div class="grafica-title">Barras</div>
+      <canvas id="graficaBarras"></canvas>
+    </div>
+    <div class="grafica-card" id="box-linea">
+      <div class="grafica-title">Línea</div>
+      <canvas id="graficaLinea"></canvas>
+    </div>
+    <div class="grafica-card" id="box-pastel">
+      <div class="grafica-title">Pastel</div>
+      <canvas id="graficaPastel"></canvas>
+    </div>
+    <div class="grafica-card" id="box-gauss">
+      <div class="grafica-title">Gauss (suavizado)</div>
+      <canvas id="graficaGauss"></canvas>
     </div>
   </section>
 </div>
 
-      <!-- Checks de gráficas (ocultan/mostran sin recargar) -->
-      <div class="col-12">
-        <div class="mc-card">
-          <div class="mc-card__header">Gráficas a mostrar</div>
-          <div class="mc-card__body d-flex flex-wrap gap-3">
-            <label class="form-check-label"><input class="form-check-input me-1 mc-chk" type="checkbox" value="barras" checked> Barras</label>
-            <label class="form-check-label"><input class="form-check-input me-1 mc-chk" type="checkbox" value="linea" checked> Línea</label>
-            <label class="form-check-label"><input class="form-check-input me-1 mc-chk" type="checkbox" value="pastel" checked> Pastel</label>
-            <label class="form-check-label"><input class="form-check-input me-1 mc-chk" type="checkbox" value="gauss" checked> Gauss</label>
-            <div class="ms-auto mc-legend">* Los checks solo muestran/ocultan; los datos ya vienen filtrados por los selectores.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </form>
+{% if aviso_tipo_programa %}
+  <div class="alert alert-warning mb-3 no-print">{{ aviso_tipo_programa }}</div>
+{% endif %}
+{% if sin_datos %}
+  <div class="alert alert-info mb-3 no-print">No hay datos que coincidan con los filtros seleccionados.</div>
+{% endif %}
 
-  <!-- ——— Botonera Archivos ——— -->
-  <div class="mc-files">
-    <a href="{% url 'descargar_plantilla_matricula_cuatrimestre' %}" class="btn btn-success">
-      Descargar Plantilla CSV
-    </a>
-    <form action="{% url 'subir_csv_matricula_cuatrimestre' %}" method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="file" name="archivo_csv" class="form-control" required>
-      <button type="submit" class="btn btn-warning">Subir CSV</button>
-    </form>
-  </div>
-
-  <!-- ——— Gráficas ——— -->
-  <section class="mc-charts">
-    <div class="mc-card mc-chart" id="box-barras">
-      <div class="mc-card__header">Barras</div>
-      <div class="mc-card__body"><canvas id="chBar"></canvas></div>
-    </div>
-    <div class="mc-card mc-chart" id="box-linea">
-      <div class="mc-card__header">Línea</div>
-      <div class="mc-card__body"><canvas id="chLine"></canvas></div>
-    </div>
-    <div class="mc-card mc-chart" id="box-pastel">
-      <div class="mc-card__header">Pastel</div>
-      <div class="mc-card__body"><canvas id="chPie"></canvas></div>
-    </div>
-    <div class="mc-card mc-chart" id="box-gauss">
-      <div class="mc-card__header">Gauss (suavizado)</div>
-      <div class="mc-card__body"><canvas id="chGauss"></canvas></div>
-    </div>
-  </section>
-
-
-<!-- ——— Chart.js ——— -->
+<!-- Librerías (orden importa) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
+<!-- Datos para JS (2 vías) -->
 <script>
-  // Datos del servidor
-  const datos = {{ datos_grafica|safe }}; // {labels: [...], valores: [...]}
-  const labels = Array.isArray(datos?.labels) ? datos.labels : [];
-  const data   = Array.isArray(datos?.valores) ? datos.valores : [];
-
-  // Utilidad: suavizado simple para "Gauss"
-  function smooth(arr, k=2){
-    const out=[]; for (let i=0;i<arr.length;i++){ let s=0,c=0;
-      for (let j=i-k;j<=i+k;j++){ if (j>=0 && j<arr.length){ s+=(+arr[j]||0); c++; } }
-      out.push(s/(c||1));
-    } return out;
-  }
-
-  // Opciones base
-  const baseOpts = {
-    responsive:true,
-    plugins:{ legend:{ display:false } },
-    scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } }
-  };
-
-  // Instancias de charts (para poder destruir si recargas por ajax en el futuro)
-  let chBar=null, chLine=null, chPie=null, chGauss=null;
-
-  // Renderizadores
-  function renderBar(){
-    const el = document.getElementById('chBar'); if (!el) return;
-    chBar = new Chart(el.getContext('2d'), {
-      type:'bar',
-      data:{ labels, datasets:[{ label:'Matrícula', data }] },
-      options: baseOpts
-    });
-  }
-  function renderLine(){
-    const el = document.getElementById('chLine'); if (!el) return;
-    chLine = new Chart(el.getContext('2d'), {
-      type:'line',
-      data:{ labels, datasets:[{ label:'Matrícula', data, tension:.35, fill:false }] },
-      options: baseOpts
-    });
-  }
-  function renderPie(){
-    const el = document.getElementById('chPie'); if (!el) return;
-    chPie = new Chart(el.getContext('2d'), {
-      type:'pie',
-      data:{ labels, datasets:[{ data }] },
-      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
-    });
-  }
-  function renderGauss(){
-    const el = document.getElementById('chGauss'); if (!el) return;
-    chGauss = new Chart(el.getContext('2d'), {
-      type:'line',
-      data:{ labels, datasets:[{ label:'Suavizado', data: smooth(data,2), tension:.45, fill:true }] },
-      options: baseOpts
-    });
-  }
-
-  // Pintar de inicio
-  renderBar(); renderLine(); renderPie(); renderGauss();
-
-  // Mostrar/ocultar tarjetas sin recargar
-  document.querySelectorAll('.mc-chk').forEach(chk=>{
-    chk.addEventListener('change', ()=>{
-      const id = `box-${chk.value}`;
-      const box = document.getElementById(id);
-      if (!box) return;
-      box.style.display = chk.checked ? '' : 'none';
-    });
-  });
-
-  // UX: al cambiar tipo_programa, reiniciar programa y enviar
-  document.getElementById('tipo_programa')?.addEventListener('change', function () {
-    const prog = document.getElementById('programa');
-    if (prog) prog.value = 'Todos';
-    this.form.submit();
-  });
+  // 1) Global
+  window.MPC_DATOS = {{ datos_grafica|safe }};
 </script>
+<!-- 2) data-atributo -->
+<div id="contenedorGraficas" data-grafica-json='{{ datos_grafica|escapejs }}'></div>
+
+<!-- Tu JS (con rompe-caché) -->
+<script src="{% static 'js/matricula_por_cuatrimestre.js' %}?v={% now 'U' %}"></script>
+
+<!-- (Opcional) Asegura altura visible de los canvas -->
+<style>
+  #box-barras canvas, #box-linea canvas, #box-pastel canvas, #box-gauss canvas,
+  #graficaBarras, #graficaLinea, #graficaPastel, #graficaGauss,
+  #chBar, #chLine, #chPie, #chGauss {
+    min-height: 280px !important;
+  }
+</style>
+
 {% endblock %}

@@ -12,26 +12,31 @@
 
   <!-- 🎯 Filtros -->
   <form method="get" class="filtros">
+    <!-- Año (múltiple) -->
     <div class="form-group">
       <label for="filtroAnio">Año:</label>
-      <select name="anio" id="filtroAnio">
-        <option value="Todos">Todos</option>
+      <select name="filtroAnio" id="filtroAnio" multiple>
         {% for anio in anios_lista %}
-          <option value="{{ anio }}">{{ anio }}</option>
+          <option value="{{ anio }}"
+            {% if filtro_anios_sel and anio in filtro_anios_sel %}selected{% endif %}>
+            {{ anio }}
+          </option>
         {% endfor %}
       </select>
     </div>
 
+    <!-- Cuatrimestre -->
     <div class="form-group">
       <label for="filtroCuatrimestre">Cuatrimestre:</label>
       <select name="cuatrimestre" id="filtroCuatrimestre">
-        <option value="Todos">Todos</option>
-        <option value="Enero - Abril">Enero - Abril</option>
-        <option value="Mayo - Agosto">Mayo - Agosto</option>
-        <option value="Septiembre - Diciembre">Septiembre - Diciembre</option>
+        <option value="Todos" {% if filtro_cuatrimestre_sel == "Todos" %}selected{% endif %}>Todos</option>
+        <option value="Enero - Abril" {% if filtro_cuatrimestre_sel == "Enero - Abril" %}selected{% endif %}>Enero - Abril</option>
+        <option value="Mayo - Agosto" {% if filtro_cuatrimestre_sel == "Mayo - Agosto" %}selected{% endif %}>Mayo - Agosto</option>
+        <option value="Septiembre - Diciembre" {% if filtro_cuatrimestre_sel == "Septiembre - Diciembre" %}selected{% endif %}>Septiembre - Diciembre</option>
       </select>
     </div>
 
+    <!-- Tipo de Programa -->
     <div class="form-group">
       <label for="filtroPrograma">Tipo de Programa:</label>
       <select name="tipo_programa" id="filtroPrograma">
@@ -41,9 +46,17 @@
       </select>
     </div>
 
+    <!-- Carreras (múltiple) — IDs al backend, nombres al usuario -->
     <div class="form-group">
       <label for="filtroCarreras">Carreras:</label>
-      <select id="filtroCarreras" multiple></select>
+      <select id="filtroCarreras" name="filtroCarreras" multiple>
+        {% for p in programas_catalogo %}
+          <option value="{{ p.id }}"
+            {% if filtro_carreras_sel and p.id|stringformat:"s" in filtro_carreras_sel %}selected{% endif %}>
+            {{ p.nombre }}
+          </option>
+        {% endfor %}
+      </select>
     </div>
 
     <button type="submit" class="btn-admin">Aplicar filtros</button>
@@ -65,16 +78,22 @@
         </tr>
       </thead>
       <tbody>
-        {% for fila in tabla_datos %}
-        <tr>
-          <td>{{ fila.anio }}</td>
-          <td>{{ fila.programa }}</td>
-          <td>{{ fila.ene_abr }}</td>
-          <td>{{ fila.may_ago }}</td>
-          <td>{{ fila.sep_dic }}</td>
-          <td>{{ fila.total }}</td>
-        </tr>
-        {% endfor %}
+        {% if tabla_datos and tabla_datos|length > 0 %}
+          {% for fila in tabla_datos %}
+          <tr>
+            <td>{{ fila.anio }}</td>
+            <td>{{ fila.programa }}</td>
+            <td>{{ fila.ene_abr }}</td>
+            <td>{{ fila.may_ago }}</td>
+            <td>{{ fila.sep_dic }}</td>
+            <td>{{ fila.total }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">Sin resultados con los filtros seleccionados.</td>
+          </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
@@ -97,4 +116,13 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="{% static 'js/matricula_anual.js' %}"></script>
+<script>
+  // Inicializa Choices para selects múltiples
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      new Choices('#filtroAnio', { removeItemButton: true, shouldSort: false });
+      new Choices('#filtroCarreras', { removeItemButton: true, shouldSort: true });
+    } catch (e) { /* opcional */ }
+  });
+</script>
 {% endblock %}

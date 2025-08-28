@@ -115,3 +115,35 @@ canvas {
 .tabla-matricula tr:hover {
   background-color: #e0f0ff;
 }
+
+/* === Ocultar elementos en el PDF === */
+.admin-panel.pdf-export .filtros,
+.admin-panel.pdf-export .btn-admin,
+.admin-panel.pdf-export .btn-pdf {
+  display: none !important;
+}
+
+/* Por si alguien imprime directamente */
+@media print {
+  .filtros,
+  .btn-admin,
+  .btn-pdf {
+    display: none !important;
+  }
+}
+
+/* Ocultar filtros y botones SOLO al exportar a PDF */
+.admin-panel.pdf-export .filtros,
+.admin-panel.pdf-export .btn-admin,
+.admin-panel.pdf-export .btn-pdf {
+  display: none !important;
+}
+
+/* Por si alguien imprime directo desde el navegador */
+@media print {
+  .filtros,
+  .btn-admin,
+  .btn-pdf {
+    display: none !important;
+  }
+}

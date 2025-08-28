@@ -8,10 +8,11 @@ from django.contrib import messages
 from django.conf import settings
 from django.urls import reverse
 from django.db.models import Sum, F
+from django.db.models.functions import Coalesce
 
 from api.models import (
     CicloEscolar, Periodo, CicloPeriodo,
-    ProgramaEducativoAntiguo, ProgramaEducativoNuevo,  # ← AÑADIDO
+    ProgramaEducativoAntiguo, ProgramaEducativoNuevo,
     MatriculaPorCuatrimestre
 )
 
@@ -46,7 +47,7 @@ def importar_matricula_cuatrimestres(request):
 
     for hoja in hojas:
         df = excel.parse(hoja).dropna(how="all")
-        for i, row in df.iterrows():
+        for _, row in df.iterrows():
             nombre = str(row.get("Unnamed: 1", "")).strip().lower()
             if nombre not in carreras_normalizadas:
                 continue
@@ -71,7 +72,7 @@ def importar_matricula_cuatrimestres(request):
                                 defaults={"cantidad": cantidad}
                             )
                             registros += 1
-                        except:
+                        except Exception:
                             continue
 
     print(f"✅ {registros} registros cargados en MatriculaPorCuatrimestre.")
@@ -79,50 +80,127 @@ def importar_matricula_cuatrimestres(request):
 
 
 def matricula_por_cuatrimestre_view(request):
-    ciclos = CicloPeriodo.objects.select_related('ciclo', 'periodo').order_by('ciclo__anio', 'periodo__clave')
+    ciclos = (CicloPeriodo.objects
+              .select_related('ciclo', 'periodo')
+              .order_by('ciclo__anio', 'periodo__clave'))
 
-    # nuevo filtro tipo_programa
-    tipo_programa = request.GET.get('tipo_programa', 'antiguo')  # default: antiguo
+    # Filtros
+    tipo_programa = request.GET.get('tipo_programa', 'antiguo')  # default
+    filtro_ciclo = request.GET.get('ciclo')
+    filtro_programa = request.GET.get('programa')
+
+    # Catálogo de programas según tipo
     if tipo_programa == 'nuevo':
         programas = ProgramaEducativoNuevo.objects.all().order_by('nombre')
     else:
         programas = ProgramaEducativoAntiguo.objects.all().order_by('nombre')
 
-    filtro_ciclo = request.GET.get('ciclo')
-    filtro_programa = request.GET.get('programa')
-
-    registros = MatriculaPorCuatrimestre.objects.select_related('ciclo_periodo', 'programa_antiguo')
+    # Base queryset
+    base_qs = (MatriculaPorCuatrimestre.objects
+               .select_related('ciclo_periodo__ciclo',
+                               'ciclo_periodo__periodo',
+                               'programa_antiguo'))
 
     if filtro_ciclo and filtro_ciclo != "Todos":
-        registros = registros.filter(ciclo_periodo__id=filtro_ciclo)
+        base_qs = base_qs.filter(ciclo_periodo__id=filtro_ciclo)
 
+    # Aplica filtro de programa según tipo
+    qs = base_qs
     if filtro_programa and filtro_programa != "Todos":
         if tipo_programa == 'nuevo':
-            registros = registros.filter(programa_nuevo__id=filtro_programa)
-        else:  # antiguo
-            registros = registros.filter(programa_antiguo__id=filtro_programa)
+            qs = qs.filter(programa_nuevo__id=filtro_programa)
+        else:
+            qs = qs.filter(programa_antiguo__id=filtro_programa)
 
+    # Dataset base para gráficas (agrupado por periodo y programa)
+    grafica_qs = (qs.values(
+                    anio=F('ciclo_periodo__ciclo__anio'),
+                    periodo=F('ciclo_periodo__periodo__clave'),
+                    prog_ant=F('programa_antiguo__nombre'),
+                    prog_nvo=F('programa_nuevo__nombre'),
+                  )
+                  .annotate(total=Sum('cantidad'))
+                  .order_by('anio', 'periodo', 'prog_ant', 'prog_nvo'))
+
+    sin_datos = not grafica_qs.exists()
+    aviso_tipo_programa = None
+
+    # Fallback: si pidieron "nuevo" y no hay datos, usar "antiguo"
+    if sin_datos and tipo_programa == 'nuevo':
+        aviso_tipo_programa = "No hay datos para 'Programa nuevo'. Se muestran los de 'Programa antiguo'."
+        tipo_programa = 'antiguo'
+        programas = ProgramaEducativoAntiguo.objects.all().order_by('nombre')
+
+        qs = base_qs
+        if filtro_programa and filtro_programa != "Todos":
+            qs = qs.filter(programa_antiguo__id=filtro_programa)
+
+        grafica_qs = (qs.values(
+                        anio=F('ciclo_periodo__ciclo__anio'),
+                        periodo=F('ciclo_periodo__periodo__clave'),
+                        prog_ant=F('programa_antiguo__nombre'),
+                        prog_nvo=F('programa_nuevo__nombre'),
+                      )
+                      .annotate(total=Sum('cantidad'))
+                      .order_by('anio', 'periodo', 'prog_ant', 'prog_nvo'))
+        sin_datos = not grafica_qs.exists()
+
+    # --------- TABLA (sobre el queryset final) ----------
     tabla = [
         {
-            'programa': (
-                r.programa_antiguo.nombre if r.programa_antiguo else
-                (r.programa_nuevo.nombre if hasattr(r, 'programa_nuevo') and r.programa_nuevo else '')
-            ),
+            'programa': (r.programa_antiguo.nombre if r.programa_antiguo else
+                         (getattr(r, 'programa_nuevo', None).nombre
+                          if getattr(r, 'programa_nuevo', None) else '')),
             'periodo': f"{r.ciclo_periodo.periodo.nombre} {r.ciclo_periodo.ciclo.anio}",
-            'cantidad': r.cantidad
+            'cantidad': int(r.cantidad or 0),
         }
-        for r in registros
+        for r in qs
     ]
 
-    grafica_data = registros.values(
-        anio=F('ciclo_periodo__ciclo__anio'),
-        periodo=F('ciclo_periodo__periodo__clave')
-    ).annotate(total=Sum('cantidad')).order_by('anio', 'periodo')
+    # --------- SERIES POR MATERIA/PROGRAMA ----------
+    # 1) Eje X (periodos en orden)
+    etiquetas_periodo = []
+    for row in grafica_qs:
+        etiqueta = f"{row['anio']} - {row['periodo']}"
+        if etiqueta not in etiquetas_periodo:
+            etiquetas_periodo.append(etiqueta)
 
+    # 2) Nombres de programa (antiguo/nuevo según exista en datos)
+    programas_nombres = []
+    for row in grafica_qs:
+        nombre = row['prog_ant'] or row['prog_nvo'] or ''
+        if nombre and nombre not in programas_nombres:
+            programas_nombres.append(nombre)
+
+    # 3) Mapa (programa -> valores por periodo)
+    series_map = {p: [0] * len(etiquetas_periodo) for p in programas_nombres}
+    idx_periodo = {etq: i for i, etq in enumerate(etiquetas_periodo)}
+    for row in grafica_qs:
+        etiqueta = f"{row['anio']} - {row['periodo']}"
+        nombre = row['prog_ant'] or row['prog_nvo'] or ''
+        if not nombre:
+            continue
+        i = idx_periodo[etiqueta]
+        series_map[nombre][i] = int(row['total'] or 0)
+
+    # 4) Totales por programa (para pie)
+    totales_por_programa = {p: sum(vals) for p, vals in series_map.items()}
+
+    # 5) Estructura final para el frontend (multi-series)
     datos_grafica = {
-        'labels': [f"{g['anio']} - {g['periodo']}" for g in grafica_data],
-        'valores': [g['total'] for g in grafica_data]
+        'labels': etiquetas_periodo,
+        'series': [{'label': p, 'data': series_map[p]} for p in programas_nombres],
+        'pie_labels': list(totales_por_programa.keys()),
+        'pie_values': list(totales_por_programa.values()),
     }
+
+    # Total general del queryset final
+    total_general = qs.aggregate(total=Sum('cantidad'))['total'] or 0
+
+    # Debug (opcional)
+    print("DBG MPC -> periodos:", len(etiquetas_periodo))
+    print("DBG MPC -> programas:", len(programas_nombres))
+    print("DBG MPC -> total_general:", total_general)
 
     return render(request, "matricula_por_cuatrimestre.html", {
         'ciclos': ciclos,
@@ -131,7 +209,10 @@ def matricula_por_cuatrimestre_view(request):
         'filtro_programa': filtro_programa,
         'tipo_programa': tipo_programa,
         'tabla': tabla,
-        'datos_grafica': json.dumps(datos_grafica)
+        'datos_grafica': json.dumps(datos_grafica),
+        'total_general': total_general,
+        'aviso_tipo_programa': aviso_tipo_programa,
+        'sin_datos': sin_datos,
     })
 
 

@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
   const cont = document.getElementById("contenedorGraficas");
+  if (!cont) return;
 
   // Datos por tipo (claves "ANIO-NOMBRE")
   const dataAnt = JSON.parse(cont.dataset.antiguos || "{}");
@@ -22,7 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const chAnio = new Choices(selAnio, {
     removeItemButton: true,
     placeholderValue: 'Selecciona uno o más años',
-    searchEnabled: false
+    searchEnabled: false,
+    shouldSort: false
   });
   const chCarr = new Choices(selCarr, {
     removeItemButton: true,
@@ -92,49 +94,109 @@ document.addEventListener("DOMContentLoaded", function () {
     return out;
   }
 
-  // ========= Gráficas (mantengo tu estilo) =========
+  // ========= Gráficas (ahora con fuentes más grandes) =========
   let chartBarras, chartLinea, chartPastel, chartGauss;
 
   function graficarBarras(labels, ea, ma, sd){
     chartBarras?.destroy();
     chartBarras = new Chart(document.getElementById("graficaBarras"), {
       type: 'bar',
-      data: { labels, datasets: [
-        { label:'Enero - Abril', data: ea, backgroundColor: '#ef9a9a' },
-        { label:'Mayo - Agosto', data: ma, backgroundColor: '#80cbc4' },
-        { label:'Septiembre - Diciembre', data: sd, backgroundColor: '#90caf9' }
-      ]},
-      options: { responsive:true, plugins:{ legend:{ position:'top' } } }
+      data: {
+        labels,
+        datasets: [
+          { label:'Enero - Abril', data: ea, backgroundColor: '#ef9a9a' },
+          { label:'Mayo - Agosto', data: ma, backgroundColor: '#80cbc4' },
+          { label:'Septiembre - Diciembre', data: sd, backgroundColor: '#90caf9' }
+        ]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ position:'top', labels:{ font:{ size:30 } } },
+          tooltip:{ bodyFont:{ size:16 }, titleFont:{ size:30 } }
+        },
+        scales:{
+          x:{ ticks:{ font:{ size:30 } } },
+          y:{ ticks:{ font:{ size:30 } } }
+        }
+      }
     });
   }
+
   function graficarLinea(labels, total){
     chartLinea?.destroy();
     chartLinea = new Chart(document.getElementById("graficaLinea"), {
       type: 'line',
-      data: { labels, datasets: [{ label:'Total por carrera', data: total, borderColor:'#9575cd', borderWidth:2, fill:false }] },
-      options: { responsive:true }
+      data: {
+        labels,
+        datasets: [{ label:'Total por carrera', data: total, borderColor:'#9575cd', borderWidth:2, fill:false }]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ labels:{ font:{ size:30 } } },
+          tooltip:{ bodyFont:{ size:30 }, titleFont:{ size:30 } }
+        },
+        scales:{
+          x:{ ticks:{ font:{ size:30 } } },
+          y:{ ticks:{ font:{ size:30 } } }
+        }
+      }
     });
   }
+
   function graficarPastel(labels, total){
     chartPastel?.destroy();
     chartPastel = new Chart(document.getElementById("graficaPastel"), {
       type: 'pie',
-      data: { labels, datasets: [{ data: total, backgroundColor: labels.map(()=>`hsl(${Math.random()*360},60%,70%)`) }] },
-      options: { responsive:true }
+      data: {
+        labels,
+        datasets: [{ data: total, backgroundColor: labels.map(()=>`hsl(${Math.random()*360},60%,70%)`) }]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ labels:{ font:{ size:30 } } },
+          tooltip:{ bodyFont:{ size:30 }, titleFont:{ size:30 } }
+        }
+      }
     });
   }
-  function graficarGauss(pcts){
+
+  // AHORA: Gauss con nombres reales en el eje X
+  function graficarGauss(labels, pcts){
     chartGauss?.destroy();
     chartGauss = new Chart(document.getElementById("graficaGauss"), {
       type: 'bar',
-      data: { labels: pcts.map((_,i)=>`Carrera ${i+1}`), datasets: [{ label:'Frecuencia', data: pcts, backgroundColor:'#fdd835' }] },
-      options: { responsive:true }
+      data: {
+        labels, // nombres reales
+        datasets: [{ label:'Frecuencia', data: pcts, backgroundColor:'#fdd835' }]
+      },
+      options: {
+        responsive:true,
+        plugins:{
+          legend:{ labels:{ font:{ size:30 } } },
+          tooltip:{ bodyFont:{ size:30 }, titleFont:{ size:30 } }
+        },
+        scales:{
+          x:{ 
+            ticks:{ 
+              font:{ size:30 },
+              autoSkip:false,
+              maxRotation:45,
+              minRotation:0
+            } 
+          },
+          y:{ ticks:{ font:{ size:16 } } }
+        }
+      }
     });
   }
 
   function actualizarGraficas(){
     const arr = filtrarDatos();
     const labels = arr.map(x => `${x.nombre} (${x.anio})`);
+    const labelsNombres = arr.map(x => x.nombre); // para Gauss (solo nombre)
     const ea = arr.map(x => x.ea);
     const ma = arr.map(x => x.ma);
     const sd = arr.map(x => x.sd);
@@ -145,10 +207,11 @@ document.addEventListener("DOMContentLoaded", function () {
     graficarBarras(labels, ea, ma, sd);
     graficarLinea(labels, total);
     graficarPastel(labels, total);
-    graficarGauss(pcts);
+    graficarGauss(labelsNombres, pcts); // nombres reales en X
   }
 
   // ====== Inicialización ======
+// Si tu template ya trae opciones preseleccionadas desde el servidor, puedes pasar keepSelection=true
   repoblarAnios(false);
   repoblarCarreras(false);
   actualizarGraficas();
