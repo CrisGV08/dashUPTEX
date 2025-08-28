@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
         searchPlaceholderValue: 'Buscar...',
         noResultsText: 'Sin resultados',
     });
-
+ 
     const contenedores = {
         graficoMatriculaTotal: document.getElementById('graficoMatriculaTotalContainer'),
         graficoMatriculaCarrera: document.getElementById('graficoMatriculaCarreraContainer'),
