@@ -21,9 +21,6 @@
       <form method="POST" action="{% url 'cargar_aprovechamiento' %}" enctype="multipart/form-data" class="d-inline">
         {% csrf_token %}
         <input type="file" name="archivo_csv" class="d-none" id="fileInput" accept=".csv" required>
-        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('fileInput').click()">
-          <i class="fas fa-upload me-1"></i> Subir CSV
-        </button>
         <button type="submit" class="btn btn-success d-none" id="submitBtn">
           <i class="fas fa-play me-1"></i> Procesar
         </button>
@@ -45,7 +42,6 @@
   </div>
 {% endif %}
 
-
 <!-- 📦 Contenido -->
 <div class="container-fluid page-content">
 
@@ -55,77 +51,75 @@
       <form method="GET" id="filter-form">
         <div class="row g-3 align-items-end">
 
-<!-- Ciclo (chips multi-select) -->
-<div class="col-lg-4">
-  <label class="form-label fw-semibold d-block mb-1">
-    <i class="far fa-calendar me-1"></i> Ciclo
-  </label>
+          <!-- Ciclo (chips multi-select) -->
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block mb-1">
+              <i class="far fa-calendar me-1"></i> Ciclo
+            </label>
 
-  <div class="btn-check-group cycle-scroll mb-2" id="ciclosChips">
-    <!-- Todos -->
-    <input type="checkbox" class="form-check-input ciclo-chip"
-           id="ciclo-Todos" value="Todos" name="ciclos[]"
-           {% if 'Todos' in filtros_aplicados.ciclos or not filtros_aplicados.ciclos %}checked{% endif %}>
-    <label class="btn btn-light btn-sm" for="ciclo-Todos">Todos</label>
+            <div class="btn-check-group cycle-scroll mb-2" id="ciclosChips">
+              <!-- Todos -->
+              <input type="checkbox" class="form-check-input ciclo-chip"
+                     id="ciclo-Todos" value="Todos" name="ciclos[]"
+                     {% if 'Todos' in filtros_aplicados.ciclos or not filtros_aplicados.ciclos %}checked{% endif %}>
+              <label class="btn btn-light btn-sm" for="ciclo-Todos">Todos</label>
 
-    <!-- Ciclos disponibles (ej. '2025 - E-A') -->
-    {% for ciclo_txt in anios %}
-      <input type="checkbox" class="form-check-input ciclo-chip"
-             id="ciclo-{{ forloop.counter }}" value="{{ ciclo_txt }}" name="ciclos[]"
-             {% if ciclo_txt in filtros_aplicados.ciclos %}checked{% endif %}>
-      <label class="btn btn-light btn-sm" for="ciclo-{{ forloop.counter }}">{{ ciclo_txt }}</label>
-    {% endfor %}
-  </div>
+              <!-- Ciclos disponibles (ej. '2025 - E-A') -->
+              {% for ciclo_txt in anios %}
+                <input type="checkbox" class="form-check-input ciclo-chip"
+                       id="ciclo-{{ forloop.counter }}" value="{{ ciclo_txt }}" name="ciclos[]"
+                       {% if ciclo_txt in filtros_aplicados.ciclos %}checked{% endif %}>
+                <label class="btn btn-light btn-sm" for="ciclo-{{ forloop.counter }}">{{ ciclo_txt }}</label>
+              {% endfor %}
+            </div>
 
-  <!-- Botones de acción -->
-  <div class="d-flex gap-2">
-    <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-select-all">
-      Seleccionar todos
-    </button>
-    <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-clear">
-      Limpiar
-    </button>
-    <button type="submit" class="btn btn-primary btn-sm">
-      <i class="fas fa-filter"></i><span>Aplicar</span>
-    </button>
-  </div>
-</div>
-
+            <!-- Botones de acción -->
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-select-all">
+                Seleccionar todos
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="ciclos-clear">
+                Limpiar
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-filter"></i><span>Aplicar</span>
+              </button>
+            </div>
+          </div>
 
           <!-- Tipo de gráficas -->
-  <div class="col-lg-4">
-    <label class="form-label fw-semibold d-block">
-      <i class="fas fa-chart-bar me-1"></i> Gráficas
-    </label>
+          <div class="col-lg-4">
+            <label class="form-label fw-semibold d-block">
+              <i class="fas fa-chart-bar me-1"></i> Gráficas
+            </label>
 
-    <div class="btn-check-group">
-      <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
-      <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
+            <div class="btn-check-group">
+              <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
+              <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
 
-      <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
-      <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
+              <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
+              <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
 
-      <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
-      <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
+              <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
+              <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
 
-      <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
-      <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
-    </div>
+              <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
+              <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
+            </div>
 
-  <!-- 🔹 Botonera para aplicar el filtro de gráficas -->
-  <div class="d-flex gap-2 mt-2">
-    <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-all">
-      Seleccionar todas
-    </button>
-    <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-none">
-      Limpiar
-    </button>
-    <button type="button" class="btn btn-primary btn-sm" id="aplicarGraficas">
-      <i class="fas fa-filter me-1"></i> Aplicar gráficas
-    </button>
-  </div>
-</div>
-
+            <!-- 🔹 Botonera para aplicar el filtro de gráficas -->
+            <div class="d-flex gap-2 mt-2">
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-all">
+                Seleccionar todas
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="graficas-none">
+                Limpiar
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" id="aplicarGraficas">
+                <i class="fas fa-filter me-1"></i> Aplicar gráficas
+              </button>
+            </div>
+          </div>
 
           <!-- Programas -->
           <div class="col-lg-4">
@@ -185,7 +179,37 @@
     </div>
   </div>
 
-  <!-- 📈 Gráficas -->
+  <!-- 📋 Tabla (AHORA ARRIBA) -->
+  <div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <h6 class="m-0">📋 Detalle por Programa y Ciclo</h6>
+      <span class="badge bg-light text-dark">Total: {{ detalle_ciclos|length }}</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive table-wrapper">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-dark sticky-top">
+            <tr>
+              <th style="width: 15%">Ciclo</th>
+              <th>Programa</th>
+              <th style="width: 12%" class="text-center">Promedio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in detalle_ciclos %}
+              <tr>
+                <td class="text-nowrap">{{ fila.ciclo }}</td>
+                <td>{{ fila.programa }}</td>
+                <td class="text-center fw-semibold">{{ fila.promedio }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📈 Gráficas (AHORA ABAJO) -->
   <div class="row g-3">
     <div class="col-lg-6 grafica-box" id="box-barras">
       <div class="card h-100 chart-card">
@@ -212,36 +236,6 @@
       <div class="card h-100 chart-card">
         <div class="card-header"><h6 class="m-0">📉 Campana de Gauss</h6></div>
         <div class="card-body p-3"><canvas id="graficaGauss" height="250"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 📋 Tabla -->
-  <div class="card mt-4">
-    <div class="card-header d-flex align-items-center justify-content-between">
-      <h6 class="m-0">📋 Detalle por Programa y Ciclo</h6>
-      <span class="badge bg-light text-dark">Total: {{ detalle_ciclos|length }}</span>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive table-wrapper">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-dark sticky-top">
-            <tr>
-              <th style="width: 15%">Ciclo</th>
-              <th>Programa</th>
-              <th style="width: 12%" class="text-center">Promedio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for fila in detalle_ciclos %}
-              <tr>
-                <td class="text-nowrap">{{ fila.ciclo }}</td>
-                <td>{{ fila.programa }}</td>
-                <td class="text-center fw-semibold">{{ fila.promedio }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -285,7 +279,7 @@
     // Antes de enviar, copia el chip seleccionado al hidden
     form?.addEventListener('submit', () => {
       const sel = document.querySelector('input[name="anioChip"]:checked');
-      if (sel) anioHidden.value = sel.value;
+      if (sel && anioHidden) anioHidden.value = sel.value;
     });
   })();
 </script>

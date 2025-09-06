@@ -1,135 +1,244 @@
-/* ====== Barra superior de acciones ====== */
-.topbar-actions{
-  position: sticky; top: 0; z-index: 1040;
-  background: #ffffff; padding: .75rem 0;
-  border-bottom: 1px solid rgba(0,0,0,.06);
-}
-.topbar-actions .emoji{font-size: 1.25rem;}
-.page-content{padding-top: 1rem;}
+/* =========================================================
+   Aprovechamiento – Diseño amigable (Administrador / Usuario)
+   Paleta: azul Bootstrap (#0d6efd), grises fríos, fondo claro
+   ========================================================= */
 
-/* ====== Panel / Tarjetas ====== */
-.card-panel{
-  border: 1px solid #eef0f4;
-  box-shadow: 0 4px 10px rgba(20,20,20,.03);
-  border-radius: 14px;
-}
-.card-header{ background: #f8f9fb; }
+/* ---------- Variables de diseño ---------- */
+:root{
+  --bg-page:        #f6f8fc;
+  --bg-card:        #ffffff;
+  --bg-muted:       #f3f6fb;
+  --line-soft:      #e7edf6;
+  --line-softer:    #eef2f8;
 
-/* ====== Botones + check group ====== */
-.btn-check-group{
-  display: inline-flex; gap: .4rem; flex-wrap: wrap;
+  --text-strong:    #0f172a;
+  --text-default:   #334155;
+  --text-muted:     #6b7280;
+
+  --brand:          #0d6efd;
+  --brand-600:      #0b5ed7;
+  --brand-50:       #eaf2ff;
+
+  --ok:             #20c997;
+  --warn:           #ffcd39;
+  --danger:         #e35d6a;
+
+  --shadow-card:    0 16px 40px rgba(2, 8, 23, .06), 0 2px 10px rgba(2, 8, 23, .04);
+  --shadow-soft:    0 8px 22px rgba(2, 8, 23, .06);
+  --radius-xl:      18px;
+  --radius-lg:      14px;
+  --radius-md:      12px;
+  --radius-pill:    999px;
+
+  --chip-on:        var(--brand);
+  --chip-on-text:   #fff;
+  --chip-off:       #fff;
+  --chip-off-bd:    #dbe4f2;
+
+  --table-head:     #0f172a;
+  --table-head-tx:  #fff;
+
+  --scroll-thumb:   #c7d3ea;
+  --scroll-track:   transparent;
+
+  --transition:     .2s cubic-bezier(.2,.8,.2,1);
 }
-.btn-check-group .form-check-input{
-  position: absolute; opacity: 0; pointer-events: none;
+
+/* ---------- Base y página ---------- */
+*{ -webkit-tap-highlight-color: transparent; }
+html{ scroll-behavior: smooth; }
+body{
+  background: radial-gradient(1200px 200px at 0% -10%, #f0f5ff 0%, transparent 60%),
+              radial-gradient(1400px 220px at 100% -10%, #f8fbff 0%, transparent 65%),
+              var(--bg-page);
+  color: var(--text-default);
 }
+.page-content{ padding-top: 1.25rem; }
+
+/* ---------- Tarjetas / Paneles ---------- */
+.card-panel,
+.chart-card,
+.card{
+  background: var(--bg-card);
+  border: 1px solid var(--line-softer);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.card:hover{ transform: translateY(-2px); box-shadow: 0 18px 44px rgba(2,8,23,.08), 0 4px 14px rgba(2,8,23,.06); }
+.card-header{
+  background: linear-gradient(180deg, var(--bg-muted), #fff);
+  border-bottom: 1px solid var(--line-softer);
+  padding: .9rem 1rem;
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+}
+.card-header h6{ margin: 0; font-weight: 800; color: var(--text-strong); }
+
+/* ---------- Botones ---------- */
+.btn{
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .62rem 1rem; border-radius: 12px;
+  transition: transform var(--transition), box-shadow var(--transition), filter var(--transition);
+  will-change: transform;
+}
+.btn i,.btn .fa,.btn .fas,.btn .far{ line-height: 1; transform: translateY(-.5px); }
+.btn:active{ transform: translateY(1px) scale(.99); }
+
+.btn-primary,.btn-success,.btn-danger{ box-shadow: var(--shadow-soft); }
+.btn-primary{ background: var(--brand); border-color: var(--brand); }
+.btn-primary:hover{ background: var(--brand-600); box-shadow: 0 10px 22px rgba(13,110,253,.22); }
+.btn-success{ background: var(--ok); border-color: var(--ok); }
+.btn-success:hover{ box-shadow: 0 10px 22px rgba(32,201,151,.18); }
+.btn-danger{ background: var(--danger); border-color: var(--danger); }
+.btn-danger:hover{ box-shadow: 0 10px 22px rgba(227,93,106,.18); }
+
+.btn-outline-secondary{
+  background: #fff; border: 1px solid #dfe3ea; color: var(--text-default);
+}
+.btn-outline-secondary:hover{ background: #f6f8fd; box-shadow: 0 6px 16px rgba(2,8,23,.05); }
+
+/* ---------- Chips (ciclos / gráficas) ---------- */
+.btn-check-group{ display: inline-flex; flex-wrap: wrap; gap: .55rem; }
+.btn-check-group .form-check-input{ position: absolute; opacity: 0; pointer-events: none; }
 .btn-check-group .btn{
-  border-radius: 999px; padding: .35rem .8rem;
-  border: 1px solid #e4e7ec; background: #fff;
+  padding: .42rem .95rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--chip-off-bd);
+  background: var(--chip-off);
+  color: var(--text-default);
+  box-shadow: none;
 }
+.btn-check-group .btn:hover{ background: #f8faff; }
 .btn-check-group .form-check-input:checked + .btn{
-  background: #0d6efd; color: #fff; border-color: #0d6efd;
+  background: var(--chip-on);
+  border-color: var(--chip-on);
+  color: var(--chip-on-text);
+  box-shadow: 0 6px 16px rgba(13,110,253,.24);
+  transform: translateY(-1px);
 }
 
-/* ====== Programas: contenedor con scroll y dos columnas ====== */
+/* ---------- Programas (contenedor amigable) ---------- */
 .programas-wrapper{
-  background: #fafbfc; border: 1px solid #eef0f4; border-radius: 12px;
-  padding: .75rem;
+  background: #fbfdff;
+  border: 1px solid var(--line-softer);
+  border-radius: 16px; padding: .9rem;
 }
 .programas-scroll{
   display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
-  max-height: 220px; overflow: auto; padding-right: .25rem;
+  max-height: 260px; overflow: auto; padding-right: .25rem;
 }
 .programas-col .section-title{
-  font-size: .85rem; font-weight: 700; color: #6b7280; margin-bottom: .4rem;
+  font-size: .9rem; font-weight: 900; color: var(--text-muted); margin-bottom: .5rem;
 }
-.programas-col .form-check{ margin-bottom: .25rem; }
-
-/* ====== Gráficas ====== */
-.chart-card{
-  border: 1px solid #eef0f4;
-  box-shadow: 0 6px 14px rgba(0,0,0,.04);
-  border-radius: 14px;
-}
-.grafica-box canvas{
-  /* hace que el canvas no "brinque" al cargar */
-  display: block; width: 100%;
+.programas-col .form-check{ margin-bottom: .35rem; }
+.programas-col .form-check-label{ cursor: pointer; }
+.programas-col .form-check-input:checked ~ .form-check-label{
+  color: var(--text-strong); font-weight: 600;
 }
 
-/* ====== Tabla ====== */
-.table-wrapper{ max-height: 55vh; overflow: auto; }
-.table thead th{ position: sticky; top: 0; z-index: 1; }
-.table thead{ background: #0f172a; color: #fff; }
-.table tbody tr:nth-child(even){ background: #fafafa; }
-.table td, .table th{ padding: .65rem .8rem; }
-.table-hover tbody tr:hover{ background: #f2f6ff; }
+/* ---------- Scrollbars ---------- */
+.programas-scroll::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar{ width: 10px; height: 10px; }
+.programas-scroll::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb{
+  background: var(--scroll-thumb); border-radius: 10px; border: 2px solid #eef3fb;
+}
+.programas-scroll::-webkit-scrollbar-track,
+.table-wrapper::-webkit-scrollbar-track{ background: var(--scroll-track); }
 
-/* ====== Utilidades ====== */
-.fw-semibold{font-weight: 600;}
-.gap-2{gap: .5rem;}
+/* ---------- Gráficas ---------- */
+.chart-card .card-body{ padding: 1.05rem; min-height: 330px; }
+.grafica-box canvas{ display: block; width: 100%; border-radius: 12px; }
 
-/* ===== Botones: ícono alineado + espacios consistentes ===== */
-.actions-wrap, .filter-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .75rem;                 /* espacio uniforme entre botones */
+/* ---------- Tabla ---------- */
+.table-wrapper{ max-height: 62vh; overflow: auto; }
+.table{ margin: 0; font-size: .96rem; border-collapse: separate; border-spacing: 0; }
+.table thead{
+  background: linear-gradient(180deg, var(--table-head), #111827);
+  color: var(--table-head-tx);
+}
+.table thead th{
+  position: sticky; top: 0; z-index: 1; border: none; letter-spacing: .2px;
+}
+.table td, .table th{ padding: .75rem 1rem; }
+.table tbody tr:nth-child(even){ background: #f7f9ff; }
+.table-hover tbody tr{ transition: background var(--transition), transform var(--transition); }
+.table-hover tbody tr:hover{ background: #eef4ff; transform: translateX(1px); }
+.table td.text-center{ font-variant-numeric: tabular-nums; }
+
+.card-header .badge{
+  background: #eef4ff; color: var(--brand);
+  border: 1px solid #dbe7ff; font-weight: 800; border-radius: 10px;
 }
 
-.btn {
-  display: inline-flex;        /* alinea ícono y texto */
-  align-items: center;
-  gap: .5rem;                  /* espacio icono-texto */
-  padding: .55rem .9rem;
-  border-radius: .6rem;
+/* ---------- Alerts ---------- */
+.alert{
+  border-radius: 14px; border: 1px solid var(--line-softer);
+  box-shadow: var(--shadow-soft);
+}
+.alert-success{ background: #ecfff7; color: #0f5132; }
+.alert-warning{ background: #fff9e8; color: #664d03; }
+.alert-danger{  background: #ffeff1; color: #7a2530; }
+
+/* ---------- Accesibilidad ---------- */
+a:focus, button:focus, .btn:focus,
+input:focus, .form-check-input:focus, .form-select:focus{
+  outline: 3px solid rgba(13,110,253,.28);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(13,110,253,.12);
 }
 
-.btn i, .btn .fa, .btn .fas, .btn .far {
-  font-size: 1rem;             /* tamaño de icono consistente */
-  line-height: 1;
-  transform: translateY(-.5px);/* micro-ajuste vertical */
+/* ---------- Utilidades ---------- */
+.gap-2{ gap: .6rem; }
+.fw-semibold{ font-weight: 700; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1200px){
+  .chart-card .card-body{ min-height: 300px; }
+}
+@media (max-width: 992px){
+  .programas-scroll{ grid-template-columns: 1fr; max-height: 280px; }
+  .chart-card .card-body{ min-height: 280px; }
+}
+@media (max-width: 576px){
+  .btn{ padding: .56rem .9rem; border-radius: 10px; }
+  .chart-card .card-body{ min-height: 260px; }
 }
 
-/* Hover/active sutil para todas */
-.btn:hover { filter: brightness(0.98); }
-.btn:active { transform: translateY(1px); }
-
-/* Botones principales con leve sombra */
-.btn-primary, .btn-success, .btn-danger {
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+/* =========================================================
+   Exportación PDF/Imagen: SOLO tabla + gráficas
+   ========================================================= */
+body.export-only .topbar-actions,
+body.export-only .card.card-panel,
+body.export-only .btn-check-group,
+body.export-only #btnDescargarPDF,
+body.export-only .alert,
+body.export-only form[action*="cargar_aprovechamiento"],
+body.export-only a[href*="descargar_plantilla"],
+body.export-only .actions,
+body.export-only .btn,
+body.export-only .form-control,
+body.export-only .form-check-input,
+body.export-only .form-check-label{
+  display: none !important;
 }
 
-/* Outline más visible */
-.btn-outline-secondary {
-  border: 1px solid #dfe3e8;
-  background: #fff;
+body.export-only .page-content{
+  padding-top: 0 !important;
+  background: #fff !important;
 }
-.btn-outline-secondary:hover {
-  background: #f6f7fb;
+body.export-only .card,
+body.export-only .chart-card{
+  box-shadow: none !important;
+  border: 1px solid #e5e7eb !important;
 }
-
-/* Chips de gráficas: espaciado más cómodo */
-.btn-check-group { gap: .5rem; }
-.btn-check-group .btn { padding: .4rem .75rem; }
-
-/* Margen micro entre controles de archivo y Procesar */
-#fileInput + .btn, #submitBtn { margin-left: .5rem; }
-
-/* Separación visual suave bajo la barra superior */
-.topbar-actions { padding: .85rem 0; }
-
-/* Chips compatibles para radio/checkbox dentro del grupo */
-.btn-check-group input[type="radio"],
-.btn-check-group input[type="checkbox"],
-.btn-check-group .form-check-input{
-  position: absolute; opacity: 0; pointer-events: none;
+body.export-only .grafica-box,
+body.export-only .table-responsive{
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
-
-/* Scroll horizontal si hay muchos años */
-.cycle-scroll{
-  display: flex; gap: .5rem; flex-wrap: wrap;
-  max-width: 100%;
+body.export-only .table td,
+body.export-only .table th{
+  padding: .55rem .65rem !important;
 }
-
-/* Opcional: si prefieres scroll horizontal sin salto de línea, usa esto:
-.cycle-scroll{ flex-wrap: nowrap; overflow:auto; padding-bottom:.25rem; }
-.cycle-scroll .btn{ white-space: nowrap; }
-*/

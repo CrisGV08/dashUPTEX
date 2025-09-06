@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Aprovechamiento Académico{% endblock %}
+{% block title %}Aprovechamiento Académico · Usuario{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/aprovechamiento.css' %}">
 
-<h1 class="text-center mt-4 mb-4">📘 Aprovechamiento Académico Histórico</h1>
+<h1 class="text-center mt-4 mb-3">📘 Aprovechamiento Académico Histórico</h1>
 
 <div class="container-fluid">
 
@@ -24,13 +24,12 @@
             <select id="filtroAnio" class="form-control">
               <option value="Todos">Todos</option>
               {% for c in anios %}
-                <!-- c DEBE venir en formato 'YYYY - CLAVE' (p. ej. 2025 - E-A) -->
                 <option value="{{ c }}">{{ c }}</option>
               {% endfor %}
             </select>
           </div>
 
-          <!-- Tipo de gráficas -->
+          <!-- Tipos de gráficas -->
           <div class="col-lg-4">
             <label class="form-label fw-semibold d-block mb-1">
               <i class="fas fa-chart-bar me-1"></i> Gráficas
@@ -38,13 +37,10 @@
             <div class="btn-check-group">
               <input class="form-check-input grafica-check" type="checkbox" value="barras" id="checkBarras" checked>
               <label class="btn btn-light btn-sm" for="checkBarras">Barras</label>
-
               <input class="form-check-input grafica-check" type="checkbox" value="linea" id="checkLinea" checked>
               <label class="btn btn-light btn-sm" for="checkLinea">Línea</label>
-
               <input class="form-check-input grafica-check" type="checkbox" value="pastel" id="checkPastel" checked>
               <label class="btn btn-light btn-sm" for="checkPastel">Pastel</label>
-
               <input class="form-check-input grafica-check" type="checkbox" value="gauss" id="checkGauss" checked>
               <label class="btn btn-light btn-sm" for="checkGauss">Gauss</label>
             </div>
@@ -59,7 +55,7 @@
             </div>
           </div>
 
-          <!-- Programas Educativos -->
+          <!-- Programas Educativos (desde el dataset real) -->
           <div class="col-lg-4">
             <label class="form-label fw-semibold d-block mb-1">
               <i class="fas fa-layer-group me-1"></i> Programas Educativos
@@ -67,26 +63,24 @@
 
             <div class="programas-wrapper">
               <div class="programas-scroll">
-                <!-- Nuevos -->
                 <div class="programas-col">
                   <div class="section-title">Nuevos</div>
                   {% for p in programas_nuevos %}
                     <div class="form-check">
                       <input class="form-check-input programa-checkbox" type="checkbox"
-                             id="prog-n-{{ p.id }}" value="N-{{ p.id }}" checked>
-                      <label class="form-check-label" for="prog-n-{{ p.id }}">{{ p.nombre }}</label>
+                             id="prog-{{ p.id }}" value="{{ p.id }}" checked>
+                      <label class="form-check-label" for="prog-{{ p.id }}">{{ p.nombre }}</label>
                     </div>
                   {% endfor %}
                 </div>
 
-                <!-- Antiguos -->
                 <div class="programas-col">
                   <div class="section-title">Antiguos</div>
                   {% for p in programas_antiguos %}
                     <div class="form-check">
                       <input class="form-check-input programa-checkbox" type="checkbox"
-                             id="prog-a-{{ p.id }}" value="A-{{ p.id }}" checked>
-                      <label class="form-check-label" for="prog-a-{{ p.id }}">{{ p.nombre }}</label>
+                             id="prog-{{ p.id }}" value="{{ p.id }}" checked>
+                      <label class="form-check-label" for="prog-{{ p.id }}">{{ p.nombre }}</label>
                     </div>
                   {% endfor %}
                 </div>
@@ -102,49 +96,21 @@
               </div>
             </div>
           </div>
-          <!-- /Programas -->
 
-        </div> <!-- /row -->
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- 📈 Gráficas -->
-  <div class="row g-3">
-    <div class="col-lg-6 grafica-box" id="box-barras">
-      <div class="card h-100">
-        <div class="card-header"><h6 class="m-0">📊 Gráfico de Barras</h6></div>
-        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 grafica-box" id="box-linea">
-      <div class="card h-100">
-        <div class="card-header"><h6 class="m-0">📈 Gráfico de Línea</h6></div>
-        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 grafica-box" id="box-pastel">
-      <div class="card h-100">
-        <div class="card-header"><h6 class="m-0">🥧 Gráfico de Pastel</h6></div>
-        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 grafica-box" id="box-gauss">
-      <div class="card h-100">
-        <div class="card-header"><h6 class="m-0">📉 Campana de Gauss</h6></div>
-        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 📋 Tabla -->
-  <div class="card mt-4">
-    <div class="card-header">
+  <!-- 📋 Tabla (debajo de filtros, arriba de gráficas) -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
       <h6 class="m-0">📋 Detalle por Programa y Ciclo</h6>
+      <span class="badge bg-primary" id="badgeFiltrados">Filtrados: 0</span>
     </div>
     <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered text-center" id="tablaDetalle">
+      <div class="table-responsive table-wrapper">
+        <table class="table table-bordered table-hover text-center" id="tablaDetalle">
           <thead class="thead-light">
             <tr>
               <th>Ciclo</th>
@@ -159,23 +125,56 @@
               <td>{{ fila.programa }}</td>
               <td>{{ fila.promedio }}</td>
             </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted">Sin registros</td></tr>
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="text-muted small mt-2" id="msgSinDatos" style="display:none">
+        No hay datos que coincidan con los filtros.
+      </div>
+    </div>
+  </div>
+
+  <!-- 📈 Gráficas -->
+  <div class="row g-3">
+    <div class="col-lg-6 grafica-box" id="box-barras">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📊 Gráfico de Barras</h6></div>
+        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 grafica-box" id="box-linea">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📈 Gráfico de Línea</h6></div>
+        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 grafica-box" id="box-pastel">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">🥧 Gráfico de Pastel</h6></div>
+        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-6 grafica-box" id="box-gauss">
+      <div class="card h-100 chart-card">
+        <div class="card-header"><h6 class="m-0">📉 Campana de Gauss</h6></div>
+        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 🔢 Datos para JS (array de objetos con ids de programa) -->
+<!-- 🔢 Dataset para JS (SIN json_script) -->
 <script id="datosGraficas" type="application/json">
-  {{ datos_graficas|safe }}
+  {{ datos_graficas_json|safe }}
 </script>
 
 <!-- Librerías -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
-<!-- JS de usuario -->
+<!-- JS -->
 <script src="{% static 'js/aprovechamiento_usuario.js' %}"></script>
 {% endblock %}

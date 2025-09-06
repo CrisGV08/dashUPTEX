@@ -1,48 +1,77 @@
+# api/home/views.py
+import json
 from django.shortcuts import render
-from django.db.models import Avg
-from api.models import AprovechamientoAcademico, CicloPeriodo
+from api.models import AprovechamientoAcademico
 
 def aprovechamiento_usuario_view(request):
-    filtro_anio = request.GET.get('filtro_anio')
+    """
+    Vista de usuario: usa EXACTAMENTE el mismo dataset que Admin (AprovechamientoAcademico)
+    y construye los filtros a partir de los datos reales. No depende de json_script.
+    """
+    qs = (AprovechamientoAcademico.objects
+          .select_related('ciclo_periodo__ciclo',
+                          'ciclo_periodo__periodo',
+                          'programa_antiguo', 'programa_nuevo'))
 
-    registros = AprovechamientoAcademico.objects.all()
-    if filtro_anio and filtro_anio != "Todos":
-        registros = registros.filter(ciclo_periodo__ciclo__anio=filtro_anio)
+    detalle = []
+    for r in qs:
+        # Ciclo "YYYY - CLAVE"
+        anio  = getattr(getattr(r.ciclo_periodo, 'ciclo',   None), 'anio',  None)
+        clave = getattr(getattr(r.ciclo_periodo, 'periodo', None), 'clave', None)
+        ciclo = f"{anio} - {clave}" if (anio and clave) else "Sin ciclo"
 
-    detalle_programas = []
-    programas = []
-    promedios_hist = []
+        # Programa A-<id> / N-<id> / U-<rowid> si no hay relación
+        if r.programa_antiguo_id:
+            programa_id = f"A-{r.programa_antiguo_id}"
+            programa_nombre = r.programa_antiguo.nombre
+            programa_tipo = 'A'
+        elif r.programa_nuevo_id:
+            programa_id = f"N-{r.programa_nuevo_id}"
+            programa_nombre = r.programa_nuevo.nombre
+            programa_tipo = 'N'
+        else:
+            programa_id = f"U-{r.id}"
+            programa_nombre = "Programa sin nombre"
+            programa_tipo = 'U'
 
-    for r in registros:
-        nombre = r.programa_antiguo.nombre if r.programa_antiguo else r.programa_nuevo.nombre
-        if nombre not in programas:
-            promedio = registros.filter(
-                programa_antiguo=r.programa_antiguo,
-                programa_nuevo=r.programa_nuevo
-            ).aggregate(avg=Avg('promedio'))['avg'] or 0
-            programas.append(nombre)
-            promedios_hist.append(round(promedio, 2))
-            detalle_programas.append({'programa': nombre, 'promedio': round(promedio, 2)})
+        detalle.append({
+            "ciclo": ciclo,
+            "programa_id": programa_id,
+            "programa_tipo": programa_tipo,   # A / N / U
+            "programa": programa_nombre,
+            "promedio": None if r.promedio is None else float(r.promedio),
+        })
 
-    ciclos = []
-    promedios_ciclo = []
-    ciclos_cp = registros.values_list('ciclo_periodo__id', flat=True).distinct()
-    cps = CicloPeriodo.objects.filter(id__in=ciclos_cp).order_by('ciclo__anio', 'periodo__clave')
-    for cp in cps:
-        etiqueta = f"{cp.ciclo.anio} {cp.periodo.clave}"
-        promedio = registros.filter(ciclo_periodo=cp).aggregate(avg=Avg('promedio'))['avg'] or 0
-        ciclos.append(etiqueta)
-        promedios_ciclo.append(round(promedio, 2))
+    # Filtros desde el MISMO dataset
+    order_map = {'E-A': 3, 'M-A': 2, 'S-D': 1}
+    ciclos = sorted(
+        {d["ciclo"] for d in detalle if d["ciclo"] != "Sin ciclo"},
+        key=lambda s: (int(s.split(' - ')[0]), order_map.get(s.split(' - ')[1], 0)),
+        reverse=True
+    )
 
-    anios = AprovechamientoAcademico.objects.values_list('ciclo_periodo__ciclo__anio', flat=True).distinct().order_by('ciclo_periodo__ciclo__anio')
+    # Programas únicos por tipo (A/N) presentes en los datos
+    vistos = set()
+    progs_A, progs_N = [], []
+    for d in detalle:
+        pid = d["programa_id"]
+        if pid in vistos:
+            continue
+        vistos.add(pid)
+        item = {"id": pid, "nombre": d["programa"]}
+        if d["programa_tipo"] == 'A':
+            progs_A.append(item)
+        elif d["programa_tipo"] == 'N':
+            progs_N.append(item)
+        # Los 'U' no se listan en checkboxes
+    progs_A.sort(key=lambda x: x["nombre"].lower())
+    progs_N.sort(key=lambda x: x["nombre"].lower())
 
-    context = {
-        'anios': anios,
-        'detalle_programas': detalle_programas,
-        'programas': programas,
-        'promedios_hist': promedios_hist,
-        'ciclos': ciclos,
-        'promedios_ciclo': promedios_ciclo,
+    ctx = {
+        "anios": ciclos,
+        "programas_antiguos": progs_A,
+        "programas_nuevos": progs_N,
+        "detalle_ciclos": detalle,                                # tabla inicial
+        "datos_graficas_json": json.dumps(detalle, ensure_ascii=False),  # para JS
     }
-
-    return render(request, 'aprovechamiento_usuario.html', context)
+    return render(request, "aprovechamiento_usuario.html", ctx)

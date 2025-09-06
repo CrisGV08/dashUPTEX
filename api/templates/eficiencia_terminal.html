@@ -29,9 +29,9 @@
     </form>
   </div>
 
-  <!-- ✅ Filtros -->
+  <!-- ✅ Filtros (con botón PDF a la derecha) -->
   <div class="card mb-4">
-    <div class="card-body d-flex justify-content-between flex-wrap">
+    <div class="card-body d-flex justify-content-between flex-wrap align-items-center">
       <form method="GET" class="form-inline">
         <label for="filtroAnio"><strong>Ciclo:</strong></label>
         <select id="filtroAnio" name="filtro_anio" class="form-control mx-2">
@@ -56,41 +56,19 @@
         <label class="form-check form-check-inline">
           <input class="form-check-input grafica-check" type="checkbox" value="gauss" checked> Gauss
         </label>
-        <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
-        <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+
+        <button id="aplicarFiltros" type="button" class="btn btn-sm btn-primary ml-2">Aplicar</button>
+        <button id="resetFiltros" type="button" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+
+        <!-- Botón PDF aquí -->
+        <button id="btnDescargarPDF" type="button" class="btn btn-danger ml-3">
+          <i class="fas fa-file-pdf"></i> Descargar PDF
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Gráficas -->
-  <div class="row">
-    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
-      <div class="card h-100">
-        <div class="card-header text-center">📊 Gráfico de Barras</div>
-        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
-      <div class="card h-100">
-        <div class="card-header text-center">📈 Gráfico de Línea</div>
-        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
-      <div class="card h-100">
-        <div class="card-header text-center">🥧 Gráfico de Pastel</div>
-        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
-      <div class="card h-100">
-        <div class="card-header text-center">📉 Campana de Gauss</div>
-        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ Tabla Detallada -->
+  <!-- ✅ Tabla (entre Filtros y Gráficas) -->
   <div class="card mb-4">
     <div class="card-header"><strong>📋 Detalle por Programa y Ciclo</strong></div>
     <div class="card-body table-responsive">
@@ -113,25 +91,51 @@
             <td>{{ fila.egresados }}</td>
             <td>{{ fila.porcentaje }}%</td>
           </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted">Sin registros</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ✅ Botón PDF -->
-  <div class="text-center mb-4">
-    <button id="btnDescargarPDF" class="btn btn-danger">
-      <i class="fas fa-file-pdf"></i> Descargar PDF
-    </button>
-  </div>
-</div>
+  <!-- ✅ Gráficas -->
+  <div class="row">
+    <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
+      <div class="card h-100">
+        <div class="card-header text-center">📊 Gráfico de Barras</div>
+        <div class="card-body"><canvas id="graficaBarras" height="250"></canvas></div>
+      </div>
+    </div>
 
-<!-- Datos JSON para JS -->
+    <div class="col-lg-6 mb-4 grafica-box" id="box-linea">
+      <div class="card h-100">
+        <div class="card-header text-center">📈 Gráfico de Línea</div>
+        <div class="card-body"><canvas id="graficaLinea" height="250"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4 grafica-box" id="box-pastel">
+      <div class="card h-100">
+        <div class="card-header text-center">🥧 Gráfico de Pastel</div>
+        <div class="card-body"><canvas id="graficaPastel" height="250"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4 grafica-box" id="box-gauss">
+      <div class="card h-100">
+        <div class="card-header text-center">📉 Campana de Gauss</div>
+        <div class="card-body"><canvas id="graficaGauss" height="250"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>  {# <- cierre del container aquí, después de todo el contenido #}
+
+<!-- Datos JSON para JS (número, no string) -->
 <script id="datosGraficas" type="application/json">
-  {
-    "eficiencia": "{{ datos_graficas.eficiencia|floatformat:2 }}"
-  }
+{
+  "eficiencia": {{ datos_graficas.eficiencia|default:0|floatformat:2 }}
+}
 </script>
 
 <script src="{% static 'js/eficiencia_terminal.js' %}"></script>

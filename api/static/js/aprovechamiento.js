@@ -1,16 +1,8 @@
 // static/js/aprovechamiento.js
 document.addEventListener("DOMContentLoaded", function () {
   // --------- refs ----------
-
-  
   const elDatos = document.getElementById("datosGraficas");
   const formFiltros = document.getElementById("filter-form");
-
-  // Ciclo (chips)
-  const radiosCiclo = document.querySelectorAll('input[name="anioChip"]');
-  const hiddenCiclo = document.getElementById("filtroAnioHidden");
-  const btnAplicarFilt = document.getElementById("aplicarFiltros");
-  const resetLink = document.getElementById("resetFiltrosLink");
 
   // Programas
   const btnProgAll = document.getElementById("select-all-prog");
@@ -42,28 +34,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   console.log("[Aprovechamiento] puntos:", datos.programas ? datos.programas.length : 0);
 
-  // --------- chips ciclo -> hidden ----------
-  if (radiosCiclo.length && hiddenCiclo) {
-    radiosCiclo.forEach(r => {
-      r.addEventListener("change", function () {
-        hiddenCiclo.value = this.value;
-      });
-    });
-  }
-  if (btnAplicarFilt && hiddenCiclo) {
-    btnAplicarFilt.addEventListener("click", function () {
-      const sel = document.querySelector('input[name="anioChip"]:checked');
-      if (sel) hiddenCiclo.value = sel.value;
-      // submit lo hace el propio botón (type="submit")
-    });
-  }
-  if (resetLink) {
-    resetLink.addEventListener("click", function () {
-      // al resetear, deja todas las gráficas activas
-      chkGraficas.forEach(cb => { cb.checked = true; });
-    });
-  }
-
   // --------- seleccionar/limpiar programas ----------
   if (btnProgAll) {
     btnProgAll.addEventListener("click", function () {
@@ -83,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const hasChart = typeof Chart !== "undefined";
   const hasDatalabels = typeof ChartDataLabels !== "undefined";
   const basePlugins = hasDatalabels ? [ChartDataLabels] : [];
-  const defaultGenLabels = hasChart ? (Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.legend && Chart.defaults.plugins.legend.labels && Chart.defaults.plugins.legend.labels.generateLabels) : null;
+  const defaultGenLabels = hasChart ? (Chart.defaults?.plugins?.legend?.labels?.generateLabels) : null;
 
   function activasDesdeUI() {
     return Array.from(chkGraficas)
@@ -226,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
             responsive: true,
             plugins: {
               legend: { position: "right", labels: { usePointStyle: true, padding: 20 } },
-              datalabels: { formatter: function (v) { return Number(v).toFixed(2); }, font: { weight: "bold" } }
+              datalabels: { formatter: (v) => Number(v).toFixed(2), font: { weight: "bold" } }
             }
           },
           plugins: basePlugins
@@ -270,25 +240,58 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Eventos del filtro de gráficas
-  chkGraficas.forEach(cb => {
-    cb.addEventListener("change", renderDesdeUI);
-  });
-  if (btnGrafAll) {
-    btnGrafAll.addEventListener("click", function () {
-      chkGraficas.forEach(cb => { cb.checked = true; });
-      renderDesdeUI();
-    });
-  }
-  if (btnGrafNone) {
-    btnGrafNone.addEventListener("click", function () {
-      chkGraficas.forEach(cb => { cb.checked = false; });
-      renderDesdeUI();
-    });
-  }
-  if (btnGrafApply) {
-    btnGrafApply.addEventListener("click", renderDesdeUI);
-  }
+  chkGraficas.forEach(cb => cb.addEventListener("change", renderDesdeUI));
+  if (btnGrafAll) btnGrafAll.addEventListener("click", () => { chkGraficas.forEach(cb => cb.checked = true); renderDesdeUI(); });
+  if (btnGrafNone) btnGrafNone.addEventListener("click", () => { chkGraficas.forEach(cb => cb.checked = false); renderDesdeUI(); });
+  if (btnGrafApply) btnGrafApply.addEventListener("click", renderDesdeUI);
 
   // Render inicial
   renderDesdeUI();
+
+  // --------- Descargar PDF: solo tabla + gráficas ----------
+  document.getElementById("btnDescargarPDF")?.addEventListener("click", function () {
+    const { jsPDF } = window.jspdf;
+
+    // Activar modo exportación (oculta filtros y barra)
+    document.body.classList.add("export-only");
+
+    const area = document.querySelector(".page-content");
+    html2canvas(area, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff"
+    })
+    .then(canvas => {
+      // Quitar modo exportación (volver normal)
+      document.body.classList.remove("export-only");
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = canvas.height * imgW / canvas.width;
+
+      let position = 0;
+      let heightLeft = imgH;
+
+      pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+
+      while (heightLeft > 0) {
+        position -= pageH;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
+      }
+
+      pdf.save("Aprovechamiento.pdf");
+    })
+    .catch(err => {
+      document.body.classList.remove("export-only");
+      console.error("[PDF] Error:", err);
+      alert("No se pudo generar el PDF. Revisa la consola.");
+    });
+  });
 });

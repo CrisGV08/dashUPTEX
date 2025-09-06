@@ -19,7 +19,7 @@
         <select id="filtroAnio" name="filtro_anio" class="form-control mx-2">
           <option value="Todos">Todos</option>
           {% for anio in anios %}
-            <option value="{{ anio }}" {% if anio == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
+            <option value="{{ anio }}" {% if anio|stringformat:"s" == request.GET.filtro_anio %}selected{% endif %}>{{ anio }}</option>
           {% endfor %}
         </select>
       </form>
@@ -38,13 +38,44 @@
         <label class="form-check form-check-inline">
           <input class="form-check-input grafica-check" type="checkbox" value="gauss" checked> Gauss
         </label>
-        <button id="aplicarFiltros" class="btn btn-sm btn-primary ml-2">Aplicar</button>
-        <button id="resetFiltros" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
+        <button id="aplicarFiltros" type="button" class="btn btn-sm btn-primary ml-2">Aplicar</button>
+        <button id="resetFiltros" type="button" class="btn btn-sm btn-outline-secondary ml-1">Reset</button>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Gráficas -->
+  <!-- ✅ TABLA (entre filtros y gráficas) -->
+  <div class="card mb-4">
+    <div class="card-header"><strong>📋 Detalle por Programa y Ciclo</strong></div>
+    <div class="card-body table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="thead-light">
+          <tr>
+            <th>Ciclo</th>
+            <th>Programa</th>
+            <th>Matrícula Ingreso</th>
+            <th>Egresados</th>
+            <th>% Eficiencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fila in detalle_ciclos %}
+          <tr>
+            <td>{{ fila.ciclo }}</td>
+            <td>{{ fila.programa }}</td>
+            <td>{{ fila.matricula_ingreso }}</td>
+            <td>{{ fila.egresados }}</td>
+            <td>{{ fila.porcentaje }}%</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-muted text-center">Sin registros</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ✅ GRÁFICAS -->
   <div class="row">
     <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
       <div class="card h-100">
@@ -71,44 +102,15 @@
       </div>
     </div>
   </div>
-
-  <!-- ✅ Tabla Detallada -->
-  <div class="card mb-4">
-    <div class="card-header"><strong>📋 Detalle por Programa y Ciclo</strong></div>
-    <div class="card-body table-responsive">
-      <table class="table table-bordered table-hover">
-        <thead class="thead-light">
-          <tr>
-            <th>Ciclo</th>
-            <th>Programa</th>
-            <th>Matrícula Ingreso</th>
-            <th>Egresados</th>
-            <th>% Eficiencia</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for fila in detalle_ciclos %}
-          <tr>
-            <td>{{ fila.ciclo }}</td>
-            <td>{{ fila.programa }}</td>
-            <td>{{ fila.matricula_ingreso }}</td>
-            <td>{{ fila.egresados }}</td>
-            <td>{{ fila.porcentaje }}%</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
 </div>
 
-<!-- JSON para gráficas -->
+<!-- ✅ JSON para JS (con default seguro) -->
 <script id="datosGraficas" type="application/json">
-  {
-    "eficiencia": "{{ datos_graficas.eficiencia|floatformat:2 }}"
-  }
+{
+  "eficiencia": {{ datos_graficas.eficiencia|default:0|floatformat:2 }}
+}
 </script>
 
-<!-- JS separado -->
-<script src="{% static 'js/eficiencia_terminal.js' %}"></script>
+<!-- JS del usuario -->
+<script src="{% static 'js/eficiencia_terminal_usuario.js' %}"></script>
 {% endblock %}

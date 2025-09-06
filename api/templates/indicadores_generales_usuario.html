@@ -50,7 +50,49 @@
     </div>
   </div>
 
-  <!-- Gráficas -->
+  <!-- ⬆️ Filtros | ⬇️ Tabla (ahora va aquí) -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="m-0">📋 Detalle por Ciclo</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered text-center" id="tablaDetalle">
+          <thead class="thead-light">
+            <tr>
+              <th>Ciclo</th>
+              <th>Matrícula</th>
+              <th>Deserción</th>
+              <th>Reprobación</th>
+              <th>Egresados</th>
+              <th>% Deserción</th>
+              <th>% Reprobación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in detalle_ciclos %}
+            <tr>
+              <td>{{ fila.ciclo }}</td>
+              <td>{{ fila.matricula }}</td>
+              <td>{{ fila.desercion }}</td>
+              <td>{{ fila.reprobacion }}</td>
+              <td>{{ fila.egresados }}</td>
+              <td>{{ fila.porcentaje_desercion }}%</td>
+              <td>{{ fila.porcentaje_reprobacion }}%</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-muted">Sin registros</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-muted small mt-2" id="msgSinDatos" style="display:none">
+        No hay datos que coincidan con los filtros.
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficas (ahora quedan debajo de la tabla) -->
   <div class="row">
     <div class="col-lg-6 mb-4 grafica-box" id="box-barras">
       <div class="card h-100">
@@ -78,55 +120,16 @@
     </div>
   </div>
 
-  <!-- Tabla de detalle -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="m-0">📋 Detalle por Ciclo</h5>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered text-center">
-          <thead class="thead-light">
-            <tr>
-              <th>Ciclo</th>
-              <th>Matrícula</th>
-              <th>Deserción</th>
-              <th>Reprobación</th>
-              <th>Egresados</th>
-              <th>% Deserción</th>
-              <th>% Reprobación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for fila in detalle_ciclos %}
-            <tr>
-              <td>{{ fila.ciclo }}</td>
-              <td>{{ fila.matricula }}</td>
-              <td>{{ fila.desercion }}</td>
-              <td>{{ fila.reprobacion }}</td>
-              <td>{{ fila.egresados }}</td>
-              <td>{{ fila.porcentaje_desercion }}%</td>
-              <td>{{ fila.porcentaje_reprobacion }}%</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- Datos para JS -->
 <script id="datosGraficas" type="application/json">
-{
-  "desercion": "{{ datos_graficas.desercion|default:'0' }}",
-  "reprobacion": "{{ datos_graficas.reprobacion|default:'0' }}"
-}
+  {{ datos_graficas_json|safe }}
 </script>
+
 
 <!-- Librerías -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-<script src="{% static 'js/indicadores_generales.js' %}"></script>
+<script src="{% static 'js/indicadores_generales_usuario.js' %}"></script>
 {% endblock %}
