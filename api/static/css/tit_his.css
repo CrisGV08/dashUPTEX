@@ -1,0 +1,159 @@
+/* ==========================================================================
+   TITULADOS – HISTÓRICO (CRUD)  —  CSS COMPLETO
+   ========================================================================== */
+
+/* ----- Layout general ----- */
+.tit-his{ padding:16px; max-width:1200px; margin:0 auto; }
+.tit-his__header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.tit-his__title{ margin:0; font-size:20px; font-weight:700; }
+
+/* ----- Botones ----- */
+.th-btn{
+  background:#ffffff; border:1px solid #d1d5db; color:#111827;
+  padding:8px 12px; border-radius:10px; cursor:pointer; transition:.15s ease;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+.th-btn:hover{ transform: translateY(-1px); filter:brightness(0.98); }
+.th-btn--primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+.th-btn--primary:hover{ filter:brightness(0.95); }
+.th-btn--pdf{ background:#16a34a; color:#fff; border-color:#16a34a; }
+.th-btn--danger{ background:#ef4444; color:#fff; border-color:#ef4444; }
+.th-btn--soft{ background:#f3f4f6; }
+
+/* Mini botones (Todos/Ninguno en filtros) */
+.th-filter-actions{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.th-mini{
+  background:#f3f4f6; border:1px solid #d1d5db; color:#111827;
+  padding:4px 8px; border-radius:8px; font-size:12px; cursor:pointer;
+}
+
+/* ----- Filtros ----- */
+.th-filters{
+  display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:12px; margin:8px 0 16px;
+  position: relative; /* ayuda con stacking */
+  z-index: 20;
+}
+.th-filter{
+  background:#fff; border:1px solid #e5e7eb; padding:12px; border-radius:12px;
+}
+.th-filter label{ display:block; font-size:12px; color:#6b7280; margin-bottom:6px; }
+
+/* ----- Pills (chips) ----- */
+.th-pills{ display:flex; gap:8px; flex-wrap:wrap; }
+.pill{
+  border:1px solid #d1d5db; background:#fff; color:#374151; padding:6px 10px;
+  border-radius:999px; cursor:pointer; font-size:13px; transition:.15s ease;
+}
+.pill:hover{ background:#f3f4f6; }
+.pill.active{ background:#111827; color:#fff; border-color:#111827; }
+.th-topbar--center{ display:flex; justify-content:center; margin:14px 0 12px; }
+.th-pills--center{ justify-content:center; }
+
+/* ----- Tabla ----- */
+.th-tablewrap{
+  background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:auto;
+  box-shadow: 0 6px 16px rgba(0,0,0,.04);
+}
+.th-tablewrap.no-scroll{ overflow: visible !important; }
+
+.th-grid{ width:100%; border-collapse:separate; border-spacing:0; font-size:14px; }
+.th-grid thead th{
+  position:sticky; top:0; z-index:1;
+  background:linear-gradient(180deg,#eef2ff,#e7ecff);
+  border-bottom:1px solid #e5e7eb; padding:10px; text-align:center;
+  font-weight:700;
+}
+.th-grid thead th:first-child{ border-top-left-radius:14px; }
+.th-grid thead th:last-child{ border-top-right-radius:14px; }
+
+.th-grid td{
+  border-top:1px solid #f0f2f5; padding:8px; text-align:center;
+  vertical-align:middle; white-space:nowrap;
+}
+.th-grid tbody tr:nth-child(even){ background:#fafafa; }
+.th-grid tbody tr:hover{ background:#f5f7ff; }
+
+.th-grid input[type="number"]{ width:84px; padding:6px 8px; border:1px solid #d1d5db; border-radius:8px; }
+.th-grid input[type="month"]{ width:130px; padding:6px 8px; border:1px solid #d1d5db; border-radius:8px; }
+.th-grid select{ min-width:240px; padding:6px 8px; border:1px solid #d1d5db; border-radius:8px; background:#fff; }
+
+.th-grid .tasa{ font-weight:700; color:#111827; }
+
+.acciones-col{ width: 110px; }
+.acciones .th-btn{ padding:6px 10px; border-radius:8px; }
+
+/* ----- Modo lectura vs edición (refuerzo visual) ----- */
+.tit-his:not(.editing) .th-grid input,
+.tit-his:not(.editing) .th-grid select,
+.tit-his:not(.editing) .btn-del{
+  pointer-events:none; opacity:.75;
+}
+
+/* ----- Gráfica ----- */
+.th-charts{ display:block; margin:8px 0 18px; }
+.th-charts canvas{
+  display:block; width:100%;
+  background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:12px;
+  height:360px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.04);
+}
+
+/* ----- Responsive ----- */
+html, body { overflow-x: hidden; }
+@media (max-width: 900px){
+  .th-filters{ grid-template-columns:1fr; }
+  .th-grid select{ min-width:200px; }
+}
+
+/* --------------------------------------------------------------------------
+   FIX superposición: que el dropdown de Choices quede por encima del <thead>
+   -------------------------------------------------------------------------- */
+.choices{ position: relative; z-index: 30; }
+.choices__list--dropdown,
+.choices__list[aria-expanded]{
+  z-index: 9999 !important; /* que siempre flote arriba */
+}
+
+/* ==========================================================================
+   PDF — Modo captura (sin recortes, sin sticky, auto-escala)
+   ========================================================================== */
+
+/* Fondo y ajustes de encabezado para que no “se pegue” el thead */
+#titHisRoot.pdf-mode{ background:#fff; }
+#titHisRoot.pdf-mode .th-grid thead th{ position: static !important; }
+
+/* Mostrar TODO el contenido (sin scroll recortado) */
+#titHisRoot.pdf-mode .th-tablewrap{ overflow: visible !important; }
+
+/* Fuerza ancho por contenido durante la captura (evita recortes horizontales) */
+#titHisRoot.pdf-mode .fit-content-width{ width: max-content !important; }
+
+/* Escala visual controlada desde JS (reduce para encajar en una hoja si se desea) */
+#tableWrap.pdf-scaled{
+  transform-origin: top left;
+  transform: scale(var(--pdf-scale, 0.9));
+  width: calc(100% / var(--pdf-scale, 0.9));
+}
+
+/* Compactación para PDF (opcional, si tu JS agrega .pdf-compact o .pdf-ultra) */
+#titHisRoot.pdf-mode.pdf-compact .th-grid { font-size: 12px; }
+#titHisRoot.pdf-mode.pdf-compact .th-grid td,
+#titHisRoot.pdf-mode.pdf-compact .th-grid th { padding: 6px 8px; }
+#titHisRoot.pdf-mode.pdf-compact .th-grid input[type="number"]{ width:70px; padding:4px 6px; border-radius:6px; }
+#titHisRoot.pdf-mode.pdf-compact .th-grid input[type="month"]{ width:110px; padding:4px 6px; border-radius:6px; }
+#titHisRoot.pdf-mode.pdf-compact .th-grid select{ min-width:200px; padding:4px 6px; border-radius:6px; }
+
+/* Aún más compacto si lo requieres (clase adicional .pdf-ultra) */
+#titHisRoot.pdf-mode.pdf-ultra .th-grid { font-size: 11px; }
+#titHisRoot.pdf-mode.pdf-ultra .th-grid td,
+#titHisRoot.pdf-mode.pdf-ultra .th-grid th { padding: 4px 6px; }
+#titHisRoot.pdf-mode.pdf-ultra .th-grid input[type="number"]{ width:60px; padding:3px 5px; border-radius:4px; }
+#titHisRoot.pdf-mode.pdf-ultra .th-grid input[type="month"]{ width:96px; padding:3px 5px; border-radius:4px; }
+#titHisRoot.pdf-mode.pdf-ultra .th-grid select{ min-width:180px; padding:3px 5px; border-radius:4px; }
+
+/* Quitar columna Acciones del PDF */
+#titHisRoot.pdf-mode .acciones-col,
+#titHisRoot.pdf-mode .acciones { display: none !important; }
+
+/* Permitir salto de línea en la columna Programa para aprovechar ancho */
+#titHisRoot.pdf-mode .th-grid td:first-child{ white-space: normal !important; }

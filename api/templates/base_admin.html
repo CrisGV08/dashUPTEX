@@ -2,153 +2,212 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="{% static 'imagenes/uptex.png' %}">
-    <title>Dashboard Universidad</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="{% static 'imagenes/uptex.png' %}" />
+  <title>Dashboard Universidad</title>
 
-    <!-- CSS global -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link rel="stylesheet" href="{% static 'css/style_buttoms.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- ===== CSS global ===== -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/style_buttoms.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <!-- Choices.js (global) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <!-- ===== Choices.js (global) ===== -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
-    <!-- JS global -->
-    <script defer src="{% static 'js/script.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <!-- ===== JS global ===== -->
+  <script defer src="{% static 'js/script.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-    <!-- jQuery (global, para DataTables u otros plugins) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- ===== jQuery (global, para DataTables u otros plugins) ===== -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <style>
-        .sidebar {
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-        }
-        .content {
-            padding-left: 30px;
-        }
-    </style>
+  <!-- ===== Estilos rápidos específicos de layout (sin mover lógica) ===== -->
+  <style>
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .content {
+      padding-left: 30px;
+    }
+  </style>
 
-    <!-- 👇 Bloque opcional por-vista (CSS, libs adicionales) -->
-    {% block extra_head %}{% endblock %}
+  <!-- ===== Bloque opcional por-vista (CSS, libs adicionales) ===== -->
+  {% block extra_head %}{% endblock %}
 </head>
 
 <body>
-<div class="sidebar">
+  <!-- ===== Lateral: Sidebar navegación ===== -->
+  <div class="sidebar">
+    <!-- Logo -->
     <div class="sidebar-logo" style="text-align: center; margin-bottom: 20px;">
-        <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;">
-    </div> 
-    <div style="font-weight: bold; color: white; margin-top: 5px; font-size: 13px; background-color: #007bff; border-radius: 10px; padding: 3px 10px; display: inline-block;">
-        MODO ADMINISTRADOR
+      <img src="{% static 'imagenes/uptex_logo.png' %}" alt="Logo UPTEX" style="height: 60px; width: auto;" />
     </div>
 
+    <!-- Etiqueta modo -->
+    <div
+      style="
+        font-weight: bold;
+        color: white;
+        margin-top: 5px;
+        font-size: 13px;
+        background-color: #007bff;
+        border-radius: 10px;
+        padding: 3px 10px;
+        display: inline-block;
+      "
+    >
+      MODO ADMINISTRADOR
+    </div>
+
+    <!-- Menú -->
     <div class="menu-container">
-        <ul class="menu">
+      <ul class="menu">
+        <!-- Examen de admisión -->
+        <li class="menu-item">
+          <a href="{% url 'examen_admision' %}" data-menu="/examen_admision/">
+            <i class="fas fa-file-signature"></i> Examen Admisión y Crear Ciclo Nuevo
+          </a>
+        </li>
+
+        <!-- Matrícula -->
+        <li class="menu-item">
+          <a href="#" data-menu="matricula">
+            <i class="fas fa-user-shield"></i> Matricula
+          </a>
+          <ul class="submenu">
             <li class="menu-item">
-                <a href="{% url 'examen_admision' %}" data-menu="/examen_admision/"><i class="fas fa-file-signature"></i> Examen Admisión y Crear Ciclo Nuevo</a>
+              <a href="{% url 'matricula_h_nuevo_ingreso' %}" data-submenu="/matricula_h_nuevo_ingreso/">
+                <i class="fas fa-file-signature"></i> Matricula H. Nuevo Ingreso
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'matricula_historica' %}" data-submenu="/matricula_historica/">
+                <i class="fas fa-file-signature"></i> Matricula Historica
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'matricula_por_genero' %}" data-submenu="/matricula_por_genero/">
+                <i class="fas fa-file-signature"></i> Matricula Por Genero
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'matricula_por_anio' %}" data-submenu="/matricula_por_anio/">
+                <i class="fas fa-chart-bar"></i> Matrícula Anual
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'matricula_por_cuatrimestre' %}" data-submenu="/matricula_por_cuatrimestre/">
+                <i class="fas fa-layer-group"></i> Matricula por cuatrimestre
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Escolar -->
+        <li class="menu-item">
+          <a href="#" data-menu="escolar">
+            <i class="fas fa-user-shield"></i> Escolar
+          </a>
+          <ul class="submenu">
+            <li class="menu-item">
+              <a href="{% url 'aprovechamiento' %}" data-submenu="/aprovechamiento/">
+                <i class="fas fa-chart-pie"></i> Aprovechamiento Académico
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'indicadores_generales' %}" data-submenu="/indicadores_generales/">
+                <i class="fas fa-user-minus"></i> Deserción y Reprobación
+              </a>
+            </li>
+            <li class="menu-item">
+              <a href="{% url 'eficiencia_terminal' %}" data-submenu="/eficiencia_terminal/">
+                <i class="fas fa-user-minus"></i> Eficiencia Terminal Historico
+              </a>
+            </li>
+        <li class="menu-item">
+          <a href="{% url 'evaluacion_docente_cuatrimestre' %}" data-menu="/evaluacion_docente_cuatrimestre/">
+            <i class="fas fa-graduation-cap"></i> Evaluacion Docente por Cuatrimestre
+          </a>
+        </li>
+
+        <li class="menu-item">
+          <a href="{% url 'evaluacion_docente_concentrado' %}" data-menu="/evaluacion_docente_concentrado/">
+            <i class="fas fa-chart-line"></i> Evaluación Docente Concentrado
+          </a>
+        </li>            
+          </ul>
+        </li>
+
+        <!-- Titulación -->
+        <li class="menu-item">
+          <a href="#" data-menu="Titulación">
+            <i class="fas fa-user-shield"></i> Titulación
+          </a>
+          <ul class="submenu">
+            <li class="menu-item">
+              <a href="{% url 'tit_his' %}" data-menu="/administrador/tit-his/">
+                <i class="fas fa-certificate"></i> Titulados
+             </a>
+            </li>            
+            <li class="menu-item">
+              <a href="{% url 'titulados_tsu_inge' %}" data-menu="/titulados-tsu-ingenieria/">
+                <i class="fas fa-certificate"></i> Titulados por TSU e Ingeniería
+              </a>
             </li>
 
             <li class="menu-item">
-                <a href="#" data-menu="matricula"><i class="fas fa-user-shield"></i> Matricula</a>
-                <ul class="submenu">
-                    <li class="menu-item">
-                        <a href="{% url 'matricula_h_nuevo_ingreso' %}" data-submenu="/matricula_h_nuevo_ingreso/"><i class="fas fa-file-signature"></i> Matricula H. Nuevo Ingreso</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'matricula_historica' %}" data-submenu="/matricula_historica/"><i class="fas fa-file-signature"></i> Matricula Historica</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'matricula_por_genero' %}" data-submenu="/matricula_por_genero/"><i class="fas fa-file-signature"></i> Matricula Por Genero</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'matricula_por_anio' %}" data-submenu="/matricula_por_anio/"><i class="fas fa-chart-bar"></i> Matrícula Anual</a> 
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'matricula_por_cuatrimestre' %}" data-submenu="/matricula_por_cuatrimestre/"><i class="fas fa-layer-group"></i> Matricula por cuatrimestre</a>
-                    </li>
-                </ul>
+              <a href="{% url 'tasa_de_titulacion' %}" data-menu="/tasa-de-titulacion/">
+                <i class="fas fa-graduation-cap"></i> Tasa de Titulación
+              </a>
             </li>
 
+          </ul>
+        </li>
+
+        <!-- Materias -->
+        <li class="menu-item">
+          <a href="{% url 'subir_carreras' %}" data-menu="/subir_carreras/">
+            <i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas
+          </a>
+        </li>
+
+        <!-- Salir -->
+        <li class="menu-item">
+          <a href="#" data-menu="salir">
+            <i class="fas fa-user-shield"></i> Salir
+          </a>
+          <ul class="submenu">
             <li class="menu-item">
-                <a href="#" data-menu="escolar"><i class="fas fa-user-shield"></i> Escolar</a>
-                <ul class="submenu">
-                    <li class="menu-item">
-                        <a href="{% url 'aprovechamiento' %}" data-submenu="/aprovechamiento/"><i class="fas fa-chart-pie"></i> Aprovechamiento Académico</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'indicadores_generales' %}" data-submenu="/indicadores_generales/"><i class="fas fa-user-minus"></i> Deserción y Reprobación</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'eficiencia_terminal' %}" data-submenu="/eficiencia_terminal/"><i class="fas fa-user-minus"></i> Eficiencia Terminal Historico</a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{% url 'titulados_historico_actual' %}" data-submenu="/titulados_historico_actual/"><i class="fas fa-certificate"></i> Titulados Historico Actual</a>
-                    </li>
-                </ul>
+              <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="menu-link styled-button"
+                  style="background: none; border: none; color: white; text-align: left; width: 100%; padding: 10px;"
+                >
+                  <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                </button>
+              </form>
             </li>
-
-            <li class="menu-item">
-                <a href="{% url 'evaluacion_docente_cuatrimestre' %}" data-menu="/evaluacion_docente_cuatrimestre/"><i class="fas fa-graduation-cap"></i> Evaluacion Docente por Cuatrimestre</a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{% url 'evaluacion_docente_concentrado' %}" data-menu="/evaluacion_docente_concentrado/">
-                    <i class="fas fa-chart-line"></i> Evaluación Docente Concentrado
-                </a>
-            </li>
-
-            <li class="menu-item"> 
-                <a href="{% url 'tasa_de_titulacion' %}" data-menu="/tasa-de-titulacion/">
-                    <i class="fas fa-graduation-cap"></i> Tasa de Titulación
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{% url 'titulados_historicos' %}" data-menu="/titulados_historicos/">
-                    <i class="fas fa-certificate"></i> Titulados Históricos
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{% url 'titulados_tsu_inge' %}" data-menu="/titulados-tsu-ingenieria/">
-                    <i class="fas fa-certificate"></i> Titulados por TSU e Ingeniería
-                </a>
-            </li>
-
-            <li class="menu-item">
-                <a href="{% url 'subir_carreras' %}" data-menu="/subir_carreras/"><i class="fas fa-graduation-cap"></i> Materias Nuevas y Antiguas</a>
-            </li>
-
-            <li class="menu-item">
-                <a href="#" data-menu="salir"><i class="fas fa-user-shield"></i> Salir</a>
-                <ul class="submenu">
-                    <li class="menu-item">
-                        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
-                            {% csrf_token %}
-                            <button type="submit" class="menu-link styled-button" style="background: none; border: none; color: white; text-align: left; width: 100%; padding: 10px;">
-                                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-                            </button>
-                        </form>
-                    </li>
-                </ul>
-            </li>
-        </ul>
+          </ul>
+        </li>
+      </ul>
     </div>
-</div>
+  </div>
 
-<div class="content">
+  <!-- ===== Contenido principal ===== -->
+  <div class="content">
     {% block content %}
-    <h1>Bienvenido Administrador</h1>
-    <p>¿Qué desea actualizar?</p>
+      <h1>Bienvenido Administrador</h1>
+      <p>¿Qué desea actualizar?</p>
     {% endblock %}
-</div>
+  </div>
 
-<!-- 👇 Bloque opcional por-vista (scripts JS adicionales) -->
-{% block extra_scripts %}{% endblock %}
+  <!-- ===== Bloque opcional por-vista (scripts JS adicionales) ===== -->
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>

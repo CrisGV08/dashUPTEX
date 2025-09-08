@@ -1,12 +1,13 @@
+# DjangoApi/urls.py
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth.views import LogoutView
+
+# Auth
 from api.login.login_views import login_view, logout_view
 
-
-# Vistas públicas (home)
+# ----- Home (público) -----
 from api.home.home_views import (
     home_view, home_calificaciones, home_aprobados,
     home_reprobados, home_promedios, home_mapa
@@ -23,16 +24,9 @@ from api.home.eficiencia_terminal_usuario_view import eficiencia_terminal_usuari
 from api.home.titulados_historicos_actual_usuario_view import titulados_historicos_actual_usuario_view
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 from api.home.evaluacion_docente_concentrado_usuario_view import evaluacion_docente_concentrado_usuario_view
-from api.home.aprovechamiento_usuario_view import aprovechamiento_usuario_view
+from api.home.tit_his_usuario import tit_his_usuario_view
 
-
-
-
-# Login
-from api.login.login_views import login_view
-
-
-# Administrador
+# ----- Administrador -----
 from api.Administrador.administrador_views import (
     administrador_view, subir_calificaciones, gestionar_usuarios, generar_plantilla_csv
 )
@@ -55,14 +49,11 @@ from api.Administrador.aprovechamiento_views import (
     descargar_plantilla_aprovechamiento,
     cargar_aprovechamiento,
 )
-
-
 from api.Administrador.indicadores_generales_view import (
     reprobacion_desercion_view,
     cargar_indicadores_generales,
     descargar_plantilla_indicadores
 )
-
 from api.Administrador.eficiencia_terminal_view import (
     eficiencia_terminal_view,
     descargar_plantilla_eficiencia_terminal,
@@ -75,45 +66,44 @@ from api.Administrador.titulados_historico_actual_view import (
     titulados_historico_actual_view,
     descargar_plantilla_titulados_historico_actual
 )
-
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
 from api.Administrador.evaluacion_docente_concentrado_view import evaluacion_docente_concentrado_view
+
+# OJO: esta vista tenía un import duplicado de nombre; la alias-eamos para evitar choques
 from api.Administrador.subir_carreras_view import (
-    subir_carreras_view, generar_plantilla_csv,
-    generar_plantilla_nuevos_csv, exportar_carreras_pdf
+    subir_carreras_view,
+    generar_plantilla_csv as generar_plantilla_carreras_csv,
+    generar_plantilla_nuevos_csv,
+    exportar_carreras_pdf
 )
-from api.Administrador.subir_carreras_view import exportar_carreras_pdf
-# Tasa de Titulación
+
+# ----- Tasa de Titulación / Titulados (admin) -----
 from api.Administrador.tasa_de_titulacion_view import (
     tasa_de_titulacion_view, descargar_plantilla_tasa_titulacion, subir_excel_tasa_titulacion
 )
-
 from api.Administrador.titulados_historicos_view import (
     titulados_historicos_view,
     descargar_plantilla_titulados_historicos
 )
 from api.Administrador import titulados_tsu_inge_view as tti
-from api.login.login_views import login_view, logout_view
 
+# ----- NUEVO CRUD Titulados -----
+from api.Administrador.tit_his import tit_his_view, tit_his_api
 
 urlpatterns = [
-    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
-
-    # Home públicas
-    path('', home_view, name='index'),
-    path('login/', login_view, name='login'),
+    # ==================== Autenticación ====================
+    path('login/',  login_view,  name='login'),
     path('logout/', logout_view, name='logout'),
+
+    # ==================== Home / Público ====================
+    path('', home_view, name='index'),
     path('calificaciones/', home_calificaciones, name='calificaciones'),
     path('aprobados/', home_aprobados, name='aprobados'),
     path('reprobados/', home_reprobados, name='reprobados'),
     path('promedios/', home_promedios, name='promedios'),
     path('mapa/', home_mapa, name='mapa'),
-    path('logout/', logout_view, name='logout'),
 
-    path('login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-
-    # Vistas usuario normal
+    # ----- Vistas usuario normal -----
     path('usuario/examen-admision/', examen_admision_usuario_view, name='examen_admision_usuario'),
     path('usuario/matricula-historica/', matricula_historica_usuario_view, name='matricula_historica_usuario'),
     path('usuario/matricula-genero/', matricula_por_genero_usuario_view, name='matricula_por_genero_usuario'),
@@ -124,79 +114,89 @@ urlpatterns = [
     path('usuario/indicadores-generales/', indicadores_generales_usuario_view, name='indicadores_generales_usuario'),
     path('usuario/eficiencia-terminal/', eficiencia_terminal_usuario_view, name='eficiencia_terminal_usuario'),
     path('usuario/titulados-historicos-actual/', titulados_historicos_actual_usuario_view, name='titulados_historicos_actual_usuario'),
-    path('evaluacion-docente-concentrado/', evaluacion_docente_concentrado_usuario_view, name='evaluacion_docente_concentrado_usuario'),
+    path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
+    path('usuario/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_usuario_view, name='evaluacion_docente_concentrado_usuario'),
 
-   
-    # Administrador
+    # Vista pública Titulados – Histórico (nuevo URL que va en base.html)
+    path('titulados/historico/', tit_his_usuario_view, name='tit_his_usuario'),
 
-
+    # ==================== Administrador ====================
+    path('admin/', admin.site.urls),
     path('administrador/', administrador_view, name='administrador'),
+
+    # Gestión general
     path('administrador/subir-calificaciones/', subir_calificaciones, name='subir_calificaciones'),
     path('administrador/gestionar-usuarios/', gestionar_usuarios, name='gestionar_usuarios'),
     path('administrador/generar-plantilla/', generar_plantilla_csv, name='generar_plantilla_csv'),
+
+    # Egresados / Examen admisión
     path('administrador/egresados/', egresados_view, name='egresados'),
     path('administrador/examen-admision/', examen_admision_view, name='examen_admision'),
+
+    # Nuevo ingreso CSV
     path('administrador/descargar-plantilla-nuevo-ingreso/', descargar_plantilla_nuevo_ingreso, name='descargar_plantilla_nuevo_ingreso'),
     path('administrador/subir-csv-nuevo-ingreso/', subir_csv_nuevo_ingreso, name='subir_csv_nuevo_ingreso'),
+
+    # Matrícula
     path('administrador/matricula-genero/', matriculagenero_views.matriculagenero, name='matricula_por_genero'),
     path('administrador/matricula-historica/', matricula_historica, name='matricula_historica'),
     path('administrador/matricula-por-anio/', matricula_por_anio_view, name='matricula_por_anio'),
+
     path('administrador/matricula-cuatrimestre/', matricula_por_cuatrimestre_view, name='matricula_por_cuatrimestre'),
-    path('administrador/matricula-cuatrimestre/', matricula_por_cuatrimestre_view, name='matricula_por_cuatrimestre'),
-    path('matricula-cuatrimestre/descargar-plantilla/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_matricula_cuatrimestre'),
-    path('matricula-cuatrimestre/subir-csv/', subir_csv_matricula_cuatrimestre, name='subir_csv_matricula_cuatrimestre'),    path('administrador/descargar-plantilla-cuatrimestre/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_cuatrimestre'),
-    path('administrador/subir-csv-cuatrimestre/', subir_csv_matricula_cuatrimestre, name='subir_csv_cuatrimestre'),
+    path('administrador/matricula-cuatrimestre/descargar-plantilla/', descargar_plantilla_matricula_cuatrimestre, name='descargar_plantilla_matricula_cuatrimestre'),
+    path('administrador/matricula-cuatrimestre/subir-csv/', subir_csv_matricula_cuatrimestre, name='subir_csv_matricula_cuatrimestre'),
+
+    # Eficiencia / Aprovechamiento / Indicadores
     path('administrador/eficiencia-3anios/', eficiencia_3anios_view, name='eficiencia_3anios'),
     path('administrador/aprovechamiento/', aprovechamiento_view, name='aprovechamiento'),
-    path('administrador/descargar-plantilla-aprovechamiento/', descargar_plantilla_aprovechamiento, name='descargar_plantilla_aprovechamiento'),
-    path('administrador/cargar-aprovechamiento/', cargar_aprovechamiento, name='cargar_aprovechamiento'),
-    path('administrador/reprobacion-desercion/', reprobacion_desercion_view, name='indicadores_generales'),
-    path('cargar-indicadores-generales/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
-    path('descargar-plantilla-indicadores/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'), 
+    path('administrador/aprovechamiento/descargar-plantilla/', descargar_plantilla_aprovechamiento, name='descargar_plantilla_aprovechamiento'),
+    path('administrador/aprovechamiento/cargar/', cargar_aprovechamiento, name='cargar_aprovechamiento'),
+
+    path('administrador/indicadores/reprobacion-desercion/', reprobacion_desercion_view, name='indicadores_generales'),
+    path('administrador/indicadores/cargar/', cargar_indicadores_generales, name='cargar_indicadores_generales'),
+    path('administrador/indicadores/descargar-plantilla/', descargar_plantilla_indicadores, name='descargar_plantilla_indicadores'),
+
     path('administrador/eficiencia-terminal/', eficiencia_terminal_view, name='eficiencia_terminal'),
-    path('eficiencia-terminal/descargar-plantilla/', descargar_plantilla_eficiencia_terminal, name='descargar_plantilla_eficiencia_terminal'),
-    path('eficiencia-terminal/cargar/', cargar_eficiencia_terminal, name='cargar_eficiencia_terminal'),
+    path('administrador/eficiencia-terminal/descargar-plantilla/', descargar_plantilla_eficiencia_terminal, name='descargar_plantilla_eficiencia_terminal'),
+    path('administrador/eficiencia-terminal/cargar/', cargar_eficiencia_terminal, name='cargar_eficiencia_terminal'),
+
     path('administrador/matricula-h-nuevo-ingreso/', matricula_h_nuevo_ingreso_view, name='matricula_h_nuevo_ingreso'),
-    path('administrador/descargar-plantilla-matricula-h-nuevo-ingreso/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),
+    path('administrador/matricula-h-nuevo-ingreso/descargar-plantilla/', descargar_plantilla_matricula_h_nuevo_ingreso, name='descargar_plantilla_matricula_h_nuevo_ingreso'),
+
+    # Titulados histórico actual
     path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
-    path('administrador/descargar-plantilla-titulados-historico-actual/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+    path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+
+    # Evaluación docente
     path('administrador/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_view, name='evaluacion_docente_cuatrimestre'),
+    path('administrador/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_view, name='evaluacion_docente_concentrado'),
+
+    # Carreras
     path('administrador/subir-carreras/', subir_carreras_view, name='subir_carreras'),
-    path('plantilla-carreras/', generar_plantilla_csv, name='generar_plantilla_carreras'),
-    path('plantilla-carreras-nuevos/', generar_plantilla_nuevos_csv, name='generar_plantilla_nuevos'),
-    path('exportar-carreras-pdf/', exportar_carreras_pdf, name='exportar_carreras_pdf'),
+    path('administrador/carreras/generar-plantilla/', generar_plantilla_carreras_csv, name='generar_plantilla_carreras'),
+    path('administrador/carreras/generar-plantilla-nuevos/', generar_plantilla_nuevos_csv, name='generar_plantilla_nuevos'),
+    path('administrador/carreras/exportar-pdf/', exportar_carreras_pdf, name='exportar_carreras_pdf'),
+
+    # NUEVO CRUD Titulados (sin plantillas)
+    path('administrador/titulados-crud/', tit_his_view, name='tit_his'),
+    path('administrador/titulados-crud/api/', tit_his_api, name='tit_his_api'),
 
     # Tasa de Titulación
     path('administrador/tasa-de-titulacion/', tasa_de_titulacion_view, name='tasa_de_titulacion'),
-    path('administrador/descargar-plantilla-tasa-titulacion/', descargar_plantilla_tasa_titulacion, name='descargar_plantilla_tasa_titulacion'),
-    path('administrador/subir-excel-tasa-titulacion/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
-    path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
-    
-    path('administrador/titulados-historico-actual/', titulados_historico_actual_view, name='titulados_historico_actual'),
-   
-    path('administrador/titulados-historico-actual/descargar-plantilla/', descargar_plantilla_titulados_historico_actual, name='descargar_plantilla_titulados_historico_actual'),
+    path('administrador/tasa-de-titulacion/descargar-plantilla/', descargar_plantilla_tasa_titulacion, name='descargar_plantilla_tasa_titulacion'),
+    path('administrador/tasa-de-titulacion/subir-excel/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
 
-    path('administrador/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_view, name='evaluacion_docente_concentrado'),
-    
-    # 👇 
+    # Titulados históricos (separado)
     path('administrador/titulados-historicos/', titulados_historicos_view, name='titulados_historicos'),
     path('administrador/titulados-historicos/descargar-plantilla/', descargar_plantilla_titulados_historicos, name='descargar_plantilla_titulados_historicos'),
-    
-    # Página
-    path('administrador/titulados-tsu-ingenieria/', tti.titulados_tsu_inge_view, name='titulados_tsu_inge'),
 
-    # Descargas separadas
+    # TSU / Ingeniería
+    path('administrador/titulados-tsu-ingenieria/', tti.titulados_tsu_inge_view, name='titulados_tsu_inge'),
     path('administrador/titulados-tsu/descargar-plantilla/', tti.descargar_plantilla_titulados_tsu, name='descargar_plantilla_titulados_tsu'),
     path('administrador/titulados-ing/descargar-plantilla/', tti.descargar_plantilla_titulados_ing, name='descargar_plantilla_titulados_ing'),
-
-    # Cargas separadas
     path('administrador/titulados-tsu/subir-excel/', tti.subir_titulados_tsu_excel, name='subir_titulados_tsu_excel'),
     path('administrador/titulados-ing/subir-excel/', tti.subir_titulados_ing_excel, name='subir_titulados_ing_excel'),
-
-    ]
-
-
-
+]
 
 # Archivos estáticos en modo desarrollo
 if settings.DEBUG:

@@ -1,117 +1,125 @@
+/* ============ layout general ============ */
 .admin-panel {
-    max-width: 1300px;
-    margin: auto;
-    padding: 30px 20px;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f9f9f9;
+  max-width: 1300px;
+  margin: auto;
+  padding: 30px 20px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9f9f9;
 }
+.titulo-vista { text-align: center; color: #2c3e50; margin-bottom: 10px; }
 
-h1, h2, h3 {
-    color: #2c3e50;
-    text-align: center;
+/* alerts */
+.msgs { margin: 10px 0 20px; }
+.alert { padding: 10px 12px; border-radius: 6px; margin-bottom: 8px; }
+.alert-success { background: #e8f8ef; color: #1e7e34; }
+.alert-error, .alert-danger { background: #fdecea; color: #a71d2a; }
+.alert-warning { background: #fff4e5; color: #9c6500; }
+.alert-info { background: #e7f3fe; color: #0c5460; }
+
+/* acciones archivo */
+.acciones {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  justify-content: center; margin: 15px 0 25px;
 }
+.form-inline { display: flex; gap: 10px; align-items: center; }
 
+/* botones */
+.btn-admin,
+#btnDescargarPDF {
+  background-color: #2980b9;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,.08);
+}
+.btn-admin:hover,
+#btnDescargarPDF:hover { background-color: #21618c; }
+
+.btn-mini {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d7e3f7;
+  background: #eef3fb;
+  color: #245e97;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-mini:hover { background: #e2ebfa; }
+
+/* cajas de filtros */
 .form-box {
-    background-color: #ffffff;
-    padding: 20px;
-    margin: 10px auto;
-    border-radius: 10px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
+  background-color: #fff;
+  padding: 16px;
+  margin: 12px auto 18px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+  max-width: 1200px;
 }
 
-.btn-admin {
-    background-color: #2980b9;
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 15px;
-    cursor: pointer;
+/* grids */
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 16px;
+  align-items: end;
 }
-
-.btn-admin:hover {
-    background-color: #21618c;
+.filtros-visual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 16px;
+  align-items: end;
 }
+.align-end { display:flex; align-items:end; justify-content:flex-end; }
 
+/* quick actions under selects */
+.quick-actions { margin-top: 8px; display:flex; gap:8px; flex-wrap:wrap; }
+
+/* píldoras de año */
+.pills {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+}
+.pill {
+  border: 1px solid #d7e3f7;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f5f8ff;
+  color: #245e97;
+  cursor: pointer;
+  font-size: 13px;
+}
+.pill.active, .pill:hover { background: #e9f0ff; border-color: #b9d1ff; }
+
+/* chips para gráficas */
+.chips { display:flex; gap:10px; flex-wrap:wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid #e1e1e1; padding: 6px 10px; border-radius: 999px;
+  background: #fafafa; cursor: pointer; user-select: none;
+}
+.chip input { margin: 0; }
+.chip.active { background: #e9f0ff; border-color: #b9d1ff; }
+
+/* tabla */
+.tabla-scroll { overflow-x: auto; }
 .crud-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(0,0,0,.08);
 }
+.crud-table thead { background-color: #2c3e50; color: #fff; }
+.crud-table th, .crud-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #e1e1e1; }
+.crud-table tbody tr:hover { background-color: #f7faff; }
 
-.crud-table thead {
-    background-color: #2c3e50;
-    color: white;
-}
-
-.crud-table th, .crud-table td {
-    padding: 10px 12px;
-    text-align: center;
-    border-bottom: 1px solid #e1e1e1;
-}
-
-.crud-table tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-/* Nueva distribución para las gráficas: 1 por fila */
-.graficas-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 40px;
-    margin-top: 40px;
-}
-
-.filtros-graficas {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-/* 🎯 Gráficas en columna */
+/* gráficas */
 .graficas-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 60px;
-    width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 36px; width: 100%; margin-top: 18px;
 }
-
-/* 🎯 Canvas full width y con altura dinámica */
 .grafica {
-    width: 100% !important;
-    max-width: 1200px;
-    height: auto !important;
-    min-height: 380px;
-}
-
-.filtros-carreras {
-    margin: 20px auto;
-    text-align: center;
-}
-
-#selectCarreras {
-    width: 90%;
-    max-width: 1200px;
-    margin: auto;
-}
-
-#btnExportPDF {
-    display: block;
-    margin: 25px auto;
-    background-color: #27ae60;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-#btnExportPDF:hover {
-    background-color: #1e8449;
+  width: 100% !important; max-width: 1200px; height: auto !important; min-height: 360px;
 }

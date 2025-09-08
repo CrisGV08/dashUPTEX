@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Titulados – Histórico{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/tit_his.css' %}">
+
+<div class="tit-his" id="titHisRoot">
+  <div class="tit-his__header">
+    <h1 class="tit-his__title">Titulados – Histórico</h1>
+  </div>
+
+  <!-- Filtros -->
+  <section class="th-filters">
+    <!-- Años -->
+    <div class="th-filter">
+      <label>Años de ingreso</label>
+      <div class="th-filter-actions">
+        <button type="button" id="yearsAll" class="th-mini">Todos</button>
+        <button type="button" id="yearsNone" class="th-mini">Ninguno</button>
+      </div>
+      <div id="yearPills" class="th-pills th-pills--wrap"></div>
+    </div>
+
+    <!-- Programa (Antiguo) -->
+    <div class="th-filter">
+      <label>Programa (Antiguo)</label>
+      <div class="th-filter-actions">
+        <button type="button" id="antAll" class="th-mini">Todos</button>
+        <button type="button" id="antNone" class="th-mini">Ninguno</button>
+      </div>
+      <select id="filAntiguo" multiple></select>
+    </div>
+
+    <!-- Programa (Nuevo) -->
+    <div class="th-filter">
+      <label>Programa (Nuevo)</label>
+      <div class="th-filter-actions">
+        <button type="button" id="nueAll" class="th-mini">Todos</button>
+        <button type="button" id="nueNone" class="th-mini">Ninguno</button>
+      </div>
+      <select id="filNuevo" multiple></select>
+    </div>
+  </section>
+
+  <!-- Tabla (solo lectura) -->
+  <div class="th-tablewrap" id="tableWrap">
+    <table id="grid" class="th-grid">
+      <thead>
+        <tr>
+          <th>Programa</th>
+          <th>Ingreso (YYYY-MM)</th>
+          <th>Egreso (YYYY-MM)</th>
+          <th>ING H</th>
+          <th>ING M</th>
+          <th>EGR COH H</th>
+          <th>EGR COH M</th>
+          <th>EGR REZ H</th>
+          <th>EGR REZ M</th>
+          <th>TIT H</th>
+          <th>TIT M</th>
+          <th>DGP H</th>
+          <th>DGP M</th>
+          <th>Tasa %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in generaciones %}
+          {% with pa=g.programa_antiguo pn=g.programa_nuevo %}
+          <tr>
+            <td>
+              <!-- Select relleno por JS; lo dejamos disabled para que el JS lea valor pero no se edite -->
+              <select class="programa" disabled></select>
+              <span class="programa-init"
+                    data-id="{% if pa %}{{ pa.id }}{% elif pn %}{{ pn.id }}{% endif %}"></span>
+            </td>
+            <td><input class="fi" type="month" value="{{ g.fecha_ingreso|date:'Y-m' }}" disabled></td>
+            <td><input class="fe" type="month" value="{{ g.fecha_egreso|date:'Y-m' }}" disabled></td>
+            <td><input class="n ih" type="number" value="{{ g.ingreso_hombres|default:0 }}" disabled></td>
+            <td><input class="n im" type="number" value="{{ g.ingreso_mujeres|default:0 }}" disabled></td>
+            <td><input class="n ch" type="number" value="{{ g.egresados_cohorte_h|default:0 }}" disabled></td>
+            <td><input class="n cm" type="number" value="{{ g.egresados_cohorte_m|default:0 }}" disabled></td>
+            <td><input class="n rh" type="number" value="{{ g.egresados_rezagados_h|default:0 }}" disabled></td>
+            <td><input class="n rm" type="number" value="{{ g.egresados_rezagados_m|default:0 }}" disabled></td>
+            <td><input class="n th" type="number" value="{{ g.titulados_h|default:0 }}" disabled></td>
+            <td><input class="n tm" type="number" value="{{ g.titulados_m|default:0 }}" disabled></td>
+            <td><input class="n dh" type="number" value="{{ g.registrados_dgp_h|default:0 }}" disabled></td>
+            <td><input class="n dm" type="number" value="{{ g.registrados_dgp_m|default:0 }}" disabled></td>
+            <td class="tasa"></td>
+          </tr>
+          {% endwith %}
+        {% empty %}
+          <tr class="empty"><td colspan="14">Sin registros</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+    <!-- Tipo de gráfica -->
+  <div class="th-topbar th-topbar--center">
+    <div class="th-pills th-pills--center" id="graphPills">
+      <button type="button" class="pill active" data-type="line">Líneas</button>
+      <button type="button" class="pill" data-type="bar">Barras</button>
+      <button type="button" class="pill" data-type="pie">Pastel</button>
+      <button type="button" class="pill" data-type="gauss">Gauss</button>
+    </div>
+  </div>
+
+  <!-- Gráfica única -->
+  <section class="th-charts">
+    <canvas id="chartMain"></canvas>
+  </section>
+</div>
+
+<!-- Variables para JS -->
+<script>
+  window.CARRERAS_ANTIGUAS = {{ carreras_antiguas|safe }};
+  window.CARRERAS_NUEVAS   = {{ carreras_nuevas|safe }};
+  window.GENERACIONES      = {{ generaciones_json|safe }};
+</script>
+
+<!-- Librerías externas -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/choices.js/10.2.0/choices.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/choices.js/10.2.0/choices.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+
+<!-- JS de la vista de usuario -->
+<script src="{% static 'js/tit_his_usuario.js' %}"></script>
+{% endblock %}
