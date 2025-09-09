@@ -1,102 +1,101 @@
-/* =========================
-   🎨 Titulados TSU/ING – estilos de filtros y gráficas (ajustado)
-   ========================= */
+/* static/css/titulados_tsu_inge.css */
 :root{
   --bg:#f8f9fb;
-  --card:#ffffff;
-  --text:#2c3e50;
+  --card:#fff;
+  --border:#e5e7eb;
+  --text:#1f2937;
   --muted:#6b7280;
   --brand:#2e86de;
-  --brand-2:#1e6bb8;
-  --ok:#28a745;
-  --ok-2:#1f8a38;
-  --accent:#e8f3ff;
-  --border:#e1e5ea;
-  --shadow:0 2px 8px rgba(0,0,0,.07);
+  --brand2:#1e6bb8;
+  --shadow:0 2px 8px rgba(0,0,0,.06);
 }
 
-/* --- Contenedor principal --- */
-.admin-panel{ max-width:1200px; margin:auto; padding:24px 16px 40px }
+.admin-panel{ max-width:1200px; margin:auto; padding:22px 14px 44px }
+.titulo{ text-align:center; font-weight:800; margin:0 0 14px; }
+.titulo .brand{ color:var(--brand) }
+.titulo .brand2{ color:var(--brand2) }
 
-/* --- Título --- */
-.titulo{
-  margin:0 0 18px; text-align:center;
-  font-size:clamp(1.4rem,2.2vw,2rem); font-weight:800; letter-spacing:.2px;
+.topbar{
+  display:flex; gap:12px; align-items:center; justify-content:space-between;
+  padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:#f7f9fb;
+  margin-bottom:12px;
 }
+.btn-primary{
+  background:var(--brand); color:#fff; border:none; border-radius:10px; padding:8px 12px; font-weight:700;
+}
+.btn{ background:#fff; border:1px solid var(--border); border-radius:8px; padding:6px 10px }
 
-/* --- Botón activo TSU/ING --- */
-.btn-admin.btn-active{ box-shadow:0 0 0 3px rgba(46,134,222,.25) inset; filter:brightness(.96) }
+.segmented{ display:inline-flex; background:#fff; border:1px solid var(--border); border-radius:10px; padding:3px }
+.segmented.small{ padding:2px }
+.seg-btn{
+  background:transparent; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:700; color:#111827;
+}
+.seg-btn.small{ padding:4px 8px; font-size:.9rem }
+.seg-btn.active{ background:#e8f3ff }
 
-/* --- Filtros --- */
 .filtros{
-  display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end; justify-content:center;
-  margin:18px 0; padding:12px; background:#f7f9fb; border:1px solid var(--border); border-radius:12px;
+  display:grid; grid-template-columns: repeat(4, minmax(220px,1fr)) auto; gap:12px; align-items:end;
+  padding:12px; background:#f7f9fb; border:1px solid var(--border); border-radius:12px; margin-bottom:14px;
 }
-.filtros label{ display:inline-block; margin:0 6px 4px 0; font-weight:700; color:#1f2937 }
-.filtros select{
-  background:#fff; border:1px solid var(--border); border-radius:10px;
-  min-width:220px; min-height:44px; padding:8px 10px; outline:0;
-  transition:border .15s ease, box-shadow .15s ease; font-size:.95rem;
+.f-col label{ display:block; margin:0 0 6px; font-weight:700 }
+.f-col select{ width:100%; min-height:42px; border:1px solid var(--border); border-radius:10px; padding:6px 8px; }
+.f-col.align-end{ display:flex; gap:8px; align-items:end }
+
+.contenedor-tabla{
+  background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:12px; margin-bottom:14px;
 }
-.filtros select:focus{ border-color:#8cc5ff; box-shadow:0 0 0 3px rgba(46,134,222,.16) }
+.subtitulo{ font-weight:800; margin:0 0 8px }
+.table td.num, .text-end{ text-align:right }
 
-/* --- Choices.js --- */
-.choices{ min-width:220px; max-width:420px }
-.choices__inner{ border-radius:10px !important; border:1px solid var(--border) !important; padding:6px 8px !important; min-height:44px; background:#fff }
-.is-focused .choices__inner{ border-color:#8cc5ff !important; box-shadow:0 0 0 3px rgba(46,134,222,.16) !important }
-.choices__list--multiple .choices__item{ border-radius:999px; padding:4px 8px; font-size:.9rem; margin:4px 6px 0 0 }
-
-/* --- Grid de gráficas --- */
-.graficas{
-  display:grid; grid-template-columns:repeat(2, minmax(320px,1fr));
-  gap:18px; margin-top:10px;
-}
-@media (max-width: 920px){ .graficas{ grid-template-columns:1fr } }
-
-/* --- Tarjetas de gráfica --- */
+.graficas{ display:block }
 .chart-card{
-  background:var(--card); border:1px solid var(--border); border-radius:12px;
-  box-shadow:var(--shadow); padding:12px; min-height:360px;
-  display:flex; flex-direction:column; gap:10px;
+  background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px; box-shadow:var(--shadow);
 }
 .chart-card__title{
-  font-weight:800; color:#0b3d4a; font-size:.98rem;
-  padding:4px 6px 8px; border-bottom:1px dashed #e6eef7;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  font-weight:800; border-bottom:1px dashed #e6eef7; padding-bottom:6px; margin-bottom:8px;
 }
+.chart-box{ position:relative; width:100%; height:360px }
+.chart-box canvas{ width:100% !important; height:100% !important }
 
-/* ✅ Altura fija y estable del canvas (evita crecimiento infinito) */
-#chBar, #chLine, #chPie, #chGauss{
-  width:100% !important;
-  height:360px !important;      /* ← altura fija */
-  max-height:360px !important;
-  display:block;                 /* evita que el canvas “colapse” */
-  flex:0 0 auto !important;      /* no permitir que flex lo estire */
-}
-@media (max-width:640px){
-  #chBar, #chLine, #chPie, #chGauss{ height:300px !important; max-height:300px !important }
-}
-
-/* --- Tabla --- */
-.contenedor-tabla{ background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); padding:12px }
-.tabla-admin{
-  width:100%; border-collapse:separate; border-spacing:0; min-width:860px; font-size:.95rem;
-}
-.tabla-admin thead th{
-  position:sticky; top:0; z-index:1; background:var(--accent); color:#0b3d4a;
-  font-weight:800; border-bottom:2px solid #cfe8ff;
-}
-.tabla-admin th,.tabla-admin td{ padding:10px 8px; text-align:center; border-bottom:1px solid #eef2f6; white-space:nowrap }
-.tabla-admin tbody tr:hover{ background:#f9fcff }
-
-/* --- Utilidades --- */
-.mensaje-exito{
-  background:#d4edda; color:#155724; padding:10px 14px; border:1px solid #c3e6cb; border-radius:10px;
-  text-align:center; max-width:720px; margin:12px auto 18px; box-shadow:0 1px 0 rgba(0,0,0,.03);
-}
 .empty{ color:var(--muted); font-style:italic; padding:10px 0 }
 
-/* --- Print --- */
-@media print{
-  .filtros, .btn-admin{ display:none !important }
-  .chart-card, .contenedor-tabla{ box-shadow:none; border:1px solid #bbb }
+.modal .modal-content{ border-radius:14px }
+.grid-form .row{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px }
+.grid-form .row.two{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.grid-form input[type="number"], .grid-form input[type="month"], .grid-form select{
+  width:100%; min-height:40px; border:1px solid var(--border); border-radius:10px; padding:6px 8px;
 }
+.details summary{ cursor:pointer; font-weight:700 }
+.btn-close{ background:transparent; border:none; font-size:16px; }
+.btn-danger{ background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:6px }
+.btn-group{ display:flex; gap:6px; justify-content:center }
+
+
+.page-title{font-size:1.35rem;font-weight:700;text-align:center;margin:6px 0 14px}
+.mt-8{margin-top:8px}.mt-10{margin-top:10px}.mt-12{margin-top:12px}.mt-14{margin-top:14px}
+
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.col{flex:1 1 260px;min-width:260px}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.toolbar.between{justify-content:space-between}
+.toolbar.end{justify-content:flex-end}
+
+.btn{padding:8px 14px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer}
+.btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+.btn.ghost{background:#fff}
+.btn.warn{background:#ef4444;color:#fff;border-color:#ef4444}
+.btn-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.btn-tabs.small .btn-tab{padding:6px 10px}
+.btn-tab{padding:6px 12px;border-radius:999px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+.btn-tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:1200px}
+th,td{padding:10px 8px;border-bottom:1px solid #f0f0f0;white-space:nowrap;text-align:center}
+thead th{position:sticky;top:0;background:#f8fafc;z-index:1;font-weight:600}
+.chip{font-size:.85rem;background:#eef2ff;color:#3730a3;border-radius:8px;padding:2px 8px}
+
+label{display:block;font-size:.9rem;color:#374151;margin-bottom:4px}
+input[type="number"],select{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;background:#fff}

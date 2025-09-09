@@ -1,0 +1,135 @@
+{% extends "base.html" %} {# usa la base pública de tu sitio #}
+{% load static %}
+
+{% block title %}Titulados – TSU / Ingeniería{% endblock %}
+
+{% block content %}
+<style>
+  .page-title{font-size:1.35rem;font-weight:700;text-align:center;margin:6px 0 14px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .btn{padding:8px 14px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer}
+  .btn-tab{padding:6px 12px;border-radius:999px;border:1px solid #d1d5db;background:#fff;cursor:pointer}
+  .btn-tab.active{background:#2563eb;color:#fff;border-color:#2563eb}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .col{flex:1 1 260px;min-width:260px}
+  .table-wrap{overflow:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0;min-width:1200px}
+  th,td{padding:10px 8px;border-bottom:1px solid #f0f0f0;white-space:nowrap;text-align:center}
+  thead th{position:sticky;top:0;background:#f8fafc;z-index:1;font-weight:600}
+  .chip{font-size:.85rem;background:#eef2ff;color:#3730a3;border-radius:8px;padding:2px 8px}
+</style>
+
+<h2 class="page-title">Titulados – TSU / Ingeniería</h2>
+
+<div class="card" id="tsui-user-root"
+     data-api-list="{% url 'tsui_api_public' %}"
+     data-api-programas="{% url 'tsui_programas_api_public' %}">
+  <div class="toolbar" style="justify-content:space-between;">
+    <div>
+      <button class="btn-tab active" data-nivel="TODOS" id="tabTodos">Todos</button>
+      <button class="btn-tab" data-nivel="TSU" id="tabTSU">TSU</button>
+      <button class="btn-tab" data-nivel="ING" id="tabING">Ingeniería</button>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <div class="row">
+      <div class="col">
+        <label><b>Programa:</b></label>
+        <div class="toolbar">
+          <button class="btn-tab active" id="ptTodos">Todos</button>
+          <button class="btn-tab" id="ptAntiguo">Antiguo</button>
+          <button class="btn-tab" id="ptNuevo">Nuevo</button>
+        </div>
+      </div>
+      <div class="col">
+        <label><b>Carrera:</b></label>
+        <select id="filtroCarrera"></select>
+      </div>
+      <div class="col">
+        <label><b>Año ingreso:</b></label>
+        <input id="anioIngreso" type="number" placeholder="Año ingreso">
+      </div>
+      <div class="col">
+        <label><b>Año egreso:</b></label>
+        <input id="anioEgreso" type="number" placeholder="Año egreso">
+      </div>
+    </div>
+    <div class="toolbar" style="justify-content:flex-end; margin-top:10px;">
+      <button class="btn" id="btnAplicar">Aplicar</button>
+      <button class="btn" id="btnReset">Reset</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="toolbar" style="justify-content:space-between;">
+      <div><b>📄 Registros</b> <span class="chip" id="chipCount">0</span></div>
+    </div>
+
+    <div>
+      <button class="btn-tab active" data-chart="bar">Barras</button>
+      <button class="btn-tab" data-chart="line">Líneas</button>
+      <button class="btn-tab" data-chart="pie">Pastel</button>
+    </div>
+    
+    <div class="table-wrap" style="margin-top:8px;">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>Nivel</th>
+            <th>Programa</th>
+            <th>Ingreso</th>
+            <th>Egreso</th>
+            <th>Ing H</th>
+            <th>Ing M</th>
+            <th>Eg coh H</th>
+            <th>Eg coh M</th>
+            <th>Eg rez H</th>
+            <th>Eg rez M</th>
+            <th>Tit H</th>
+            <th>Tit M</th>
+            <th>DGP H</th>
+            <th>DGP M</th>
+            <th>Tasa (%)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="toolbar" style="justify-content:space-between;">
+      <div><b>📈 Tasa de Titulación por Nivel</b></div>
+    </div>
+    <canvas id="chart" height="120" style="margin-top:12px;"></canvas>
+  </div>
+</div>
+
+<!-- Chart.js + plugin etiquetas -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script>
+  const valueLabelPlugin = {
+    id: 'valueLabel',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart; const type = chart.config.type;
+      const ds = chart.data.datasets[0]; const meta = chart.getDatasetMeta(0);
+      if (!ds || !meta) return;
+      ctx.save(); ctx.font = '12px sans-serif'; ctx.fillStyle = '#111'; ctx.textAlign = 'center';
+      meta.data.forEach((el, i) => {
+        const v = ds.data[i]; if (v == null) return;
+        const p = el.tooltipPosition(); const label = `${v}%`;
+        if (type === 'pie') { ctx.textBaseline = 'middle'; ctx.fillText(label, p.x, p.y); }
+        else { ctx.textBaseline = 'bottom'; ctx.fillText(label, p.x, p.y - 6); }
+      });
+      ctx.restore();
+    }
+  };
+  window.chartValueLabelPlugin = valueLabelPlugin;
+</script>
+
+<!-- App JS -->
+<script src="{% static 'js/titulados_tsu_inge_usuario.js' %}"></script>
+{% endblock %}

@@ -1,4 +1,4 @@
-// static/js/tasa_de_titulacion.js
+// static/js/tasa_de_titulacion_usuario.js
 document.addEventListener("DOMContentLoaded", () => {
   const avisos = document.getElementById("avisos");
   const cards = document.getElementById("cardsProgramas");
@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     avisos.innerHTML = `<div class="mensaje">${msg}</div>`;
   };
 
-  // ===== Paleta (sin verdes) =====
+  // Paleta (azules / cian / violeta)
   const COLORS = {
     mat:  { border:'rgb(33,150,243)',  fill:'rgba(33,150,243,.15)' }, // blue 500
     egr:  { border:'rgb(2,136,209)',   fill:'rgba(2,136,209,.15)'  }, // light blue 700
@@ -18,19 +18,20 @@ document.addEventListener("DOMContentLoaded", () => {
     tasa: { border:'rgb(0,172,193)',   fill:'rgba(0,172,193,.15)'  }, // cyan 600
   };
 
-  // ===== 1) Datos del template =====
+  // 1) Datos del template
   let raw = [];
   try {
     raw = JSON.parse(document.getElementById("jsonDatos")?.textContent || "[]");
   } catch (e) {
-    console.error("[TT] JSON inválido en #jsonDatos", e);
+    console.error("[TT-U] JSON inválido", e);
     notice("Los datos no tienen el formato esperado (JSON).");
   }
 
-  // ===== 2) Librerías =====
-  if (typeof Chart === "undefined") notice("No se pudo cargar Chart.js (revisa el CDN o la red).");
+  if (typeof Chart === "undefined") {
+    notice("No se pudo cargar Chart.js (revisa el CDN o la red).");
+  }
 
-  // ===== 3) UI =====
+  // 2) UI
   const filtroAnio = document.getElementById("filtro_anio");
   const filtroPrograma = document.getElementById("filtro_programa");
   const filtroTipo = document.getElementById("filtro_tipo");
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const badgeProm = document.getElementById("promedioGlobal");
   const exportable = document.getElementById("seccionDescargable");
 
-  // ===== 4) Choices (si carga) =====
+  // 3) Choices
   let chAnio, chPrograma, chTipo, chVista;
   const common = { removeItemButton: true, searchPlaceholderValue: "Buscar…" };
   function initChoices() {
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chVista = new Choices(filtroVista, { ...common, shouldSort:false });
   }
 
-  // ===== 5) Helpers =====
+  // Helpers
   const fmtPct = (v) => `${(Number(v) || 0).toFixed(0)}%`;
   const fmtNum = (v) => new Intl.NumberFormat().format(Number(v)||0);
 
@@ -74,24 +75,20 @@ document.addEventListener("DOMContentLoaded", () => {
     return DATA;
   };
 
-  // Crea un canvas con tamaño fijo para evitar width=0 al instanciar Chart
   function createSizedCanvas(container, h = 160) {
     const c = document.createElement("canvas");
     c.height = h;
     container.appendChild(c);
-    // Forzar ancho basado en el contenedor ya montado
-    const w = Math.max(300, container.clientWidth - 16); // margen
+    const w = Math.max(300, container.clientWidth - 16);
     c.style.width = `${w}px`;
-    c.width = w; // atributo, no solo CSS
+    c.width = w;
     return c;
   }
 
-  // Si hay error al crear gráfica, se muestra dentro de la card
   function guardChart(createFn, container) {
-    try {
-      return createFn();
-    } catch (e) {
-      console.error("[TT] Error creando gráfica:", e);
+    try { return createFn(); }
+    catch (e) {
+      console.error("[TT-U] Error Chart:", e);
       const err = document.createElement("div");
       err.className = "mensaje";
       err.textContent = "No se pudo renderizar la gráfica.";
@@ -101,14 +98,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let charts = [];
-  const destroyCharts = () => { charts.forEach(c=>c && typeof c.destroy==="function" && c.destroy()); charts=[]; };
+  const destroyCharts = () => { charts.forEach(c => c && typeof c.destroy==="function" && c.destroy()); charts = []; };
 
   function render() {
     destroyCharts();
     cards.innerHTML = "";
 
     if (!raw.length) {
-      notice("No hay registros que mostrar. Revisa que existan datos en Titulados con fechas y programa.");
+      notice("No hay registros para mostrar.");
       return;
     }
 
@@ -135,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
       avisos.innerHTML = "";
     }
 
-    // Promedio global
+    // Promedio global visible en el título
     const tasasGlobal = filtered.map(r => +r.tasa_titulacion || 0);
     const promGlobal = tasasGlobal.length ? Math.round(tasasGlobal.reduce((a,b)=>a+b,0)/tasasGlobal.length) : 0;
     if (badgeProm) badgeProm.textContent = promGlobal ? `${promGlobal}%` : "";
@@ -168,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       const body = card.querySelector(".pc-body");
 
-      // ===== Línea =====
+      // Línea combinada
       if (vistas.includes("linea") && typeof Chart !== "undefined") {
         const c = createSizedCanvas(body, 170);
         const ctx = c.getContext("2d");
@@ -177,24 +174,22 @@ document.addEventListener("DOMContentLoaded", () => {
           data: {
             labels: years,
             datasets: [
-              { label: "Matrícula",           data: matricula, yAxisID: "y",  fill: true, borderWidth: 2, tension:.25,
-                borderColor: COLORS.mat.border,  backgroundColor: COLORS.mat.fill,  pointRadius: 2 },
-              { label: "Egresados",           data: egresados, yAxisID: "y",  fill: true, borderWidth: 2, tension:.25,
-                borderColor: COLORS.egr.border,  backgroundColor: COLORS.egr.fill,  pointRadius: 2 },
-              { label: "Titulados",           data: titulados, yAxisID: "y",  fill: true, borderWidth: 2, tension:.25,
-                borderColor: COLORS.tit.border,  backgroundColor: COLORS.tit.fill,  pointRadius: 2 },
-              { label: "EF. Terminal %",      data: ef,        yAxisID: "y1", fill: false,borderWidth: 2, tension:.25,
-                borderColor: COLORS.ef.border,   pointRadius: 2, borderDash:[5,4] },
-              { label: "Tasa Titulación %",   data: tasa,      yAxisID: "y1", fill: false,borderWidth: 3, tension:.25,
+              { label: "Matrícula", data: matricula, yAxisID: "y", fill: true, borderWidth: 2, tension:.25,
+                borderColor: COLORS.mat.border, backgroundColor: COLORS.mat.fill, pointRadius: 2 },
+              { label: "Egresados", data: egresados, yAxisID: "y", fill: true, borderWidth: 2, tension:.25,
+                borderColor: COLORS.egr.border, backgroundColor: COLORS.egr.fill, pointRadius: 2 },
+              { label: "Titulados", data: titulados, yAxisID: "y", fill: true, borderWidth: 2, tension:.25,
+                borderColor: COLORS.tit.border, backgroundColor: COLORS.tit.fill, pointRadius: 2 },
+              { label: "EF. Terminal %", data: ef, yAxisID: "y1", fill: false, borderWidth: 2, tension:.25,
+                borderColor: COLORS.ef.border, pointRadius: 2, borderDash:[5,4] },
+              { label: "Tasa Titulación %", data: tasa, yAxisID: "y1", fill: false, borderWidth: 3, tension:.25,
                 borderColor: COLORS.tasa.border, pointRadius: 2 }
             ]
           },
           options: {
-            responsive:false, // tamaño fijado por createSizedCanvas
+            responsive:false,
             maintainAspectRatio:false,
-            plugins:{
-              legend:{display:true, position:"top"}
-            },
+            plugins:{ legend:{display:true, position:"top"} },
             scales:{
               y:{beginAtZero:true, title:{display:true, text:"Cantidad"}, ticks:{precision:0}},
               y1:{beginAtZero:true, max:100, position:"right", grid:{drawOnChartArea:false},
@@ -205,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
         charts.push(ch);
       }
 
-      // ===== Tabla mini =====
+      // Tabla mini
       if (vistas.includes("tabla")) {
         const t = document.createElement("div");
         t.className = "mini-table";
@@ -221,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body.appendChild(t);
       }
 
-      // ===== Barras =====
+      // Barras
       if (vistas.includes("barras") && typeof Chart !== "undefined") {
         const c2 = createSizedCanvas(body, 150);
         const ctx2 = c2.getContext("2d");
@@ -252,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== 6) PDF =====
+  // PDF
   const pdfOpts = {
     margin:[10,10,10,10],
     filename:"tasa_titulacion.pdf",
@@ -269,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
     panelFiltros.style.display = prev || "";
   }
 
-  // ===== 7) Eventos =====
+  // Eventos
   btnAplicar?.addEventListener("click", render);
   btnReset?.addEventListener("click", () => {
     const allAnios = [...new Set(raw.map(d => String(d.anio_ingreso)))];
@@ -282,9 +277,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   btnPDF?.addEventListener("click", descargarPDF);
 
-  // ===== 8) Init =====
+  // Init
   initChoices();
   render();
-
-  console.log("[TT] registros:", raw.length);
+  console.log("[TT-U] registros:", raw.length);
 });

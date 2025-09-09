@@ -25,6 +25,9 @@ from api.home.titulados_historicos_actual_usuario_view import titulados_historic
 from api.home.evaluacion_docente_cuatrimestre_usuario_view import evaluacion_docente_cuatrimestre_usuario_view
 from api.home.evaluacion_docente_concentrado_usuario_view import evaluacion_docente_concentrado_usuario_view
 from api.home.tit_his_usuario import tit_his_usuario_view
+from api.home import titulados_tsu_inge_usuario_view as tsui_usr
+from api.home.tasa_de_titulacion_usuario_view import build_tasa_usuario_context
+from api.home.tasa_de_titulacion_usuario_view import tasa_de_titulacion_usuario_view  # <-- NUEVO
 
 # ----- Administrador -----
 from api.Administrador.administrador_views import (
@@ -69,7 +72,6 @@ from api.Administrador.titulados_historico_actual_view import (
 from api.Administrador.evaluacion_docente_cuatrimestre_view import evaluacion_docente_cuatrimestre_view
 from api.Administrador.evaluacion_docente_concentrado_view import evaluacion_docente_concentrado_view
 
-# OJO: esta vista tenía un import duplicado de nombre; la alias-eamos para evitar choques
 from api.Administrador.subir_carreras_view import (
     subir_carreras_view,
     generar_plantilla_csv as generar_plantilla_carreras_csv,
@@ -78,9 +80,8 @@ from api.Administrador.subir_carreras_view import (
 )
 
 # ----- Tasa de Titulación / Titulados (admin) -----
-from api.Administrador.tasa_de_titulacion_view import (
-    tasa_de_titulacion_view, descargar_plantilla_tasa_titulacion, subir_excel_tasa_titulacion
-)
+from api.Administrador.tasa_de_titulacion_view import tasa_de_titulacion_view
+
 from api.Administrador.titulados_historicos_view import (
     titulados_historicos_view,
     descargar_plantilla_titulados_historicos
@@ -117,7 +118,7 @@ urlpatterns = [
     path('usuario/evaluacion-docente-cuatrimestre/', evaluacion_docente_cuatrimestre_usuario_view, name='Evaluacion_docente_cuatrimestre_usuario'),
     path('usuario/evaluacion-docente-concentrado/', evaluacion_docente_concentrado_usuario_view, name='evaluacion_docente_concentrado_usuario'),
 
-    # Vista pública Titulados – Histórico (nuevo URL que va en base.html)
+    # Vista pública Titulados – Histórico
     path('titulados/historico/', tit_his_usuario_view, name='tit_his_usuario'),
 
     # ==================== Administrador ====================
@@ -183,19 +184,34 @@ urlpatterns = [
 
     # Tasa de Titulación
     path('administrador/tasa-de-titulacion/', tasa_de_titulacion_view, name='tasa_de_titulacion'),
-    path('administrador/tasa-de-titulacion/descargar-plantilla/', descargar_plantilla_tasa_titulacion, name='descargar_plantilla_tasa_titulacion'),
-    path('administrador/tasa-de-titulacion/subir-excel/', subir_excel_tasa_titulacion, name='subir_excel_tasa_titulacion'),
 
     # Titulados históricos (separado)
     path('administrador/titulados-historicos/', titulados_historicos_view, name='titulados_historicos'),
     path('administrador/titulados-historicos/descargar-plantilla/', descargar_plantilla_titulados_historicos, name='descargar_plantilla_titulados_historicos'),
 
-    # TSU / Ingeniería
+    # ====== TSU / Ingeniería (VISTA + API) ======
+    # Página (admin)
     path('administrador/titulados-tsu-ingenieria/', tti.titulados_tsu_inge_view, name='titulados_tsu_inge'),
-    path('administrador/titulados-tsu/descargar-plantilla/', tti.descargar_plantilla_titulados_tsu, name='descargar_plantilla_titulados_tsu'),
-    path('administrador/titulados-ing/descargar-plantilla/', tti.descargar_plantilla_titulados_ing, name='descargar_plantilla_titulados_ing'),
-    path('administrador/titulados-tsu/subir-excel/', tti.subir_titulados_tsu_excel, name='subir_titulados_tsu_excel'),
-    path('administrador/titulados-ing/subir-excel/', tti.subir_titulados_ing_excel, name='subir_titulados_ing_excel'),
+
+    # Página (usuario)
+    path('usuario/titulados-tsu-ingenieria/', tsui_usr.titulados_tsu_inge_usuario_view, name='tsui_usuario'),
+
+    # APIs (admin)
+    path('administrador/titulados-tsu-ingenieria/api/programas/', tti.tsui_programas_api, name='tsui_programas_api'),
+    path('administrador/titulados-tsu-ingenieria/api/create/', tti.tsui_create, name='tsui_create'),
+    path('administrador/titulados-tsu-ingenieria/api/<int:pk>/', tti.tsui_update_delete, name='tsui_update_delete'),
+    path('administrador/titulados-tsu-ingenieria/api/', tti.tsui_api, name='tsui_api'),
+
+    # APIs SOLO LECTURA (usuario) — mantenemos ambos names para compatibilidad
+    path('usuario/titulados-tsu-ingenieria/api/programas/', tti.tsui_programas_api, name='tsui_programas_api_usuario'),
+    path('usuario/titulados-tsu-ingenieria/api/', tti.tsui_api, name='tsui_api_usuario'),
+
+    # Aliases que pide el template (mismo endpoint, distinto name)
+    path('usuario/titulados-tsu-ingenieria/api/programas/', tti.tsui_programas_api, name='tsui_programas_api_public'),
+    path('usuario/titulados-tsu-ingenieria/api/', tti.tsui_api, name='tsui_api_public'),
+
+    # ====== NUEVO: Tasa de Titulación (usuario) ======
+    path('usuario/tasa-de-titulacion/', tasa_de_titulacion_usuario_view, name='tasa_de_titulacion_usuario'),  # <-- NUEVO
 ]
 
 # Archivos estáticos en modo desarrollo

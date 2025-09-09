@@ -1,4 +1,5 @@
-{% extends 'base_admin.html' %}
+{# api/templates/tasa_de_titulacion_usuario.html #}
+{% extends 'base.html' %}
 {% load static %}
 {% block title %}Tasa de Titulación{% endblock %}
 
@@ -8,15 +9,7 @@
 
 <h2 class="titulo-principal">📈 Tasa de Titulación <span id="promedioGlobal" class="badge"></span></h2>
 
-{% if messages %}
-  <div class="mensajes">
-    {% for message in messages %}
-      <div class="mensaje">{{ message }}</div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<!-- ===== Filtros ===== -->
+<!-- Filtros (solo lectura) -->
 <div class="filtros">
   <div class="filtro">
     <label for="filtro_anio"><strong>Años de ingreso</strong></label>
@@ -59,33 +52,20 @@
   </div>
 </div>
 
-<!-- ===== Contenido exportable (el menú NO va aquí) ===== -->
+<!-- Contenido exportable (el menú de base.html permanece intacto) -->
 <div id="seccionDescargable">
   <div id="avisos" class="mensajes" style="display:none"></div>
   <div id="cardsProgramas" class="cards-programas"></div>
 </div>
 
-<!-- Datos -->
+<!-- Datos para JS -->
 <script type="application/json" id="jsonDatos">{{ datos_json|safe }}</script>
 
-<!-- Librerías (con defer y en orden) -->
+<!-- Librerías -->
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
-<!-- Nuestro JS -->
-<script defer src="{% static 'js/tasa_de_titulacion.js' %}?v=20250909"></script>
-
-<!-- Mini-check para que si algo falla se vea un aviso -->
-<script>
-  window.addEventListener('load', () => {
-    const avisos = document.getElementById('avisos');
-    const json = document.getElementById('jsonDatos');
-    if (!json) {
-      avisos.style.display='block';
-      avisos.innerHTML = '<div class="mensaje">No se encontró #jsonDatos en el template.</div>';
-    }
-  });
-</script>
+<!-- JS de esta vista -->
+<script defer src="{% static 'js/tasa_de_titulacion_usuario.js' %}?v=20250909"></script>
 {% endblock %}

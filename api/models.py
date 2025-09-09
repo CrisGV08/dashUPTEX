@@ -343,7 +343,7 @@ class SeguimientoLaboral(models.Model):
 
     def __str__(self):
         prog = self.programa_antiguo or self.programa_nuevo
-        return f"{prog} - {self.fecha_ingreso.strftime('%m-%Y')} / {self.fecha_egreso.strftime('%m-%Y')}"
+        return f"{prog} - ${self.fecha_ingreso.strftime('%m-%Y')} / ${self.fecha_egreso.strftime('%m-%Y')}"
 
 
 
@@ -370,10 +370,128 @@ class EvaluacionDocenteCuatrimestre(models.Model):
         return f"{self.ciclo_periodo} - {self.promedio_general}"
 
 
+# --------------------------
+# TITULADOS POR TSU / INGENIERÍA (CRUD independiente)
+# --------------------------
+class TituladosTSUIng(models.Model):
+    NIVEL_CHOICES = (
+        ("TSU", "TSU"),
+        ("ING", "Ingeniería"),
+    )
 
+    nivel = models.CharField(max_length=3, choices=NIVEL_CHOICES, db_index=True)
 
+    programa_antiguo = models.ForeignKey(
+        'ProgramaEducativoAntiguo',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="titulados_tsu_ing_antiguo",
+        db_index=True,
+    )
+    programa_nuevo = models.ForeignKey(
+        'ProgramaEducativoNuevo',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="titulados_tsu_ing_nuevo",
+        db_index=True,
+    )
 
+    fecha_ingreso = models.DateField(db_index=True)
+    fecha_egreso  = models.DateField(db_index=True)
 
+    ingreso_hombres = models.IntegerField(default=0)
+    ingreso_mujeres = models.IntegerField(default=0)
 
+    egresados_cohorte_h = models.IntegerField(default=0)
+    egresados_cohorte_m = models.IntegerField(default=0)
 
+    egresados_rezagados_h = models.IntegerField(default=0)
+    egresados_rezagados_m = models.IntegerField(default=0)
 
+    titulados_h = models.IntegerField(default=0)
+    titulados_m = models.IntegerField(default=0)
+
+    registrados_dgp_h = models.IntegerField(default=0)
+    registrados_dgp_m = models.IntegerField(default=0)
+
+    creado_en   = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Titulados TSU/ING"
+        verbose_name_plural = "Titulados TSU/ING"
+        ordering = ["fecha_ingreso", "fecha_egreso", "nivel"]
+        constraints = [
+            models.CheckConstraint(
+                name="tsui_programa_xor",
+                check=(
+                    (models.Q(programa_antiguo__isnull=False, programa_nuevo__isnull=True) |
+                     models.Q(programa_antiguo__isnull=True,  programa_nuevo__isnull=False))
+                ),
+            ),
+            models.CheckConstraint(
+                name="tsui_no_negativos",
+                check=models.Q(ingreso_hombres__gte=0) &
+                      models.Q(ingreso_mujeres__gte=0) &
+                      models.Q(egresados_cohorte_h__gte=0) &
+                      models.Q(egresados_cohorte_m__gte=0) &
+                      models.Q(egresados_rezagados_h__gte=0) &
+                      models.Q(egresados_rezagados_m__gte=0) &
+                      models.Q(titulados_h__gte=0) &
+                      models.Q(titulados_m__gte=0) &
+                      models.Q(registrados_dgp_h__gte=0) &
+                      models.Q(registrados_dgp_m__gte=0),
+            ),
+            models.UniqueConstraint(
+                name="tsui_unico_gen_prog_nivel",
+                fields=["nivel", "fecha_ingreso", "fecha_egreso", "programa_antiguo", "programa_nuevo"],
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["nivel", "fecha_ingreso"]),
+            models.Index(fields=["nivel", "fecha_egreso"]),
+        ]
+
+    @property
+    def total_ingreso(self) -> int:
+        return (self.ingreso_hombres or 0) + (self.ingreso_mujeres or 0)
+
+    @property
+    def total_egresados(self) -> int:
+        return ((self.egresados_cohorte_h or 0) + (self.egresados_cohorte_m or 0) +
+                (self.egresados_rezagados_h or 0) + (self.egresados_rezagados_m or 0))
+
+    @property
+    def total_titulados(self) -> int:
+        return (self.titulados_h or 0) + (self.titulados_m or 0)
+
+    @property
+    def total_dgp(self) -> int:
+        return (self.registrados_dgp_h or 0) + (self.registrados_dgp_m or 0)
+
+    @property
+    def tasa_titulacion(self) -> float:
+        ing = self.total_ingreso
+        if ing <= 0:
+            return 0.0
+        return round((self.total_titulados / ing) * 100.0, 2)
+
+    def programa_nombre(self) -> str:
+        p = self.programa_antiguo or self.programa_nuevo
+        return getattr(p, "nombre", "SIN PROGRAMA")
+
+    def programa_id(self) -> str:
+        p = self.programa_antiguo or self.programa_nuevo
+        return getattr(p, "id", "")
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.fecha_egreso < self.fecha_ingreso:
+            raise ValidationError("La fecha de egreso no puede ser menor que la fecha de ingreso.")
+        if self.nivel not in dict(self.NIVEL_CHOICES):
+            raise ValidationError("Nivel inválido. Usa 'TSU' o 'ING'.")
+
+    def __str__(self):
+        prog = self.programa_antiguo or self.programa_nuevo
+        pnom = getattr(prog, "nombre", "SIN PROGRAMA")
+        return f"[{self.nivel}] {pnom} | {self.fecha_ingreso:%m-%Y} → {self.fecha_egreso:%m-%Y} (tasa {self.tasa_titulacion}%)"
